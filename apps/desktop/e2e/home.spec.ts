@@ -147,6 +147,7 @@ for (const language of ["zh-CN", "en-US"] as const) for (const theme of ["light"
       .toBe(theme === "dark" ? "rgba(255, 255, 255, 0.9)" : "rgba(0, 0, 0, 0.85)");
     for (const [size, width, height] of [["desktop", 1000, 760], ["narrow", 720, 540]] as const) {
       await page.setViewportSize({ width, height });
+      await page.evaluate(() => document.fonts.ready);
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await expect.poll(() => home.locator(".transcript-event").evaluateAll(elements => elements.every((element, index) => {
         const next = elements[index + 1];
@@ -155,14 +156,21 @@ for (const language of ["zh-CN", "en-US"] as const) for (const theme of ["light"
       const heading = await page.getByRole("heading", { level: 1 }).boundingBox();
       const trigger = await page.getByRole("button", { name: /Toggle sidebar|切换侧栏/ }).boundingBox();
       expect(Math.abs(heading!.y + heading!.height / 2 - trigger!.y - trigger!.height / 2)).toBeLessThan(1);
-      const guide = await page.getByTestId("voiceprint-guide").boundingBox();
-      const activity = await page.getByTestId("speech-activity").boundingBox();
-      const timestamp = await home.locator("time").first().boundingBox();
-      expect(guide).not.toBeNull();
-      expect(activity!.y).toBeGreaterThanOrEqual(guide!.y + guide!.height);
-      expect(timestamp!.y).toBeGreaterThanOrEqual(activity!.y + activity!.height);
-      expect(timestamp!.y - activity!.y - activity!.height).toBeLessThan(48);
-      await page.evaluate(() => document.fonts.ready);
+      await expect(page.getByTestId("voiceprint-guide")).toBeVisible();
+      await expect(page.getByTestId("speech-activity")).toBeVisible();
+      await expect(home.locator("time").first()).toBeVisible();
+      // Read one coherent layout frame; fonts and resize transitions can move
+      // sibling sections between separate boundingBox protocol round trips.
+      await expect.poll(() => home.evaluate(element => {
+        const guide = document.querySelector('[data-testid="voiceprint-guide"]')?.getBoundingClientRect();
+        const activity = document.querySelector('[data-testid="speech-activity"]')?.getBoundingClientRect();
+        const timestamp = element.querySelector("time")?.getBoundingClientRect();
+        if (!guide || !activity || !timestamp) return null;
+        const guideGap = activity.top - guide.bottom;
+        const transcriptGap = timestamp.top - activity.bottom;
+        return { guideGap, transcriptGap, guideClear: guideGap >= 0,
+          transcriptClear: transcriptGap >= 0, compactGap: transcriptGap < 48 };
+      })).toMatchObject({ guideClear: true, transcriptClear: true, compactGap: true });
       const screenshot = testInfo.outputPath(`home-${language}-${theme}-${size}.png`);
       await page.screenshot({ path: screenshot, animations: "disabled" });
       await testInfo.attach(`home-${language}-${theme}-${size}`, {

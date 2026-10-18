@@ -54,7 +54,9 @@ Windows 的 Go 测试通过 `apps/desktop/scripts/native-test-exec.mjs` 启动�
 
 mygo 再执行 `buildCommand`（`bun run build:web`）并把前端产物从 `out/renderer` 打进 `dist`。macOS 最低系统版本、签名身份、entitlements 和可选公证都在 `mygo.config.ts`。Windows 证书和签名命令只在对应环境变量存在时写入。
 
-macOS 配置了公证 profile 时，`desktop.mjs` 先用 mygo 的 `--skip-notarize` 完成签名构建，再由 `apps/desktop/scripts/notarize.mjs` 提交最终架构命名的 DMG。Apple 必须返回 `Accepted`；票据装订错误 65 或 68 最多重试三次，分别等待 5、10、20 秒，不重新提交或重新签名。最后必须通过 `stapler validate`。拒绝、公证失败、其他装订错误或重试耗尽均终止构建，不上传产物。
+macOS 配置了公证 profile 时，`desktop.mjs` 先用 mygo 的 `--skip-notarize` 完成签名构建，再由 `apps/desktop/scripts/notarize.mjs` 提交最终架构命名的 DMG。Apple 必须返回 `Accepted`；票据装订错误 65 或 68 最多重试三次，分别等待 5、10、20 秒，不重新提交或重新签名。最后必须通过 `stapler validate`。拒绝、公证失败、其他装订错误或重试耗尽均以非零退出，阻止发布。
+
+`DAYBEE_DEFER_NOTARIZATION`（1）只推迟公证，不影响 Developer ID 签名。CI 的 Intel Mac 构建使用它，避免该 runner 访问 Apple 票据服务时持续断连；三平台原生检查完成后，`notarize-intel` 在 Apple Silicon runner 上下载已签名的 Intel 安装包，再公证、装订和验证。该作业不编译或执行 Intel 应用，凭据通过 `signing.mjs --notary-only` 导入，只需要已有的 Apple API 密钥。
 
 更新公钥默认读 `apps/desktop/build/mygo-update.pub`，可用 `DAYBEE_UPDATER_PUBLIC_KEY` 覆盖。配置指向 GitHub `nexmoe/DayBee`，标签前缀 `v`。
 
@@ -62,7 +64,7 @@ macOS 配置了公证 profile 时，`desktop.mjs` 先用 mygo 的 `--skip-notari
 
 `.github/workflows/desktop-release.yml` 在 `macos-15`、`macos-15-intel`、`windows-latest` 上跑同一套原生检查。标签 `v*` 才为 macOS 导入 Developer ID 和公证材料，并为三个平台带上 `MYGO_UPDATER_PRIVATE_KEY`。Windows 安装包不做 Authenticode 证书签名；更新归档仍必须通过 Ed25519 签名校验。
 
-三个 native job 都通过后，`publish` 用 `apps/desktop/scripts/release-gates.mjs --report` 在日志及 Actions summary 中报告未完成的人工迁移验收。根据本次 1.0.0 发布约定，这份报告不阻止发布，也不改写 `docs/migration-verification.json` 的结果。直接运行脚本仍严格检查每个目标的界面、原生推理、最低系统、干净安装、签名更新恢复及至少 8 小时实录，未完成时返回非零。
+三个 native job 和 `notarize-intel` 都通过后，`publish` 用 `apps/desktop/scripts/release-gates.mjs --report` 在日志及 Actions summary 中报告未完成的人工迁移验收。它先下载原生制品，再把已公证的 Intel DMG 下载到同一目标目录，替换原始 DMG 后收集发布文件。根据本次 1.0.0 发布约定，人工报告不阻止发布，也不改写 `docs/migration-verification.json` 的结果。直接运行脚本仍严格检查每个目标的界面、原生推理、最低系统、干净安装、签名更新恢复及至少 8 小时实录，未完成时返回非零。
 
 `apps/desktop/scripts/collect-release.mjs` 必须验证标签与包版本一致、三个目标的更新版本与包版本一致、更新归档的长度与签名正确、各平台安装包齐全且无同名内容冲突，才会生成校验和并交给 GitHub Release 发布。
 

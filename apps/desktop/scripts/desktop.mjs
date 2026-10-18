@@ -47,7 +47,7 @@ if (child.status === 0 && command === "build" && platform === "darwin") {
   for (const file of readdirSync(out).filter(file => file.endsWith(".dmg") && !file.endsWith(`-${target}.dmg`))) {
     renameSync(join(out, file), join(out, file.replace(/\.dmg$/, `-${target}.dmg`)));
   }
-  if (env.MYGO_NOTARY_PROFILE) {
+  if (env.MYGO_NOTARY_PROFILE && env.DAYBEE_DEFER_NOTARIZATION !== "1") {
     const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
     await notarizeImage(join(out, `${pkg.productName} ${pkg.version}-${target}.dmg`), env.MYGO_NOTARY_PROFILE);
   }

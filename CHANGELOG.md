@@ -8,6 +8,7 @@ All notable changes to this project are documented in this file.
 
 ### Maintenance
 
+- Notarize and validate signed Intel Mac installers on the Apple Silicon runner after native checks, avoiding intermittent Apple ticket-service failures on Intel runners.
 - Publish after all automated platform checks and signed-update verification pass, while reporting incomplete manual migration acceptance. Windows installers do not require Authenticode certificates.
 - Rename the GitHub repository to `nexmoe/DayBee` and update the Go module path, app update feed, website links and subsystem documentation.
 
@@ -22,6 +23,7 @@ All notable changes to this project are documented in this file.
 
 ### Fixes
 
+- Wait for fonts and measure Home layout in one frame to avoid false overlap failures during responsive transitions.
 - Verify Windows title-bar clearance and platform-specific recovery controls in renderer acceptance tests, with local platform emulation for regression coverage.
 - Preserve the intended Windows content viewport by compensating for invisible frameless resize borders.
 - Load locked native DLLs beside Windows test executables, close FLAC test files explicitly, and use portable storage-failure fixtures. Preserve microphone archive retries when its directory is blocked.

@@ -1,5 +1,8 @@
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
+import { fileURLToPath } from "node:url";
 
 export async function notarizeImage(path, profile, { run = execFileSync, wait = delay, warn = console.warn } = {}) {
   const output = run("xcrun", ["notarytool", "submit", path, "--keychain-profile", profile,
@@ -18,4 +21,14 @@ export async function notarizeImage(path, profile, { run = execFileSync, wait = 
     }
   }
   run("xcrun", ["stapler", "validate", path], { stdio: "inherit" });
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const [directory, target] = process.argv.slice(2);
+  const profile = process.env.MYGO_NOTARY_PROFILE;
+  if (!directory || !["darwin-arm64", "darwin-amd64"].includes(target) || !profile) {
+    throw new Error("Notarization requires an artifact directory, a Mac target and MYGO_NOTARY_PROFILE");
+  }
+  const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+  await notarizeImage(join(resolve(directory), `${pkg.productName} ${pkg.version}-${target}.dmg`), profile);
 }

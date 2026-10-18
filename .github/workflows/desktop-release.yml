@@ -74,6 +74,7 @@ jobs:
         working-directory: apps/desktop
         env:
           MYGO_UPDATER_PRIVATE_KEY: ${{ startsWith(github.ref, 'refs/tags/v') && secrets.MYGO_UPDATER_PRIVATE_KEY || '' }}
+          DAYBEE_DEFER_NOTARIZATION: ${{ matrix.target == 'darwin-amd64' && '1' || '' }}
         run: bun run build
       - name: Native window smoke
         working-directory: apps/desktop
@@ -89,9 +90,32 @@ jobs:
           name: daybee-${{ matrix.target }}
           path: apps/desktop/dist/${{ matrix.target }}/
           if-no-files-found: error
-  publish:
+  notarize-intel:
     if: startsWith(github.ref, 'refs/tags/v')
     needs: native
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: {node-version: "24"}
+      - name: Import notarization credentials
+        env:
+          APPLE_API_KEY_P8_BASE64: ${{ secrets.APPLE_API_KEY_P8_BASE64 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        run: node apps/desktop/scripts/signing.mjs --notary-only
+      - uses: actions/download-artifact@v4
+        with: {name: daybee-darwin-amd64, path: artifacts}
+      - name: Notarize and validate the Intel installer on the Apple Silicon runner
+        run: node apps/desktop/scripts/notarize.mjs artifacts darwin-amd64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: notarized-darwin-amd64
+          path: artifacts/*.dmg
+          if-no-files-found: error
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [native, notarize-intel]
     runs-on: ubuntu-latest
     permissions: {contents: write}
     steps:
@@ -102,6 +126,9 @@ jobs:
         run: node apps/desktop/scripts/release-gates.mjs --report
       - uses: actions/download-artifact@v4
         with: {pattern: daybee-*, path: artifacts}
+      - name: Use the notarized Intel installer
+        uses: actions/download-artifact@v4
+        with: {name: notarized-darwin-amd64, path: artifacts/daybee-darwin-amd64}
       - name: Collect installers, signed updates and checksums
         run: node apps/desktop/scripts/collect-release.mjs artifacts dist
       - uses: softprops/action-gh-release@v2
