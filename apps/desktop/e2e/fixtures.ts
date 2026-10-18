@@ -45,7 +45,14 @@ export const test = base.extend<{
         const close = async () => { if (closed) return; closed = true; try { await page.close(); } finally { await native.close(); } };
         cleanup.push(close);
         await page.exposeFunction("__nativeCall", native.call);
-        await page.exposeFunction("__nativeSnapshot", native.snapshot);
+        let previousSnapshot = "";
+        await page.exposeFunction("__nativeSnapshot", async () => {
+          const snapshot = await native.snapshot();
+          const serialized = JSON.stringify(snapshot);
+          if (serialized === previousSnapshot) return null;
+          previousSnapshot = serialized;
+          return snapshot;
+        });
         await page.addInitScript(({ platform }) => {
           const testWindow = window as unknown as {
             __nativeCall(method: string, args: unknown[]): Promise<unknown>;
@@ -61,9 +68,22 @@ export const test = base.extend<{
               return () => { listeners.get(name)?.delete(listener); };
             }
           } as NonNullable<Window["mygo"]>;
-          setInterval(() => { void testWindow.__nativeSnapshot().then(snapshot => {
-            listeners.get("desktop:snapshot")?.forEach(listener => listener(snapshot));
-          }); }, 100);
+          let stopped = false, timer: number | undefined;
+          const poll = async () => {
+            try {
+              const snapshot = await testWindow.__nativeSnapshot();
+              if (!stopped && snapshot !== null) listeners.get("desktop:snapshot")?.forEach(listener => listener(snapshot));
+            } catch (error) {
+              if (!stopped) console.error("Native snapshot polling failed", error);
+            } finally {
+              if (!stopped) timer = window.setTimeout(() => { void poll(); }, 100);
+            }
+          };
+          window.addEventListener("pagehide", () => {
+            stopped = true;
+            window.clearTimeout(timer);
+          }, { once: true });
+          timer = window.setTimeout(() => { void poll(); }, 100);
         }, { platform: rendererPlatform === "windows" || (!rendererPlatform && process.platform === "win32") ? "win32" : "darwin" });
         await page.goto("/");
         await expect(page.getByRole("button", { name: /Start recording|开始录音|Stop|停止/ })).toBeVisible();

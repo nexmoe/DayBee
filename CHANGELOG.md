@@ -4,10 +4,6 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
-### Fixes
-
-- Keep timeline reading-position acceptance anchored to the same visible paragraph, including rows partly clipped at the viewport edge.
-
 ## 1.0.0 - 2026-10-18
 
 ### Maintenance
@@ -27,6 +23,8 @@ All notable changes to this project are documented in this file.
 
 ### Fixes
 
+- Bound native E2E snapshot polling and diagnostic logs, and avoid sending unchanged large snapshots across the browser bridge.
+- Keep timeline reading-position acceptance anchored to the same visible paragraph, including rows partly clipped at the viewport edge.
 - Check the actual oldest timeline row after narrow-window scrolling, keeping virtualization from changing the acceptance test's target.
 - Give the complete 1,000-row timeline acceptance flow enough total time on Intel CI while preserving individual assertions and the normal test timeout.
 - Run voiceprint device-consistency acceptance tests in virtual time so accelerated capture does not race CI scheduling.

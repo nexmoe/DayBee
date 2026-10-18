@@ -23,7 +23,10 @@ export async function launchNative(storeDir: string) {
   const child = spawn(executable, [], {
     env: { ...process.env, DAYBEE_E2E_TEST: "1", DAYBEE_TEST_BACKGROUND: "1", DAYBEE_STORE_DIR: storeDir, DAYBEE_TEST_TOKEN: token, DAYBEE_TEST_PORT: String(port) }, stdio: "pipe"
   });
-  let logs = ""; child.stderr?.on("data", data => { logs += data; });
+  let logs = Buffer.alloc(0);
+  const captureLog = (data: Buffer) => { logs = Buffer.concat([logs, data]).subarray(-64 * 1024); };
+  child.stdout?.on("data", captureLog);
+  child.stderr?.on("data", captureLog);
   let spawnError: Error | undefined;
   child.once("error", error => { spawnError = error; });
   const close = async () => {
