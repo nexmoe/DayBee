@@ -4,19 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.0.0 - 2026-10-18
+
 ### Maintenance
 
 - Publish after all automated platform checks and signed-update verification pass, while reporting incomplete manual migration acceptance. Windows installers do not require Authenticode certificates.
 - Rename the GitHub repository to `nexmoe/DayBee` and update the Go module path, app update feed, website links and subsystem documentation.
-
-### Fixes
-
-- Define Windows Core Audio GUIDs when compiling microphone activity detection, and allow the system font fallback when optional static PingFang faces are absent.
-- Reject releases with mismatched tag/update versions or missing installers.
-- Restore an intact native library when older Xcode tools cannot strip its symbols, and preserve Windows executable search paths while preparing native dependencies.
-- Use version 1.0.0 as the fallback when launching the Go entry point directly.
-
-## 1.0.0 - 2026-10-18
 
 ### Features
 
@@ -29,11 +22,15 @@ All notable changes to this project are documented in this file.
 
 ### Fixes
 
+- Define Windows Core Audio GUIDs when compiling microphone activity detection, and allow the system font fallback when optional static PingFang faces are absent.
+- Reject releases with mismatched tag/update versions or missing installers.
+- Restore an intact native library when older Xcode tools cannot strip its symbols, and preserve Windows executable search paths while preparing native dependencies.
+- Use version 1.0.0 as the fallback when launching the Go entry point directly.
 - Persist transcript capture timing before notifying history listeners so FLAC finalization preserves live transcript scene boundaries.
 
 ### Desktop migration
 
-- Rename the project and desktop product to DayBee, including workspace packages, application identifiers, permissions, development routes and installers. Use DayBee data and recording folders for new installations; import existing settings, voiceprints and microphone activity once, reuse model caches and retain old recordings. Keep the GitHub repository at `nexmoe/eve`.
+- Rename the project and desktop product to DayBee, including workspace packages, application identifiers, permissions, development routes and installers. Use DayBee data and recording folders for new installations; import existing settings, voiceprints and microphone activity once, reuse model caches and retain old recordings. Rename the GitHub repository to `nexmoe/DayBee`.
 
 - Send recording meters and voiceprint progress separately from saved data; publish full snapshots only when history, application annotations or settings change, and reuse unchanged timelines to reduce CPU and memory usage across both windows.
 
@@ -64,7 +61,7 @@ All notable changes to this project are documented in this file.
 - Migrate the desktop runtime to mygo 0.3.4 and Go 1.27.1, with malgo native microphone capture and application-owned recording tasks.
 - Upgrade sherpa Go/native dependencies to 1.13.8 and ONNX Runtime to 1.28.2; retain the existing Qwen3/Silero model caches and React interface.
 - Preserve speech-only WAV/FLAC archives, add bounded inference queues and safe shutdown, and import existing Electron settings without moving recordings.
-- Replace Electron packaging with native macOS/Windows builds, signed mygo updates and explicit UI/inference/endurance release gates.
+- Replace Electron packaging with native macOS/Windows builds, signed mygo updates and a report of outstanding manual UI/inference/endurance acceptance.
 - Remove FFmpeg entirely: stream lossless FLAC encoding and WAV/FLAC decoding in Go with mewkiz/flac 1.0.14, retaining legacy recordings. Remove the obsolete FFmpeg status row as approved.
 - Migration acceptance is still in progress; see `docs/migration-verification.md` before release.
 
