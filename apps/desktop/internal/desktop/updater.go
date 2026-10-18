@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/egoist/mygo"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 type pendingInstallation struct {

@@ -3,7 +3,7 @@ package desktop
 import (
 	"testing"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/voiceprint"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/voiceprint"
 )
 
 func TestVoiceprintSnapshotExposesPersistedLearningProgress(t *testing.T) {

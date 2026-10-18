@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/micactivity"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/micactivity"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 func (s *DesktopService) initializeMicrophoneActivity(root string) {

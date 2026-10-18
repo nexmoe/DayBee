@@ -8,7 +8,7 @@ import (
 	"sync/atomic"
 
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
-	"github.com/nexmoe/eve/apps/desktop/internal/infer"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/infer"
 )
 
 type Manager struct {

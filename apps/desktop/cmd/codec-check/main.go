@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/codec"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/codec"
 )
 
 func main() {

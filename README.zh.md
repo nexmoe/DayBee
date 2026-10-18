@@ -27,7 +27,7 @@ DayBee 是使用 Go 和 mygo 构建、以托盘常驻为核心的桌面录音应
 
 ## 下载
 
-- 发布页面：[DayBee Releases](https://github.com/nexmoe/eve/releases)
+- 发布页面：[DayBee Releases](https://github.com/nexmoe/DayBee/releases)
 - macOS 13.3+：Apple Silicon / Intel `.dmg`
 - Windows：`.exe`（NSIS 安装包）
 

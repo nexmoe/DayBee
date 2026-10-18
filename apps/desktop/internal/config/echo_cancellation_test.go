@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 func TestExistingSettingsGetEchoCancellationWithoutResettingPreferences(t *testing.T) {

@@ -5,7 +5,7 @@ for (const language of ["zh-CN", "en-US"] as const) {
   test(`interrupted recording shows recovery and can be stopped in ${language}`, async ({ page }) => {
     const snapshot: DesktopSnapshot = {
       asrModels: { items: [], busy: false, downloadingModel: null },
-      app: { name: "DayBee", repositoryUrl: "https://github.com/nexmoe/eve", version: "0.8.6" },
+      app: { name: "DayBee", repositoryUrl: "https://github.com/nexmoe/DayBee", version: "0.8.6" },
       devices: [], engineReady: true, history: [],
       microphoneActivity: { supported: false, error: null, items: [] },
       voiceprint: { enrolled: false, phase: "idle", step: 0, speechSeconds: 0, targetSeconds: 5, level: 0, progress: null, message: "", error: null },

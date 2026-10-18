@@ -11,7 +11,7 @@ import (
 	"time"
 
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
-	"github.com/nexmoe/eve/apps/desktop/internal/asr"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/asr"
 )
 
 func perfReportPath() string {

@@ -27,7 +27,7 @@ DayBee is a tray-first desktop recorder built with Go and mygo. It records micro
 
 ## Download
 
-- Release page: [DayBee Releases](https://github.com/nexmoe/eve/releases)
+- Release page: [DayBee Releases](https://github.com/nexmoe/DayBee/releases)
 - macOS 13.3+: Apple Silicon / Intel `.dmg`
 - Windows: `.exe` (NSIS installer)
 

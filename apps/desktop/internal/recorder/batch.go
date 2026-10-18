@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/asr"
-	"github.com/nexmoe/eve/apps/desktop/internal/config"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/asr"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/config"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 func (e *Engine) CancelBatch() {

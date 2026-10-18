@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/audio"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
-	"github.com/nexmoe/eve/apps/desktop/internal/voiceprint"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/audio"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/voiceprint"
 )
 
 func (v *voiceprintEnrollment) session(ctx context.Context, advance <-chan struct{}) error {

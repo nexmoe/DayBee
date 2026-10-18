@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/config"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/config"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 func TestDefaultDataPathsReuseProductionSettings(t *testing.T) {

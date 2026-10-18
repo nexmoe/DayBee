@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/voiceprint"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/voiceprint"
 )
 
 func (m *Manager) VoiceprintPath() string {

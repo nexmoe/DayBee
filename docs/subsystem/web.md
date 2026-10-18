@@ -13,7 +13,7 @@
 
 - 构建配置是 `apps/web/astro.config.mjs`。`output` 为 `static`。`site` 取 `SITE_URL`，缺省 `https://daybee.app`，并去掉末尾斜杠。
 - 可索引路径只有 `indexablePaths` 里的 `/`。
-- 产品链接在 `site.github`（`https://github.com/nexmoe/eve`）和 `site.releases`（同一仓库的 `/releases`）。
+- 产品链接在 `site.github`（`https://github.com/nexmoe/DayBee`）和 `site.releases`（同一仓库的 `/releases`）。
 
 ## 运行路径
 

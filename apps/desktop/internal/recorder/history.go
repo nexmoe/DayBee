@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 var recordingDate = regexp.MustCompile(`(\d{8})_(\d{6})`)

@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
-	"github.com/nexmoe/eve/apps/desktop/internal/asrmodel"
-	"github.com/nexmoe/eve/apps/desktop/internal/audio"
-	"github.com/nexmoe/eve/apps/desktop/internal/infer"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/asrmodel"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/audio"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/infer"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 func offlineConfig(directory string) (sherpa.OfflineRecognizerConfig, error) {

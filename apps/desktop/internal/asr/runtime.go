@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
-	"github.com/nexmoe/eve/apps/desktop/internal/audio"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/audio"
 )
 
 const Version = "1.13.8"

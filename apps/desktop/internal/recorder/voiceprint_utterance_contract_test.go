@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/asr"
-	"github.com/nexmoe/eve/apps/desktop/internal/audio"
-	"github.com/nexmoe/eve/apps/desktop/internal/voiceprint"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/asr"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/audio"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/voiceprint"
 )
 
 type confidenceVoice struct {

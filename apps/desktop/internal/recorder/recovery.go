@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 // interrupted runs on the audio loop, which must remain free to consume commands

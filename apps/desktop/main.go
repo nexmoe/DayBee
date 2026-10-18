@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/egoist/mygo"
-	"github.com/nexmoe/eve/apps/desktop/internal/asr"
-	"github.com/nexmoe/eve/apps/desktop/internal/codec"
-	"github.com/nexmoe/eve/apps/desktop/internal/desktop"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/asr"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/codec"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/desktop"
 )
 
 func main() {
@@ -27,7 +27,7 @@ func main() {
 	}
 	mygo.App.SetName(desktop.AppName)
 	if mygo.App.Version() == "" {
-		mygo.App.SetVersion("0.8.6")
+		mygo.App.SetVersion("1.0.0")
 	}
 	if err := desktop.Run(desktop.New()); err != nil {
 		log.Fatal(err)

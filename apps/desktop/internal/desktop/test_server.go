@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/egoist/mygo"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 // Tests drive the real WKWebView/WebView2 via Page.Eval and CapturePage. The

@@ -1,4 +1,4 @@
-module github.com/nexmoe/eve/apps/desktop
+module github.com/nexmoe/DayBee/apps/desktop
 
 go 1.27.1
 

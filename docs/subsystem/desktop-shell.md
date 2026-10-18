@@ -18,6 +18,7 @@
 - 数据根目录由 `dataPaths` 决定。未设置 `DAYBEE_STORE_DIR` 时用应用数据下的 `DayBee`。测试且未隔离时用 `DayBee Development`。
 - `isolated` 在设置了 `DAYBEE_STORE_DIR` 或 `DAYBEE_E2E_TEST`（1）时为真。隔离运行不改登录项，见 `shouldApplyLoginItem`。
 - 产品名常量 `AppName`（DayBee）在 `branding.go`。
+- `app.go` 的 `snapshot` 将源码仓库链接写入 `App.RepositoryURL`，指向 [工作区](workspace.md) 约定的仓库。
 
 ## 运行路径
 

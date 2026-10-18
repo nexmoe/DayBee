@@ -24,7 +24,7 @@ let snapshot: DesktopSnapshot = {
   asrModels: { items: [], busy: false, downloadingModel: null },
   app: {
     name: "DayBee",
-    repositoryUrl: "https://github.com/nexmoe/eve",
+    repositoryUrl: "https://github.com/nexmoe/DayBee",
     version: "0.0.0"
   },
   devices: [],

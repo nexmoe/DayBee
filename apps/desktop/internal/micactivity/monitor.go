@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 var ErrUnsupported = errors.New("Microphone application detection is unavailable on this system")

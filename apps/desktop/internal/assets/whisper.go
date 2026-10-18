@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/asrmodel"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/asrmodel"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 // Official Whisper archives include both FP32 and INT8 weights. Only prune the

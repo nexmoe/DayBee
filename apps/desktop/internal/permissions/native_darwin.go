@@ -23,7 +23,7 @@ static void microphoneRequest(void) {
 */
 import "C"
 
-import "github.com/nexmoe/eve/apps/desktop/internal/protocol"
+import "github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 
 func nativeStatus() protocol.MicrophonePermissionState {
 	switch C.microphoneStatus() {

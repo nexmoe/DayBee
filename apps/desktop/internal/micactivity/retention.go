@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 const unlinkedRetention = 30 * 24 * time.Hour

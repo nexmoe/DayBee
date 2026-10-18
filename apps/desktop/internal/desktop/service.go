@@ -8,8 +8,8 @@ import (
 	"runtime"
 
 	"github.com/egoist/mygo"
-	"github.com/nexmoe/eve/apps/desktop/internal/permissions"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/permissions"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 func (s *DesktopService) Bootstrap() protocol.DesktopSnapshot {

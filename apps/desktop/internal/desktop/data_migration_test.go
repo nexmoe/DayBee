@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/assets"
-	"github.com/nexmoe/eve/apps/desktop/internal/config"
-	"github.com/nexmoe/eve/apps/desktop/internal/recorder"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/assets"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/config"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/recorder"
 )
 
 func putLegacyState(t *testing.T, path, contents string) {

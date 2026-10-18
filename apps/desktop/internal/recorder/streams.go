@@ -3,8 +3,8 @@ package recorder
 import (
 	"sync/atomic"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/asr"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/asr"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 // Each source owns its own VAD, offsets and archive. Only the bounded ASR

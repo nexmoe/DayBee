@@ -3,7 +3,7 @@ package desktop
 import (
 	"errors"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 // PrepareASRModel downloads without changing the active model. A failed download

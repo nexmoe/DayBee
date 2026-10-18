@@ -3,7 +3,7 @@ package desktop
 import (
 	"reflect"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 type snapshotPublication uint8

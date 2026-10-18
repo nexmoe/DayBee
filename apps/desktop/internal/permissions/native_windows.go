@@ -1,7 +1,7 @@
 package permissions
 
 import (
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 	"golang.org/x/sys/windows/registry"
 )
 

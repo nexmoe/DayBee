@@ -3,7 +3,7 @@ package assets
 import (
 	"context"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/codec"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/codec"
 )
 
 func (m *Manager) Transcode(ctx context.Context, wavPath, flacPath string) error {

@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/gen2brain/malgo"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 type NativeCapture struct {

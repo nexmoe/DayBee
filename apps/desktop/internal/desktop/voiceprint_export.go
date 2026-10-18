@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
-	"github.com/nexmoe/eve/apps/desktop/internal/recorder"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/recorder"
 )
 
 func (s *DesktopService) ExportVoiceprintSamples(recordingID, destinationDir string) (string, error) {

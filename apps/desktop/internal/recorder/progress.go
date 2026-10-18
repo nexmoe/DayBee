@@ -1,8 +1,8 @@
 package recorder
 
 import (
-	"github.com/nexmoe/eve/apps/desktop/internal/assets"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/assets"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 func (e *Engine) ModelProgress(p assets.Progress) {

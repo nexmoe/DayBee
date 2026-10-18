@@ -10,8 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/asrmodel"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/asrmodel"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 const releaseRoot = "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/"

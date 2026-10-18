@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## Unreleased
+
+### Maintenance
+
+- Rename the GitHub repository to `nexmoe/DayBee` and update the Go module path, app update feed, website links and subsystem documentation.
+
+### Fixes
+
+- Use version 1.0.0 as the fallback when launching the Go entry point directly.
+
 ## 1.0.0 - 2026-10-18
 
 ### Features

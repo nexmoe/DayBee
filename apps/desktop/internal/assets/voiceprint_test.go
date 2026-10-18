@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/voiceprint"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/voiceprint"
 )
 
 type voiceprintTransport func(*http.Request) (*http.Response, error)

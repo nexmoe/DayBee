@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/asrmodel"
-	"github.com/nexmoe/eve/apps/desktop/internal/assets"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/asrmodel"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/assets"
 )
 
 // Opt-in integration downloads the pinned real models into an isolated cache.

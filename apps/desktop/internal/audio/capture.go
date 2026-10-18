@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 var ErrDisconnected = errors.New("Microphone disconnected.")

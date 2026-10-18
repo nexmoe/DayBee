@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/audio"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/audio"
 )
 
 const (
