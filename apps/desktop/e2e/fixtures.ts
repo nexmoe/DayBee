@@ -33,8 +33,14 @@ export const test = base.extend<{
           settings.recording.outputDir = join(storeDir, "recordings");
           writeFileSync(settingsPath, JSON.stringify({ settings, nativeDevices: true }));
         }
+        const rendererPlatform = process.env.DAYBEE_TEST_RENDERER_PLATFORM;
+        if (rendererPlatform && rendererPlatform !== "windows" && rendererPlatform !== "darwin") {
+          throw new Error("DAYBEE_TEST_RENDERER_PLATFORM must be windows or darwin");
+        }
         const native = await launchNative(storeDir);
-        const page = await browser.newPage({ viewport: { width: 420, height: 620 } });
+        const userAgent = rendererPlatform && `Mozilla/5.0 (${rendererPlatform === "windows"
+          ? "Windows NT 10.0; Win64; x64" : "Macintosh; Intel Mac OS X 10_15_7"}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36`;
+        const page = await browser.newPage({ viewport: { width: 420, height: 620 }, ...(userAgent ? { userAgent } : {}) });
         let closed = false;
         const close = async () => { if (closed) return; closed = true; try { await page.close(); } finally { await native.close(); } };
         cleanup.push(close);
@@ -58,7 +64,7 @@ export const test = base.extend<{
           setInterval(() => { void testWindow.__nativeSnapshot().then(snapshot => {
             listeners.get("desktop:snapshot")?.forEach(listener => listener(snapshot));
           }); }, 100);
-        }, { platform: process.platform === "win32" ? "windows" : "darwin" });
+        }, { platform: rendererPlatform === "windows" || (!rendererPlatform && process.platform === "win32") ? "win32" : "darwin" });
         await page.goto("/");
         await expect(page.getByRole("button", { name: /Start recording|开始录音|Stop|停止/ })).toBeVisible();
         return { app: {

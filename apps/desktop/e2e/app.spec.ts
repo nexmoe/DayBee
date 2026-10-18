@@ -16,10 +16,17 @@ test("keeps recording controls compact and moves settings to sidebar", async ({ 
   const margins = await page.locator(".panel-section").first().evaluate(section => {
     const content = section.firstElementChild!.getBoundingClientRect();
     const drag = document.querySelector(".drag-region")!.getBoundingClientRect();
-    return { top: content.top, left: content.left, right: innerWidth - content.right, dragBottom: drag.bottom };
+    const controls = document.querySelector(".windows-window-controls")?.getBoundingClientRect();
+    return { top: content.top, left: content.left, right: innerWidth - content.right, dragBottom: drag.bottom,
+      windows: window.mygo!.platform === "win32", controlsBottom: controls?.bottom ?? 0 };
   });
-  expect(margins.top).toBe(margins.left);
-  expect(margins.top).toBe(margins.right);
+  expect(margins.left).toBe(margins.right);
+  if (margins.windows) {
+    expect(margins.controlsBottom).toBeGreaterThan(0);
+    expect(margins.top).toBeGreaterThanOrEqual(margins.controlsBottom);
+  } else {
+    expect(margins.top).toBe(margins.left);
+  }
   expect(margins.dragBottom).toBeLessThanOrEqual(margins.top);
   await page.getByRole("button", { name: /Open main window|打开主窗口/ }).click();
   await page.goto("/?window=main");
