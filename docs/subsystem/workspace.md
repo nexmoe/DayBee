@@ -15,7 +15,7 @@ Bun workspace 放桌面端、营销站和前后端共用的默认值。桌面端
 ## 权威来源
 
 - 脚本入口是仓库根 `package.json` 和 `apps/desktop/package.json`。
-- 打包身份在 `apps/desktop/mygo.config.ts` 的 `defineConfig`：产品名取 `productName`，标识 `build.nexmoe.daybee.desktop`，版本取 `apps/desktop/package.json` 的 `version`（当前 0.8.6）。
+- 打包身份在 `apps/desktop/mygo.config.ts` 的 `defineConfig`：产品名取 `productName`，标识 `build.nexmoe.daybee.desktop`，版本取 `apps/desktop/package.json` 的 `version`（当前 1.0.0）。
 - 前后端契约的类型在 `apps/desktop/src/renderer/src/generated/mygo.ts`。默认值在 `packages/shared/src/defaults.ts`，由 `apps/desktop/cmd/contracts/main.go` 的 `main` 写出。
 - Go 模块路径是 `github.com/nexmoe/eve/apps/desktop`，见 `apps/desktop/go.mod`。
 

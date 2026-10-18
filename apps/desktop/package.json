@@ -1,7 +1,7 @@
 {
   "name": "daybee-desktop",
   "productName": "DayBee",
-  "version": "0.8.6",
+  "version": "1.0.0",
   "description": "Desktop app for DayBee.",
   "author": "nexmoe",
   "private": true,

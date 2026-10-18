@@ -2,6 +2,58 @@
 
 All notable changes to this project are documented in this file.
 
+## 1.0.0 - 2026-10-18
+
+### Features
+
+- Add Whisper Tiny, Base and Small INT8 models, defaulting new installations and incomplete settings to Whisper Tiny while preserving existing model choices. Show verified archive download sizes in model settings.
+- Add the DayBee marketing website with product information, model descriptions, download links and search metadata.
+
+### Performance
+
+- Release idle ASR models after two minutes and on recording shutdown, pause hidden-window updates and waveform work, and use a faster FFT for the audio spectrum.
+
+### Fixes
+
+- Persist transcript capture timing before notifying history listeners so FLAC finalization preserves live transcript scene boundaries.
+
+### Desktop migration
+
+- Rename the project and desktop product to DayBee, including workspace packages, application identifiers, permissions, development routes and installers. Use DayBee data and recording folders for new installations; import existing settings, voiceprints and microphone activity once, reuse model caches and retain old recordings. Keep the GitHub repository at `nexmoe/eve`.
+
+- Send recording meters and voiceprint progress separately from saved data; publish full snapshots only when history, application annotations or settings change, and reuse unchanged timelines to reduce CPU and memory usage across both windows.
+
+- Share the packaged app's settings, recordings, model caches and voiceprints in development by default; keep tests and explicit `DAYBEE_STORE_DIR` runs isolated and skip login-item changes in development.
+
+- Clarify voiceprint recording with one description, complete passages to read aloud, explicit sample and verification actions, and localized recovery messages that retain the failed step.
+
+- Add ASR model selection to Transcribe settings with Qwen3 ASR 0.6B, FireRedASR2 AED/CTC and SenseVoice Small (2025). Show download progress and cache status, persist the selection, switch recognizers safely while idle, and identify the selected model in transcript metadata.
+
+- Repeat Me before each matching sentence, leave unidentified speech unlabelled, retain system audio labels, and simplify the voiceprint card to one status line with standard small buttons. Keep E2E windows hidden and unfocused by default.
+
+- Add optional voiceprint enrollment and verification, automatically labeling matched microphone transcript chunks as “Me” whenever a saved profile is available while retaining all text and audio. Keep the Home voiceprint card visible after canceling, skipping and enrollment; support re-enrolling and clearing the profile, and keep system-audio transcription independent.
+
+- Add shared virtual scrolling to the compact and main timelines, keeping all history searchable and preserving the reading position as new transcripts arrive.
+
+- Reduce macOS installation size by stripping local symbols from bundled native libraries before signing; verify each library's signature separately.
+- Group timeline entries by application microphone capture sessions, keeping silence, long transcripts and recording-file changes inside one entry; app filters still include only overlapping speech.
+- Keep continuous speech in one timeline entry when microphone activity begins inside the first utterance of the same app session.
+- Show only clock times in the timeline, with full dates on hover, and list apps currently using the microphone above it.
+- Show a highlighted amber update icon to the left of Pin when a new version is detected. Click to save the current recording, install and restart; failed updates can be retried without restarting.
+- Annotate transcripts with the names and icons of apps using the microphone at the same time; separate scene changes, filter transcripts and audio files by app, and retain capture timing for audio-only recordings (macOS 14.2+ on Mac).
+
+- Add a main window with the Fluid Functionalism Sidebar for History, General, Input and Transcribe. Keep recording controls and a main-window shortcut in the compact recorder; both windows share settings and recording state.
+- Open the main window on a new Home timeline that joins segmented transcriptions, reflows the full text into readable paragraphs and shows the latest content first with its source times.
+- Show the same full transcription timeline in the compact recorder, replacing recording-history summaries. New transcripts update automatically; file history remains in the main window.
+- Remove the compact recorder's separate live-transcript card. Persist each completed recognition and push the updated timeline to both windows immediately, including before recording stops. Add Home transcript search with highlighted matches and full paragraph context.
+- Without an application context, keep timeline entries within recording sessions, split speech gaps over one minute and cap merged groups at five minutes. Preserve per-utterance capture times in new recordings and original recording times when reprocessing older audio.
+- Migrate the desktop runtime to mygo 0.3.4 and Go 1.27.1, with malgo native microphone capture and application-owned recording tasks.
+- Upgrade sherpa Go/native dependencies to 1.13.8 and ONNX Runtime to 1.28.2; retain the existing Qwen3/Silero model caches and React interface.
+- Preserve speech-only WAV/FLAC archives, add bounded inference queues and safe shutdown, and import existing Electron settings without moving recordings.
+- Replace Electron packaging with native macOS/Windows builds, signed mygo updates and explicit UI/inference/endurance release gates.
+- Remove FFmpeg entirely: stream lossless FLAC encoding and WAV/FLAC decoding in Go with mewkiz/flac 1.0.14, retaining legacy recordings. Remove the obsolete FFmpeg status row as approved.
+- Migration acceptance is still in progress; see `docs/migration-verification.md` before release.
+
 ## 0.8.6 - 2026-04-08
 
 ### Fixes
