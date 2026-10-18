@@ -140,8 +140,15 @@ test("shares complete merged transcripts with Home and keeps file history in the
     element.clientHeight >= element.scrollHeight && element.clientWidth >= element.scrollWidth &&
     getComputedStyle(element).overflowWrap === "anywhere"
   ))).toBe(true);
-  await timeline.getByRole("article").last().scrollIntoViewIfNeeded();
-  await expect(timeline.getByRole("article").last()).toBeInViewport();
+  await timeline.locator(".transcription-timeline").evaluate(list => {
+    const viewport = list.closest<HTMLElement>("[data-radix-scroll-area-viewport]")!;
+    viewport.scrollTop = viewport.scrollHeight;
+  });
+  const oldestRow = timeline.locator('[data-last="true"]');
+  await expect.poll(() => oldestRow.locator(".transcript-text").evaluateAll(elements =>
+    elements.map(element => element.textContent).join("")
+  )).toBe(updatedRows.at(-1)!.text);
+  await expect(oldestRow).toBeInViewport();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 
   await openWorkspace(page);

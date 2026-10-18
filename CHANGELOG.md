@@ -23,6 +23,7 @@ All notable changes to this project are documented in this file.
 
 ### Fixes
 
+- Check the actual oldest timeline row after narrow-window scrolling, keeping virtualization from changing the acceptance test's target.
 - Give the complete 1,000-row timeline acceptance flow enough total time on Intel CI while preserving individual assertions and the normal test timeout.
 - Run voiceprint device-consistency acceptance tests in virtual time so accelerated capture does not race CI scheduling.
 - Use virtual time to verify stalled model downloads switch to the first healthy mirror at the idle deadline, without CI scheduling or disk latency causing false timeouts.
