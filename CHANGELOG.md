@@ -6,10 +6,13 @@ All notable changes to this project are documented in this file.
 
 ### Maintenance
 
+- Publish after all automated platform checks and signed-update verification pass, while reporting incomplete manual migration acceptance. Windows installers do not require Authenticode certificates.
 - Rename the GitHub repository to `nexmoe/DayBee` and update the Go module path, app update feed, website links and subsystem documentation.
 
 ### Fixes
 
+- Define Windows Core Audio GUIDs when compiling microphone activity detection, and allow the system font fallback when optional static PingFang faces are absent.
+- Reject releases with mismatched tag/update versions or missing installers.
 - Restore an intact native library when older Xcode tools cannot strip its symbols, and preserve Windows executable search paths while preparing native dependencies.
 - Use version 1.0.0 as the fallback when launching the Go entry point directly.
 

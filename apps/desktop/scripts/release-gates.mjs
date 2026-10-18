@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -24,6 +24,13 @@ export function verifyReleaseGates(report, evidenceRoot = root) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const report = JSON.parse(readFileSync(new URL("../../../docs/migration-verification.json", import.meta.url), "utf8"));
-  verifyReleaseGates(report);
-  console.log("All migration release gates passed.");
+  try {
+    verifyReleaseGates(report);
+    console.log("All migration release gates passed.");
+  } catch (error) {
+    if (!process.argv.includes("--report")) throw error;
+    const message = `${error.message}\nManual migration acceptance remains incomplete; see docs/migration-verification.md.\nPublication requires all automated native checks, complete installers and verified signed updates.\nWindows installers do not use Authenticode signing.\n`;
+    console.warn(message);
+    if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, message);
+  }
 }

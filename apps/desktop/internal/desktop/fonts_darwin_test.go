@@ -1,6 +1,7 @@
 package desktop
 
 import (
+	"errors"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -9,6 +10,9 @@ import (
 
 func TestInstalledPublicFont(t *testing.T) {
 	path, err := installedFontPath()
+	if errors.Is(err, errPublicFontUnavailable) {
+		t.Skip("Optional static PingFang faces are not installed; the renderer uses system fonts")
+	}
 	if err != nil {
 		t.Fatal(err)
 	}

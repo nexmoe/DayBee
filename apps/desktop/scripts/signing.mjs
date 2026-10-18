@@ -29,8 +29,4 @@ if (process.platform === "darwin") {
   execFileSync("xcrun", ["notarytool", "store-credentials", "daybee-notary", "--key", key,
     "--key-id", requireSecret("APPLE_API_KEY_ID"), "--issuer", requireSecret("APPLE_API_ISSUER")], { stdio: "pipe" });
   exportEnv("MYGO_NOTARY_PROFILE", "daybee-notary");
-} else if (process.platform === "win32") {
-  const path = join(temporary, "daybee-signing.pfx");
-  writeFileSync(path, Buffer.from(requireSecret("WIN_CERT_P12_BASE64"), "base64"));
-  exportEnv("MYGO_WINDOWS_CERTIFICATE", path);
 }

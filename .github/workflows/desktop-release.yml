@@ -61,7 +61,7 @@ jobs:
         working-directory: apps/desktop
         run: node scripts/desktop.mjs vet
       - name: Import signing credentials for releases
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') && runner.os == 'macOS'
         shell: bash
         env:
           MAC_CERT_P12_BASE64: ${{ secrets.MAC_CERT_P12_BASE64 }}
@@ -69,13 +69,11 @@ jobs:
           APPLE_API_KEY_P8_BASE64: ${{ secrets.APPLE_API_KEY_P8_BASE64 }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-          WIN_CERT_P12_BASE64: ${{ secrets.WIN_CERT_P12_BASE64 }}
         run: node apps/desktop/scripts/signing.mjs
       - name: Build native app and signed updates
         working-directory: apps/desktop
         env:
           MYGO_UPDATER_PRIVATE_KEY: ${{ startsWith(github.ref, 'refs/tags/v') && secrets.MYGO_UPDATER_PRIVATE_KEY || '' }}
-          MYGO_WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WIN_CERT_P12_PASSWORD }}
         run: bun run build
       - name: Native window smoke
         working-directory: apps/desktop
@@ -100,8 +98,8 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with: {node-version: "24"}
-      - name: Enforce UI, native inference, minimum OS and endurance acceptance
-        run: node apps/desktop/scripts/release-gates.mjs
+      - name: Report outstanding manual migration acceptance
+        run: node apps/desktop/scripts/release-gates.mjs --report
       - uses: actions/download-artifact@v4
         with: {pattern: daybee-*, path: artifacts}
       - name: Collect installers, signed updates and checksums

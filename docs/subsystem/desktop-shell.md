@@ -72,7 +72,7 @@ macOS 上 `installWindowCompatibility` 在内容视图顶部加一层 `DayBeeLeg
 
 ### 字体
 
-macOS 的 `registerFontCompatibility` 用 Core Text 找同一套静态苹方：`PingFangSC-Regular`、`PingFangSC-Medium`、`PingFangSC-Semibold`。三个面必须来自同一个字体文件。协议 `daybee-font` 只提供 `system/pingfang.ttc`。渲染器在 `styles.css` 用这个 URL 加 PostScript 片段注册 `DayBee Legacy System`。Windows 的 `registerFontCompatibility` 返回 nil。
+macOS 的 `registerFontCompatibility` 用 Core Text 找同一套静态苹方：`PingFangSC-Regular`、`PingFangSC-Medium`、`PingFangSC-Semibold`。三个面必须来自同一个字体文件。协议 `daybee-font` 只提供 `system/pingfang.ttc`。渲染器在 `styles.css` 用这个 URL 加 PostScript 片段注册 `DayBee Legacy System`。未安装这套可选字体时记录信息日志，继续使用 CSS 中的系统字体回退；不要求用户或 CI 额外安装苹果字体。`TestInstalledPublicFont` 只在该字体不可用时跳过，找到文件后的读取和资源协议检查仍须通过。Windows 的 `registerFontCompatibility` 返回 nil。
 
 ### 测试服务
 

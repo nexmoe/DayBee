@@ -56,9 +56,11 @@ mygo 再执行 `buildCommand`（`bun run build:web`）并把前端产物从 `out
 
 ### 发布检查
 
-`.github/workflows/desktop-release.yml` 在 `macos-15`、`macos-15-intel`、`windows-latest` 上跑同一套原生检查。标签 `v*` 才导入签名材料并带上 `MYGO_UPDATER_PRIVATE_KEY`。
+`.github/workflows/desktop-release.yml` 在 `macos-15`、`macos-15-intel`、`windows-latest` 上跑同一套原生检查。标签 `v*` 才为 macOS 导入 Developer ID 和公证材料，并为三个平台带上 `MYGO_UPDATER_PRIVATE_KEY`。Windows 安装包不做 Authenticode 证书签名；更新归档仍必须通过 Ed25519 签名校验。
 
-三个 native job 都通过后，`publish` 先跑 `apps/desktop/scripts/release-gates.mjs`。它读 `docs/migration-verification.json`，要求每个目标的界面、原生推理、最低系统、干净安装、签名更新恢复都为真，并且 `enduranceHours` 至少为 8。当前这份 JSON 没有满足这些门，标签发布会被挡住。
+三个 native job 都通过后，`publish` 用 `apps/desktop/scripts/release-gates.mjs --report` 在日志及 Actions summary 中报告未完成的人工迁移验收。根据本次 1.0.0 发布约定，这份报告不阻止发布，也不改写 `docs/migration-verification.json` 的结果。直接运行脚本仍严格检查每个目标的界面、原生推理、最低系统、干净安装、签名更新恢复及至少 8 小时实录，未完成时返回非零。
+
+`apps/desktop/scripts/collect-release.mjs` 必须验证标签与包版本一致、三个目标的更新版本与包版本一致、更新归档的长度与签名正确、各平台安装包齐全且无同名内容冲突，才会生成校验和并交给 GitHub Release 发布。
 
 ## 约束与失败行为
 
@@ -86,6 +88,6 @@ node apps/desktop/scripts/desktop.mjs vet
 node apps/desktop/scripts/release-gates.mjs
 ```
 
-`test:release` 跑 `apps/desktop/scripts/release-artifacts.test.mjs` 和 `apps/desktop/scripts/prepare-native.test.mjs`，覆盖发布产物、Windows 路径保留及 strip 失败后的原始库恢复。`release-gates.mjs` 在门未通过时以非零退出，这是当前数据的预期结果。
+`test:release` 跑 `apps/desktop/scripts/release-artifacts.test.mjs` 和 `apps/desktop/scripts/prepare-native.test.mjs`，覆盖版本与标签匹配、安装包完整性、更新签名、文件冲突、Windows 路径保留及 strip 失败后的原始库恢复。`release-gates.mjs` 默认在人工门未通过时以非零退出；`--report` 保留这些事实并正常退出。
 
 链接：`bun run check:docs`

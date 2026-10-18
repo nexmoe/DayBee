@@ -1,6 +1,6 @@
 # mygo migration verification
 
-Updated: 2026-10-09. **Implementation is not approved for release.** Local backend, inference and package checks pass on Apple Silicon; visible-window parity and the remaining platform acceptance runs are outstanding. `migration-verification.json` keeps publication blocked until those checks have evidence.
+Updated: 2026-10-18. **Manual migration acceptance remains incomplete.** Local backend, inference and package checks pass on Apple Silicon; visible-window parity and the remaining platform acceptance runs are outstanding. For 1.0.0 the user explicitly approved publication after all automated checks pass, while retaining these incomplete manual results. `migration-verification.json` is unchanged; CI reports its outstanding items without treating them as a publication gate.
 
 ## Implementation and versions
 
@@ -79,10 +79,10 @@ Normal builds and development use the same `Eve Recorder` data by default, prefe
 
 The first Electron→mygo upgrade requires manual installation: quit and replace the app on macOS; on Windows, quit and uninstall the old client while preserving user data, then install the new client. Subsequent versions use mygo signed updates, deferred until recording, finalization and batch transcription are idle.
 
-The public update key is checked in at `apps/desktop/build/mygo-update.pub`; the private key is outside the repository and configured as the CI secret `MYGO_UPDATER_PRIVATE_KEY`. Distribution signing/notarization and real signed-update recovery have not been accepted locally. Windows certificate secrets still need configuration.
+The public update key is checked in at `apps/desktop/build/mygo-update.pub`; the private key is outside the repository and configured as the CI secret `MYGO_UPDATER_PRIVATE_KEY`. Distribution signing/notarization and real signed-update recovery have not been accepted locally. macOS releases use the configured Developer ID and notarization credentials. Windows installers intentionally have no Authenticode certificate signature, as confirmed by the user; their updater archives must still pass Ed25519 verification.
 
-## Release gates still open
+## Manual acceptance still open
 
-All three targets must pass visible UI parity, native inference, their minimum supported OS, clean-machine installation, signed-update recovery and at least eight hours of real recording. Currently only arm64 native inference is accepted in the gate file. No minimum-OS, Windows, Intel Mac, clean-machine, notarization or endurance result is inferred from the local build. Publication remains blocked by `apps/desktop/scripts/release-gates.mjs`.
+The remaining manual acceptance covers visible UI parity, native inference, the minimum supported OS, clean-machine installation, signed-update recovery and at least eight hours of real recording on each target. Currently only arm64 native inference is accepted in the report. No minimum-OS, Windows, Intel Mac, clean-machine, notarization or endurance result is inferred from the local build. `apps/desktop/scripts/release-gates.mjs` still fails by default for incomplete acceptance; CI uses its `--report` mode under the approved 1.0.0 release policy. Publication requires all three native CI jobs, complete installers, matching tag/package/update versions and verified update signatures.
 
 Reproduction commands and the native inference environment variables are documented in [workspace](subsystem/workspace.md) and [asr](subsystem/asr.md).
