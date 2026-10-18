@@ -62,6 +62,8 @@
 
 设置重启验收在点击开关后，先等待原生 `Bootstrap` 读到已保存值，再结束隔离测试进程；界面的乐观状态本身不代表写盘完成。
 
+实时转写验收先等待原生状态同时满足 `recording` 和 `asrEnabled`，再注入已完成识别的语音。浏览器点击返回只代表事件已发送，不能用空时间线代替录音已启动的确认；两窗和搜索用例共用该步骤。
+
 Vitest 只跑 `src/**/*.test.ts`，环境是 node，不挂浏览器。
 
 直接向隔离输出目录写入 JSON 的 E2E 用例要调用 `e2e/fixtures.ts` 的 `app.refreshHistory`。它通过测试引擎的 `RunTranscribe` 走正常的历史刷新路径，不等待五分钟兜底扫描。实时转写用例仍调用 `app.completeSpeech`，验证 `HistoryChanges` 事件即时刷新。

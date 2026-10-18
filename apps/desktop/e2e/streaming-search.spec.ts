@@ -1,12 +1,20 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import type { Page } from "@playwright/test";
 import type { DesktopSnapshot } from "@daybee/shared";
 import { expect, test } from "./fixtures";
+
+async function startRecording(page: Page) {
+  await page.getByRole("button", { name: /Start recording|开始录音/ }).click();
+  await expect.poll(async () => (await page.evaluate(() =>
+    window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"))).status
+  ).toMatchObject({ recording: true, asrEnabled: true });
+}
 
 for (const role of ["compact", "main"] as const) {
   test(`streams completed speech into the ${role} timeline before recording stops`, async ({ launchApp }) => {
     const { app, page } = await launchApp();
-    await page.getByRole("button", { name: /Start recording|开始录音/ }).click();
+    await startRecording(page);
     if (role === "main") {
       await page.getByRole("button", { name: /Open main window|打开主窗口/ }).click();
       await page.goto("/?window=main");
@@ -40,7 +48,7 @@ test("searches all saved speech, highlights literal matches and updates active s
     audio_path: join(directory, `${index}.flac`), segment_start_time: new Date(previousDay + index * 30_000).toISOString(), status: "ok", text
   })));
   await app.refreshHistory();
-  await page.getByRole("button", { name: /Start recording|开始录音/ }).click();
+  await startRecording(page);
   await page.getByRole("button", { name: /Open main window|打开主窗口/ }).click();
   await page.goto("/?window=main");
   await page.setViewportSize({ width: 1000, height: 760 });
