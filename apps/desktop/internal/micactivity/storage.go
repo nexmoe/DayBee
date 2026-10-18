@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/config"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/config"
 )
 
 func (m *Monitor) load() error {
@@ -52,6 +52,11 @@ func (m *Monitor) load() error {
 }
 
 func (m *Monitor) save() error {
+	if len(m.dirtyDays) > 0 {
+		if err := os.MkdirAll(m.directory, 0700); err != nil {
+			return fmt.Errorf("Save microphone history: %w", err)
+		}
+	}
 	for day := range m.dirtyDays {
 		entries := []entry{}
 		for _, item := range m.entries {

@@ -22,7 +22,7 @@ async function launchModels(page: Page, language: "zh-CN" | "en-US") {
       { id: "firered-asr2-ctc", name: "FireRedASR2 CTC", estimatedBytes: 520_516_278, ready: false },
       { id: "sensevoice-2025", name: "SenseVoice Small (2025)", estimatedBytes: 165_783_878, ready: false }
     ] },
-    app: { name: "DayBee", repositoryUrl: "https://github.com/nexmoe/eve", version: "0.8.6" },
+    app: { name: "DayBee", repositoryUrl: "https://github.com/nexmoe/DayBee", version: "0.8.6" },
     devices: [], engineReady: true, history: [],
     microphoneActivity: { supported: false, error: null, items: [] },
     voiceprint: { enrolled: false, phase: "idle", step: 0, speechSeconds: 0, targetSeconds: 5, level: 0, progress: null, message: "", error: null },

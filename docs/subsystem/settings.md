@@ -14,7 +14,7 @@
 
 - 文件是数据根目录下的 `desktop-settings.json`。根目录规则见 [desktop-shell.md](desktop-shell.md)。
 - 文档含 `settings`、`windowState`、`nativeDevices`。当前默认把 `nativeDevices` 写成 true。
-- 原生默认值由 `protocol.DefaultSettings` 定义。`cmd/contracts` 导出到 `packages/shared/src/defaults.ts` 的 `DEFAULT_SETTINGS` 是 bootstrap 前的占位值，其中 ASR 统一回退 Tiny；原生快照返回真正的平台模型默认。生成时传入的输出目录是 `"recordings"`。真正打开 Store 时，输出目录是文稿目录下的 `DayBee`。
+- 原生默认值由 `protocol.DefaultSettings` 按本机平台定义。`cmd/contracts` 用 `protocol.DefaultSettingsForPlatform("recordings", "darwin")` 生成 `packages/shared/src/defaults.ts` 的 `DEFAULT_SETTINGS`，并把 ASR 固定为 bootstrap 前的 Tiny 后备值，保证生成机器的系统模型状态不影响共享文件。共享值用于页面初始化，原生 `Bootstrap` 和 Store 规范化仍提供实际平台的设置；Windows 回声消除默认关闭。真正打开 Store 时，输出目录是文稿目录下的 `DayBee`。
 
 当前默认：
 

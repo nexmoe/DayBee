@@ -141,20 +141,26 @@ for (const language of ["zh-CN", "en-US"] as const) for (const theme of ["light"
       .toBe(theme === "dark" ? "rgba(255, 255, 255, 0.9)" : "rgba(0, 0, 0, 0.85)");
     for (const [size, width, height] of [["regular", 420, 620], ["minimum", 380, 480]] as const) {
       await page.setViewportSize({ width, height });
+      await page.evaluate(() => document.fonts.ready);
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await expect.poll(() => home.locator(".transcript-event").evaluateAll(elements => elements.every((element, index) => {
         const next = elements[index + 1];
         return !next || Math.abs(next.getBoundingClientRect().top - element.getBoundingClientRect().bottom) <= 1;
       }))).toBe(true);
-      const tabs = await page.getByRole("tablist").boundingBox();
-      const guide = await page.getByTestId("voiceprint-guide").boundingBox();
-      const activity = await page.getByTestId("speech-activity").boundingBox();
-      const timestamp = await home.locator("time").first().boundingBox();
-      expect(guide).not.toBeNull();
-      expect(guide!.y).toBeGreaterThanOrEqual(tabs!.y + tabs!.height);
-      expect(activity!.y).toBeGreaterThanOrEqual(guide!.y + guide!.height);
-      expect(timestamp!.y).toBeGreaterThanOrEqual(activity!.y + activity!.height);
-      expect(timestamp!.y - activity!.y - activity!.height).toBeLessThan(48);
+      await expect(page.getByTestId("voiceprint-guide")).toBeVisible();
+      await expect(page.getByTestId("speech-activity")).toBeVisible();
+      await expect(home.locator("time").first()).toBeVisible();
+      // Read a coherent frame while fonts and narrow layouts settle.
+      await expect.poll(() => home.evaluate(element => {
+        const tabs = document.querySelector('[role="tablist"]')?.getBoundingClientRect();
+        const guide = element.querySelector('[data-testid="voiceprint-guide"]')?.getBoundingClientRect();
+        const activity = element.querySelector('[data-testid="speech-activity"]')?.getBoundingClientRect();
+        const timestamp = element.querySelector("time")?.getBoundingClientRect();
+        if (!tabs || !guide || !activity || !timestamp) return null;
+        const gap = timestamp.top - activity.bottom;
+        return { belowTabs: guide.top >= tabs.bottom, guideClear: activity.top >= guide.bottom,
+          transcriptClear: gap >= 0, compactGap: gap < 48 };
+      })).toMatchObject({ belowTabs: true, guideClear: true, transcriptClear: true, compactGap: true });
       await page.evaluate(() => document.fonts.ready);
       const screenshot = testInfo.outputPath(`home-${language}-${theme}-${size}.png`);
       await page.screenshot({ path: screenshot, animations: "disabled" });

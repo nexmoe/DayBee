@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/asr"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/asr"
 )
 
 func perfMeasureClip(t *testing.T, manager *Manager, recognizer asr.Recognizer, clip perfClip) perfClipResult {

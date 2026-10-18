@@ -3,7 +3,7 @@ package recorder
 import (
 	"math"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/voiceprint"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/voiceprint"
 )
 
 // utteranceVerdict reads confidence spans for one VAD utterance.

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 func TestRetiredRecordingSettingsAreIgnoredAndRemovedOnSave(t *testing.T) {

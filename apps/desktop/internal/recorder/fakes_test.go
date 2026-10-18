@@ -7,10 +7,10 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/asr"
-	"github.com/nexmoe/eve/apps/desktop/internal/audio"
-	"github.com/nexmoe/eve/apps/desktop/internal/codec"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/asr"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/audio"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/codec"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 type fakeCapture struct {

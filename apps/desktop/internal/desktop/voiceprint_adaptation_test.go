@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/config"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
-	"github.com/nexmoe/eve/apps/desktop/internal/voiceprint"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/config"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/voiceprint"
 )
 
 func TestVoiceprintAdaptationDefaultsOffAndFollowsStoredSetting(t *testing.T) {
@@ -130,7 +131,7 @@ func TestClearVoiceprintRefreshesReferenceWhenSettingsSaveFails(t *testing.T) {
 	resetter := &referenceResetter{engine: s.engine}
 	s.engine = resetter
 	s.voiceSetup = newTestVoiceprintSetup(s)
-	if err := os.Chmod(root, 0555); err != nil {
+	if err := blockSettingsWrite(root); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.ClearVoiceprint(); err == nil {
@@ -180,16 +181,23 @@ type applyFailEngine struct {
 }
 
 func (e applyFailEngine) Apply(protocol.AppSettings) error {
-	if err := os.Chmod(e.root, 0555); err != nil {
+	if err := blockSettingsWrite(e.root); err != nil {
 		return err
 	}
 	return errors.New("apply failed")
 }
 
+func blockSettingsWrite(root string) error {
+	path := filepath.Join(root, "desktop-settings.json")
+	if err := os.Rename(path, path+".offline"); err != nil {
+		return err
+	}
+	return os.Mkdir(path, 0700)
+}
+
 func adaptationService(t *testing.T) (*DesktopService, *voiceprint.Manager, string) {
 	t.Helper()
 	root := t.TempDir()
-	t.Cleanup(func() { _ = os.Chmod(root, 0700) })
 	store, err := config.Open(root, t.TempDir(), nil, false)
 	if err != nil {
 		t.Fatal(err)

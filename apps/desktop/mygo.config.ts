@@ -44,6 +44,6 @@ export default defineConfig(({ command }) => ({
     ...(process.env.MYGO_WINDOWS_SIGN_COMMAND ? { signCommand: process.env.MYGO_WINDOWS_SIGN_COMMAND } : {})
   },
   ...(publicKey ? {
-    updates: { publicKey, github: "nexmoe/eve", tagPrefix: "v", deltas: 0, changelog: "../../CHANGELOG.md" }
+    updates: { publicKey, github: "nexmoe/DayBee", tagPrefix: "v", deltas: 0, changelog: "../../CHANGELOG.md" }
   } : {})
 }));

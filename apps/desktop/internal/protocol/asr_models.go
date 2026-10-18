@@ -1,6 +1,6 @@
 package protocol
 
-import "github.com/nexmoe/eve/apps/desktop/internal/speechanalyzer"
+import "github.com/nexmoe/DayBee/apps/desktop/internal/speechanalyzer"
 
 type ASRModel string
 

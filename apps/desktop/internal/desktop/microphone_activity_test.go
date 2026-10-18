@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/micactivity"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/micactivity"
 )
 
 func TestMicrophoneSnapshotReusesHistoryAndRefreshesTransitions(t *testing.T) {

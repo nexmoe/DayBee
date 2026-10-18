@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/speechanalyzer"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/speechanalyzer"
 )
 
 type speechRecognizer struct {

@@ -13,8 +13,8 @@ export const site = {
 	imageAlt: "DayBee, a local desktop recorder with live transcription",
 	imageWidth: 1200,
 	imageHeight: 630,
-	github: "https://github.com/nexmoe/eve",
-	releases: "https://github.com/nexmoe/eve/releases",
+	github: "https://github.com/nexmoe/DayBee",
+	releases: "https://github.com/nexmoe/DayBee/releases",
 } as const;
 
 export const faqs = [

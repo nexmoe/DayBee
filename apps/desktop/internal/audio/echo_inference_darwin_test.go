@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/asr"
-	"github.com/nexmoe/eve/apps/desktop/internal/codec"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/asr"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/codec"
 )
 
 // Acceptance needs both known speaker playback and real near-end speech.

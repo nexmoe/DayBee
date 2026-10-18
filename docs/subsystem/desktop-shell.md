@@ -7,7 +7,7 @@
 - `apps/desktop/main.go` 的 `main` 在 `DAYBEE_VERIFY_AUDIO`（1）时走 `codec.Diagnostic`，在 `DAYBEE_VERIFY_NATIVE`（1）时走 `asr.CheckVersion`。否则调用 `desktop.Run(desktop.New())`。
 - `--mcp` 走独立的 stdio 文稿读取入口，不创建桌面服务或窗口。连接和读取契约见 [mcp.md](mcp.md)。
 - `apps/desktop/internal/desktop/app.go` 的 `Run` 注册生命周期。`initialize` 打开数据目录、设置、引擎和窗口。
-- 窗口、托盘、拖拽和字体在 `window.go`、`window_controls.go`、`window_drag_darwin.go`、`fonts_darwin.go`。Windows 对应文件是空实现。
+- 窗口、托盘、拖拽和字体在 `window.go`、`window_controls.go`、`window_drag_darwin.go`、`fonts_darwin.go`。Windows 的 `window_windows.go` 补偿无边框窗口的内容区尺寸，字体兼容是空实现。
 - 页面进程退出后的一次自动重载在 `page_recovery.go`。
 - 更新检查和安装在 `updater.go`。
 - 原生验收用的回环服务在 `test_server.go`。普通开发和发布不启动它。
@@ -19,6 +19,7 @@
 - 数据根目录由 `dataPaths` 决定。未设置 `DAYBEE_STORE_DIR` 时用应用数据下的 `DayBee`。测试且未隔离时用 `DayBee Development`。
 - `isolated` 在设置了 `DAYBEE_STORE_DIR` 或 `DAYBEE_E2E_TEST`（1）时为真。隔离运行不改登录项，见 `shouldApplyLoginItem`。
 - 产品名常量 `AppName`（DayBee）在 `branding.go`。
+- `app.go` 的 `snapshot` 将源码仓库链接写入 `App.RepositoryURL`，指向 [工作区](workspace.md) 约定的仓库。
 
 ## 运行路径
 
@@ -43,6 +44,8 @@
 `OpenRecorderWindow` 仅显示并聚焦已有紧凑窗，不创建额外窗口。`windowForRole` 只接受 `compact`。`CloseWindow`、`MinimizeWindow`、`SetWindowPinned` 都作用于这扇窗。录音属于进程，切换 tab、隐藏和重载页面不停止录音。
 
 macOS 上 `installWindowCompatibility` 在内容视图顶部加一层高度 16 的 `DayBeeLegacyDragView`，与 CSS 紧凑窗的 `--panel-gutter`（1rem）拖拽区一致。双击按系统的 `AppleActionOnDoubleClick` 最小化或缩放。Windows 不安装该拖拽层。
+
+Windows 的同名函数比较 `Size` 与 `ContentSize` 的实际 DIP 差值，再扩大外框，补偿 mygo 0.3.4 保留的隐形缩放边框。紧凑窗页面仍为 420×620，主窗口页面仍为 1000×760，不把固定像素边框写死到尺寸中。
 
 ### 托盘与电源
 
@@ -70,7 +73,7 @@ macOS 上 `installWindowCompatibility` 在内容视图顶部加一层高度 16 �
 
 ### 字体
 
-macOS 的 `registerFontCompatibility` 用 Core Text 找同一套静态苹方：`PingFangSC-Regular`、`PingFangSC-Medium`、`PingFangSC-Semibold`。三个面必须来自同一个字体文件。协议 `daybee-font` 只提供 `system/pingfang.ttc`。渲染器在 `styles.css` 用这个 URL 加 PostScript 片段注册 `DayBee Legacy System`。Windows 的 `registerFontCompatibility` 返回 nil。
+macOS 的 `registerFontCompatibility` 用 Core Text 找同一套静态苹方：`PingFangSC-Regular`、`PingFangSC-Medium`、`PingFangSC-Semibold`。三个面必须来自同一个字体文件。协议 `daybee-font` 只提供 `system/pingfang.ttc`。渲染器在 `styles.css` 用这个 URL 加 PostScript 片段注册 `DayBee Legacy System`。未安装这套可选字体时记录信息日志，继续使用 CSS 中的系统字体回退；不要求用户或 CI 额外安装苹果字体。`TestInstalledPublicFont` 只在该字体不可用时跳过，找到文件后的读取和资源协议检查仍须通过。Windows 的 `registerFontCompatibility` 返回 nil。
 
 ### 测试服务
 

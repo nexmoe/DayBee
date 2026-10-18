@@ -7,11 +7,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 func main() {
-	defaults := protocol.DefaultSettings("recordings")
+	defaults := protocol.DefaultSettingsForPlatform("recordings", "darwin")
 	// Bootstrap supplies the native platform default. Keep the renderer's
 	// pre-bootstrap fallback independent of the build machine's system model.
 	defaults.Recording.ASRModel = protocol.ASRWhisperTiny

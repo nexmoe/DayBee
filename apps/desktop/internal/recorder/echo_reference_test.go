@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/audio"
-	"github.com/nexmoe/eve/apps/desktop/internal/config"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/audio"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/config"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 func TestEchoReferenceSlicePadGapAndReset(t *testing.T) {

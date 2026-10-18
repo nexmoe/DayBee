@@ -13,8 +13,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/asrmodel"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/asrmodel"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 // Tiny deterministic tar.bz2 fixtures contain model.int8.onnx and, in the

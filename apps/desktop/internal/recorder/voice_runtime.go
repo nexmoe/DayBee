@@ -3,7 +3,7 @@ package recorder
 import (
 	"strings"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/voiceprint"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/voiceprint"
 )
 
 func (e *Engine) noteVoiceContext(device string) {

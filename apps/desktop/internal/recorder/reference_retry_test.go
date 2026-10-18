@@ -6,13 +6,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/audio"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/audio"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 type recoverableReferenceCapture struct {
 	fakeCapture
 	denied atomic.Bool
+}
+
+func (c *recoverableReferenceCapture) Devices() ([]protocol.DeviceInfo, error) {
+	devices, err := c.fakeCapture.Devices()
+	// sourcePacket identifies microphone packets by their source. Keep that
+	// fixture device present so the initial poll cannot trigger a real switch.
+	return append(devices, protocol.DeviceInfo{ID: string(protocol.SourceMicrophone), Label: "Test Microphone"}), err
 }
 
 func (c *recoverableReferenceCapture) Start(options audio.CaptureOptions, consume func(audio.Packet), fail func(error)) error {

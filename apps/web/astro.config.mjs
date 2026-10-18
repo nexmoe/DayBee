@@ -3,7 +3,7 @@ import { defineConfig } from "astro/config";
 
 // Canonical origin for sitemap, robots.txt, Open Graph, and JSON-LD.
 // Set SITE_URL when the production hostname changes.
-const site = (process.env.SITE_URL ?? "https://daybee.app").replace(/\/$/, "");
+const site = (process.env.SITE_URL ?? "https://daybee.co").replace(/\/$/, "");
 
 if (!/^https?:\/\//.test(site)) {
 	throw new Error("SITE_URL must be an absolute http(s) URL");

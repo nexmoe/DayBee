@@ -10,9 +10,9 @@ import (
 
 	"github.com/egoist/mygo"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
-	"github.com/nexmoe/eve/apps/desktop/internal/recorder"
-	"github.com/nexmoe/eve/apps/desktop/internal/transcriptmcp"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/recorder"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/transcriptmcp"
 )
 
 // RunMCP runs without starting the desktop service, recording engine or windows.

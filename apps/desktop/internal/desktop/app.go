@@ -14,16 +14,16 @@ import (
 	"time"
 
 	"github.com/egoist/mygo"
-	"github.com/nexmoe/eve/apps/desktop/internal/asr"
-	"github.com/nexmoe/eve/apps/desktop/internal/asrmodel"
-	"github.com/nexmoe/eve/apps/desktop/internal/assets"
-	"github.com/nexmoe/eve/apps/desktop/internal/audio"
-	"github.com/nexmoe/eve/apps/desktop/internal/config"
-	"github.com/nexmoe/eve/apps/desktop/internal/micactivity"
-	"github.com/nexmoe/eve/apps/desktop/internal/permissions"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
-	"github.com/nexmoe/eve/apps/desktop/internal/recorder"
-	"github.com/nexmoe/eve/apps/desktop/internal/voiceprint"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/asr"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/asrmodel"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/assets"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/audio"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/config"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/micactivity"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/permissions"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/recorder"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/voiceprint"
 )
 
 var SnapshotEvent = mygo.NewEvent[protocol.DesktopSnapshot]("desktop:snapshot")
@@ -381,7 +381,7 @@ func (s *DesktopService) snapshot() protocol.DesktopSnapshot {
 		s.mu.RUnlock()
 		return snapshot
 	}
-	snapshot := protocol.DesktopSnapshot{App: protocol.AppInfoSnapshot{Name: AppName, RepositoryURL: "https://github.com/nexmoe/eve", Version: mygo.App.Version()},
+	snapshot := protocol.DesktopSnapshot{App: protocol.AppInfoSnapshot{Name: AppName, RepositoryURL: "https://github.com/nexmoe/DayBee", Version: mygo.App.Version()},
 		Permission: s.permission, History: append([]protocol.RecordingHistoryItem{}, s.history...), Updater: s.updater, WindowPinned: s.pinned,
 		Settings: protocol.DefaultSettings(""), Status: protocol.DefaultStatus(), Devices: []protocol.DeviceInfo{}}
 	err := s.initError

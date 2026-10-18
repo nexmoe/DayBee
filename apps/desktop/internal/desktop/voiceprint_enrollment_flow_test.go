@@ -6,12 +6,13 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"testing/synctest"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/asr"
-	"github.com/nexmoe/eve/apps/desktop/internal/audio"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
-	"github.com/nexmoe/eve/apps/desktop/internal/voiceprint"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/asr"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/audio"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/voiceprint"
 )
 
 type enrollmentHoldVAD struct {
@@ -140,60 +141,67 @@ func TestReferenceLossDoesNotStayPaused(t *testing.T) {
 func TestEnrollmentRejectsDeviceChangeOnEveryStep(t *testing.T) {
 	for _, changeAt := range []int{1, 2, 3} {
 		t.Run(string(rune('0'+changeAt)), func(t *testing.T) {
-			v, profiles, closed, active := enrollmentHarness(t, true, true)
-			var opened atomic.Int32
-			v.newCapture = func() (enrollmentCapture, error) {
-				device := "native:enrollment-mic"
-				if int(opened.Add(1))-1 == changeAt {
-					device = "native:other-mic"
+			synctest.Test(t, func(t *testing.T) {
+				v, profiles, closed, active := enrollmentHarness(t, true, true)
+				var opened atomic.Int32
+				v.newCapture = func() (enrollmentCapture, error) {
+					device := "native:enrollment-mic"
+					if int(opened.Add(1))-1 == changeAt {
+						device = "native:other-mic"
+					}
+					return &enrollmentTestCapture{speech: true, device: device, closed: closed, active: active}, nil
 				}
-				return &enrollmentTestCapture{speech: true, device: device, closed: closed, active: active}, nil
-			}
-			if err := v.Start(); err != nil {
-				t.Fatal(err)
-			}
-			for range changeAt {
-				waitEnrollment(t, v, protocol.VoiceprintSampleReady)
-				if err := v.Advance(); err != nil {
+				if err := v.Start(); err != nil {
 					t.Fatal(err)
 				}
-			}
-			waitEnrollment(t, v, protocol.VoiceprintError)
-			message := enrollmentError(v)
-			v.Cancel()
-			if message != voiceprintErrDevice || profiles.saved.Load() != 0 || profiles.embedded.Load() != int32(changeAt) || active.Load() != 0 {
-				t.Fatalf("%q embedded %d saved %d", message, profiles.embedded.Load(), profiles.saved.Load())
-			}
+				for range changeAt {
+					waitEnrollment(t, v, protocol.VoiceprintSampleReady)
+					if err := v.Advance(); err != nil {
+						t.Fatal(err)
+					}
+				}
+				waitEnrollment(t, v, protocol.VoiceprintError)
+				message := enrollmentError(v)
+				v.Cancel()
+				if message != voiceprintErrDevice || profiles.saved.Load() != 0 || profiles.embedded.Load() != int32(changeAt) || active.Load() != 0 {
+					t.Fatalf("%q embedded %d saved %d", message, profiles.embedded.Load(), profiles.saved.Load())
+				}
+			})
 		})
 	}
 }
 
 func TestEnrollmentRejectsEchoChangeBeforeCapture(t *testing.T) {
+	if !protocol.SupportsEchoCancellation {
+		t.Skip("Echo cancellation cannot change on this platform")
+	}
 	for _, changeAt := range []int{1, 2, 3} {
 		t.Run(string(rune('0'+changeAt)), func(t *testing.T) {
-			v, profiles, closed, active := enrollmentHarness(t, true, true)
-			if err := v.Start(); err != nil {
-				t.Fatal(err)
-			}
-			for step := range changeAt {
-				waitEnrollment(t, v, protocol.VoiceprintSampleReady)
-				if step == changeAt-1 {
-					settings := v.s.store.Settings()
-					settings.Recording.EchoCancellation = !settings.Recording.EchoCancellation
-					if _, err := v.s.store.Save(settings); err != nil {
+			synctest.Test(t, func(t *testing.T) {
+				v, profiles, closed, active := enrollmentHarness(t, true, true)
+				if err := v.Start(); err != nil {
+					t.Fatal(err)
+				}
+				for step := range changeAt {
+					waitEnrollment(t, v, protocol.VoiceprintSampleReady)
+					if step == changeAt-1 {
+						settings := v.s.store.Settings()
+						settings.Recording.EchoCancellation = !settings.Recording.EchoCancellation
+						if _, err := v.s.store.Save(settings); err != nil {
+							t.Fatal(err)
+						}
+					}
+					if err := v.Advance(); err != nil {
 						t.Fatal(err)
 					}
 				}
-				if err := v.Advance(); err != nil {
-					t.Fatal(err)
+				waitEnrollment(t, v, protocol.VoiceprintError)
+				message := enrollmentError(v)
+				v.Cancel()
+				if message != voiceprintErrDevice || profiles.saved.Load() != 0 || int(closed.Load()) != changeAt || active.Load() != 0 {
+					t.Fatalf("%q captures %d", message, closed.Load())
 				}
-			}
-			waitEnrollment(t, v, protocol.VoiceprintError)
-			message := enrollmentError(v)
-			v.Cancel()
-			if message != voiceprintErrDevice || profiles.saved.Load() != 0 || int(closed.Load()) != changeAt || active.Load() != 0 {
-				t.Fatalf("%q captures %d", message, closed.Load())
-			}
+			})
 		})
 	}
 }

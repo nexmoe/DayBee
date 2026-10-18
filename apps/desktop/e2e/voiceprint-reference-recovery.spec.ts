@@ -4,6 +4,7 @@ import { expect, test } from "./fixtures";
 for (const language of ["zh-CN", "en-US"] as const) {
   test(`explains paused learning and offers playback-check recovery in ${language}`, async ({ launchApp }) => {
     const { app, page } = await launchApp({ voiceprintSetup: "ready" });
+    const mac = await page.evaluate(() => window.mygo!.platform === "darwin");
     await page.goto("/");
     await page.setViewportSize({ width: 1000, height: 900 });
     const snapshot = await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"));
@@ -27,7 +28,8 @@ for (const language of ["zh-CN", "en-US"] as const) {
     await expect(field).not.toContainText(language === "zh-CN" ? "恢复后继续学习" : "before learning");
     const settings = field.getByTestId("voiceprint-reference-settings");
     const retry = field.getByTestId("voiceprint-reference-retry");
-    await expect(settings).toBeVisible();
+    if (mac) await expect(settings).toBeVisible();
+    else await expect(settings).not.toBeVisible();
     await expect(retry).toBeEnabled();
     const detail = field.getByTestId("voiceprint-reference-error");
     await expect(detail).not.toHaveAttribute("open");
@@ -51,10 +53,10 @@ for (const language of ["zh-CN", "en-US"] as const) {
         return original(method, ...args);
       }) as NonNullable<Window["mygo"]>["call"];
     }, snapshot);
-    await settings.click();
+    if (mac) await settings.click();
     await retry.click();
     expect(await page.evaluate(() => (window as unknown as { recoveryCalls: string[] }).recoveryCalls)).toEqual([
-      "DesktopService.OpenSystemAudioSettings", "DesktopService.RetryVoiceprintReference"
+      ...(mac ? ["DesktopService.OpenSystemAudioSettings"] : []), "DesktopService.RetryVoiceprintReference"
     ]);
     await expect(page.getByTestId("voiceprint-adaptation-learned")).toContainText("0");
     await expect(page.getByTestId("voiceprint-adaptation-assisted")).toContainText("0");

@@ -100,3 +100,7 @@ bunx playwright test e2e/recording-recovery.spec.ts
 ```
 
 链接：`bun run check:docs`
+
+`TestLiveModelSwitchKeepsCaptureAndQueuedSpeech` 在推理 gate 保持关闭时要求模型切换返回，再检查采集连续性、旧队列及两种模型的归档。5 秒看门狗用于发现死锁，给 Windows 文件同步和 race 检测留出余量，不是产品的切换延迟指标。
+
+播放参考重试测试的模拟设备列表包含音频包里的麦克风 ID，避免首次设备轮询把夹具误判为断开、按正常设备恢复流程切段；仍要求参考重试保留分段 ID、开始时间和完整语音区间。

@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 // testVoiceprintSetup is the E2E stand-in for enrollment. It never touches a

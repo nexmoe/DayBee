@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/config"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/config"
 )
 
 func TestHistoryReusesLegacyMetadataAndDeduplicatesAudio(t *testing.T) {

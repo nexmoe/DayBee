@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/voiceprint"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/voiceprint"
 )
 
 func TestUtteranceVerdict(t *testing.T) {

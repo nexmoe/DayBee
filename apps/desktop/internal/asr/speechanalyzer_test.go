@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/speechanalyzer"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/speechanalyzer"
 )
 
 func TestSpeechRecognizerClosedAndEmptyInput(t *testing.T) {

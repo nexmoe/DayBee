@@ -1,7 +1,8 @@
 import { spawnSync } from "node:child_process";
 import { resolve, join } from "node:path";
-import { readdirSync, renameSync, rmSync } from "node:fs";
+import { readdirSync, readFileSync, renameSync, rmSync } from "node:fs";
 import { prepareNative } from "./prepare-native.mjs";
+import { notarizeImage } from "./notarize.mjs";
 import { binaryPath } from "mygo-cli";
 
 const root = resolve(import.meta.dirname, "..");
@@ -27,6 +28,7 @@ if (command === "build") {
 }
 if (["generate", "dev", "build"].includes(command)) {
   const defaults = spawnSync("go", ["run", "./cmd/contracts"], { cwd: root, env, stdio: "inherit" });
+  if (defaults.error) throw new Error("Could not start the Go contract generator", { cause: defaults.error });
   if (defaults.status !== 0) process.exit(defaults.status ?? 1);
 }
 if (command === "test" && platform === "darwin") {
@@ -34,11 +36,20 @@ if (command === "test" && platform === "darwin") {
 }
 const binary = ["test", "vet"].includes(command) ? "go" : binaryPath();
 const flags = command === "test" ? ["test", ...args, "./..."] : command === "vet" ? ["vet", "./..."] : [command, ...args];
+if (command === "test" && platform === "windows") {
+  flags.splice(1, 0, "-exec", `"${process.execPath}" "${join(root, "scripts/native-test-exec.mjs")}"`);
+}
+if (command === "build" && platform === "darwin" && env.MYGO_NOTARY_PROFILE) flags.push("--skip-notarize");
 const child = spawnSync(binary, flags, { cwd: root, env, stdio: "inherit" });
+if (child.error) throw new Error(`Could not start ${binary}`, { cause: child.error });
 if (child.status === 0 && command === "build" && platform === "darwin") {
   const out = join(root, "dist", target);
   for (const file of readdirSync(out).filter(file => file.endsWith(".dmg") && !file.endsWith(`-${target}.dmg`))) {
     renameSync(join(out, file), join(out, file.replace(/\.dmg$/, `-${target}.dmg`)));
+  }
+  if (env.MYGO_NOTARY_PROFILE && env.DAYBEE_DEFER_NOTARIZATION !== "1") {
+    const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
+    await notarizeImage(join(out, `${pkg.productName} ${pkg.version}-${target}.dmg`), env.MYGO_NOTARY_PROFILE);
   }
 }
 process.exit(child.status ?? 1);

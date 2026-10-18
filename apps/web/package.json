@@ -6,8 +6,10 @@
 	"scripts": {
 		"dev": "astro dev --host 127.0.0.1",
 		"build": "astro build",
+		"deploy": "bun run build && alchemy deploy --stage production",
+		"deploy:plan": "bun run build && alchemy deploy --stage production --dry-run",
 		"preview": "astro preview --host 127.0.0.1",
-		"typecheck": "astro check"
+		"typecheck": "astro check && tsc -p tsconfig.alchemy.json"
 	},
 	"dependencies": {
 		"astro": "7.3.4",
@@ -16,6 +18,10 @@
 	},
 	"devDependencies": {
 		"@astrojs/check": "0.9.10",
+		"@effect/platform-bun": "4.0.5",
+		"@types/node": "24.12.0",
+		"alchemy": "2.0.0-beta.83",
+		"effect": "4.0.5",
 		"typescript": "5.9.3",
 		"vite": "8.0.16"
 	}

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/config"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/config"
 )
 
 func TestMCPHistoryFollowsSavedOutputAndReadsLiveTranscriptsWithoutWritingSettings(t *testing.T) {

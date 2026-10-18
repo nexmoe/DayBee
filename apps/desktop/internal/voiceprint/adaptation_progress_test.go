@@ -1,7 +1,6 @@
 package voiceprint
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 )
@@ -102,11 +101,7 @@ func TestAdaptationProgressKeepsLegacyTotalsUnknownAndFailedWritesUncounted(t *t
 	}
 	m.storeAdaptation(permit, profile, ctx, testVectors())
 	_, before := m.LearningProgress()
-	dir := filepath.Dir(m.path)
-	if err := os.Chmod(dir, 0500); err != nil {
-		t.Fatal(err)
-	}
-	defer os.Chmod(dir, 0700)
+	blockProfileStorage(t, m)
 	m.storeAdaptationProgress(permit, profile, ctx, testVectors(), true)
 	_, after := m.LearningProgress()
 	if *after != *before {

@@ -3,7 +3,7 @@ package recorder
 import (
 	"errors"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 // RetryVoiceprintReference reopens capture after authorization or a reference

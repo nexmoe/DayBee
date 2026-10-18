@@ -65,12 +65,17 @@ type AppSettings struct {
 }
 
 func DefaultSettings(outputDir string) AppSettings {
+	return DefaultSettingsForPlatform(outputDir, runtime.GOOS)
+}
+
+// DefaultSettingsForPlatform also gives contract generation a stable reference platform.
+func DefaultSettingsForPlatform(outputDir, platform string) AppSettings {
 	return AppSettings{
 		Desktop: DesktopSettings{HideWindowOnClose: true, Language: LanguageSystem, LaunchAtLogin: true, Theme: ThemeSystem, VoiceprintSetup: VoiceprintPending},
 		Recording: RecordingSettings{
 			ASRLanguage: "auto", ASRModel: DefaultASRModel, AutoSwitchConfirmations: 2,
 			AutoSwitchDevice: true, Device: "default", ExcludeDeviceKeywords: "iphone,continuity",
-			EchoCancellation: SupportsEchoCancellation,
+			EchoCancellation: platform == "darwin",
 			OutputDir:        outputDir, SegmentMinutes: 60, VoiceprintAdaptation: false,
 		},
 	}

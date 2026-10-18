@@ -123,6 +123,8 @@ go test ./internal/desktop/ -count=1 -timeout 60s -run 'TestPrepareASRModel'
 
 资源生命周期回归：`go test ./internal/asr/ -count=1 -run 'TestIdle'`，使用虚拟时间覆盖静音卸载、短暂停顿复用、重新加载和排队任务保护。
 
+下载超时回归：`go test ./internal/assets/ -race -count=20 -run 'TestDownloadFallsBackWhenHeadersOrBodyStall'`。使用虚拟时间分别阻塞响应头和正文，要求恰在空闲期限切到第一个健康镜像，且总共只请求两次，避免 CI 调度及磁盘耗时影响超时断言。
+
 真实模型空闲释放的可选验证为 `TestNativeIdleModelRelease`，需要 macOS、`DAYBEE_TEST_IDLE_MODEL_DIR`（已缓存模型目录）和 `DAYBEE_TEST_IDLE_WAV`（公开测试音频）；可用 `DAYBEE_TEST_IDLE_REPORT` 保存 footprint 测量。它等待真实的 2 分钟超时，检查卸载后能重载且输出一致，不访问麦克风。测量与命令见 [资源验证](../verification/resource-usage.md)。
 
 这些测试读 `apps/desktop/internal/asr/native_test.go` 里的环境变量，未设置就跳过：`DAYBEE_TEST_MODEL_DIR`（Qwen3 模型目录）、`DAYBEE_TEST_AUDIO_DIR`（固定回归 WAV）、`DAYBEE_TEST_VAD_PATH`（Silero VAD）、可选 `DAYBEE_TEST_ASR_REPORT`（报告输出路径）。

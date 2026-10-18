@@ -12,24 +12,37 @@ const record = (index: number): RecordingHistoryItem => ({
   textPreview: `${label(index)} ${"Variable height transcript with 中文和 English. ".repeat(Math.abs(index) % 4 + 1)}`
 });
 
-async function visibleAnchor(timeline: Locator) {
-  let anchor: { text: string; top: number } | null = null;
-  // A resize can briefly replace the rendered range. Wait for the next range
-  // before comparing its reading position instead of aborting the poll.
-  await expect.poll(async () => {
-    anchor = await timeline.locator(".transcript-event").evaluateAll(elements => {
-      const viewport = elements[0]?.closest("[data-radix-scroll-area-viewport]");
-      if (!viewport) return null;
-      const bounds = viewport.getBoundingClientRect();
-      const element = elements.find(element => {
-        const rect = element.getBoundingClientRect();
-        return rect.top >= bounds.top && rect.top < bounds.bottom;
-      });
-      return element ? { text: element.querySelector(".transcript-text")!.textContent!, top: element.getBoundingClientRect().top } : null;
+type ReadingAnchor = { text: string; top: number };
+
+async function readAnchor(timeline: Locator, text?: string): Promise<ReadingAnchor | null> {
+  return timeline.locator(".transcript-event").evaluateAll((elements, text) => {
+    const viewport = elements[0]?.closest("[data-radix-scroll-area-viewport]");
+    if (!viewport) return null;
+    const bounds = viewport.getBoundingClientRect();
+    const element = elements.find(element => {
+      if (text !== undefined) return element.querySelector(".transcript-text")?.textContent === text;
+      const rect = element.getBoundingClientRect();
+      return rect.bottom > bounds.top && rect.top < bounds.bottom;
     });
+    return element ? { text: element.querySelector(".transcript-text")!.textContent!, top: element.getBoundingClientRect().top } : null;
+  }, text);
+}
+
+async function visibleAnchor(timeline: Locator) {
+  let anchor: ReadingAnchor | null = null;
+  await expect.poll(async () => {
+    anchor = await readAnchor(timeline);
     return anchor !== null;
   }).toBe(true);
   return anchor!;
+}
+
+async function expectReadingAnchor(timeline: Locator, anchor: ReadingAnchor) {
+  // Keep the same record when rounding changes which row is first in view.
+  await expect.poll(async () => {
+    const current = await readAnchor(timeline, anchor.text);
+    return current ? Math.abs(current.top - anchor.top) : Infinity;
+  }).toBeLessThan(2);
 }
 
 async function expectMeasuredRows(timeline: Locator) {
@@ -53,6 +66,8 @@ async function openTimeline(page: Page, role: "compact" | "main") {
 
 for (const role of ["compact"] as const) {
   test(`virtualizes all history and preserves the reading position in the ${role} window`, async ({ launchApp }, testInfo) => {
+    // This complete 1000-row flow includes resize, live updates, search and navigation.
+    test.setTimeout(90_000);
     const { app, page } = await launchApp();
     const snapshot = await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"));
     snapshot.history = Array.from({ length: count }, (_, index) => record(index));
@@ -85,17 +100,15 @@ for (const role of ["compact"] as const) {
     snapshot.history.unshift(record(-1));
     await app.setFixture(snapshot);
     await expect(timeline.locator("li").first()).toHaveAttribute("aria-setsize", String(count + 1));
-    await expect.poll(async () => Math.abs((await visibleAnchor(timeline)).top - anchor.top)).toBeLessThan(2);
-    expect((await visibleAnchor(timeline)).text).toBe(anchor.text);
+    await expectReadingAnchor(timeline, anchor);
     snapshot.microphoneActivity.supported = false;
     await app.setFixture(snapshot);
     await expect(page.locator(".microphone-notice")).toHaveCount(1);
-    await expect.poll(async () => Math.abs((await visibleAnchor(timeline)).top - anchor.top)).toBeLessThan(2);
-    expect((await visibleAnchor(timeline)).text).toBe(anchor.text);
+    await expectReadingAnchor(timeline, anchor);
     snapshot.microphoneActivity.supported = true;
     await app.setFixture(snapshot);
     await expect(page.locator(".microphone-notice")).toHaveCount(0);
-    await expect.poll(async () => Math.abs((await visibleAnchor(timeline)).top - anchor.top)).toBeLessThan(2);
+    await expectReadingAnchor(timeline, anchor);
     await viewport.evaluate(element => element.scrollTo(0, 0));
     await expect(timeline.locator(".transcript-text").first()).toContainText(label(-1));
     snapshot.history.unshift(record(-2));

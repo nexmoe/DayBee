@@ -1,5 +1,7 @@
 #define COBJMACROS
 #include <windows.h>
+// Instantiate the Core Audio GUIDs once; MinGW's uuid library omits them.
+#include <initguid.h>
 #include <mmdeviceapi.h>
 #include <audiopolicy.h>
 #include <shellapi.h>

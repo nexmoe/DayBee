@@ -137,8 +137,15 @@ test("streams complete merged transcripts on Home", async ({ launchApp }) => {
     element.clientHeight >= element.scrollHeight && element.clientWidth >= element.scrollWidth &&
     getComputedStyle(element).overflowWrap === "anywhere"
   ))).toBe(true);
-  await timeline.getByRole("article").last().scrollIntoViewIfNeeded();
-  await expect(timeline.getByRole("article").last()).toBeInViewport();
+  await timeline.locator(".transcription-timeline").evaluate(list => {
+    const viewport = list.closest<HTMLElement>("[data-radix-scroll-area-viewport]")!;
+    viewport.scrollTop = viewport.scrollHeight;
+  });
+  const oldestRow = timeline.locator('[data-last="true"]');
+  await expect.poll(() => oldestRow.locator(".transcript-text").evaluateAll(elements =>
+    elements.map(element => element.textContent).join("")
+  )).toBe(updatedRows.at(-1)!.text);
+  await expect(oldestRow).toBeInViewport();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 
   await openWorkspace(page);
@@ -172,6 +179,10 @@ test("persists general settings across relaunch", async ({ launchApp }) => {
 
   await switchLocator.click();
   await expect(switchLocator).toHaveAttribute("aria-checked", nextState);
+  // The switch updates optimistically; wait for the native store to persist it.
+  await expect.poll(async () => (await context.page.evaluate(() =>
+    window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"))).settings.desktop.launchAtLogin
+  ).toBe(nextState === "true");
   await context.app.close();
 
   context = await launchApp();
@@ -266,6 +277,7 @@ function buildCustomSettings(storeDir: string): AppSettings {
     recording: {
       ...DEFAULT_SETTINGS.recording,
       asrLanguage: "ja",
+      echoCancellation: process.platform === "darwin",
       autoSwitchConfirmations: 3,
       autoSwitchDevice: false,
       device: "usb-mic",

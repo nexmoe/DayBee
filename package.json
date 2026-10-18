@@ -14,6 +14,8 @@
     "build:desktop": "bun run --filter ./apps/desktop build",
     "dev:web": "bun run --filter ./apps/web dev",
     "build:web": "bun run --filter ./apps/web build",
+    "deploy:web": "bun run --cwd apps/web deploy",
+    "deploy:web:plan": "bun run --cwd apps/web deploy:plan",
     "test": "bun run --filter ./apps/desktop test",
     "test:e2e": "bun run --filter ./apps/desktop test:e2e",
     "typecheck": "bun run --filter ./apps/desktop typecheck",

@@ -3,7 +3,7 @@ package protocol
 import (
 	"testing"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/speechanalyzer"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/speechanalyzer"
 )
 
 func TestASRDefaultFollowsSystemSpeechAvailability(t *testing.T) {

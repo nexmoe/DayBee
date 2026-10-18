@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"testing/synctest"
 	"time"
 )
 
@@ -70,31 +71,37 @@ func (stalledDownloadBody) Close() error { return nil }
 func TestDownloadFallsBackWhenHeadersOrBodyStall(t *testing.T) {
 	for _, phase := range []string{"headers", "body"} {
 		t.Run(phase, func(t *testing.T) {
-			t.Setenv("DAYBEE_DOWNLOAD_MIRROR", "global")
-			m := New(t.TempDir(), nil, nil)
-			m.idleTimeout = 20 * time.Millisecond
-			var requests int
-			m.client.Transport = voiceprintTransport(func(r *http.Request) (*http.Response, error) {
-				requests++
-				if r.URL.Host == "github.com" {
-					if phase == "headers" {
-						<-r.Context().Done()
-						return nil, r.Context().Err()
+			synctest.Test(t, func(t *testing.T) {
+				t.Setenv("DAYBEE_DOWNLOAD_MIRROR", "global")
+				m := New(t.TempDir(), nil, nil)
+				m.idleTimeout = 20 * time.Millisecond
+				var requests int
+				m.client.Transport = voiceprintTransport(func(r *http.Request) (*http.Response, error) {
+					requests++
+					if r.URL.Host == "github.com" {
+						if phase == "headers" {
+							<-r.Context().Done()
+							return nil, r.Context().Err()
+						}
+						return &http.Response{StatusCode: 200, ContentLength: 6, Body: stalledDownloadBody{r.Context()}}, nil
 					}
-					return &http.Response{StatusCode: 200, ContentLength: 6, Body: stalledDownloadBody{r.Context()}}, nil
+					return &http.Response{StatusCode: 200, ContentLength: 6, Body: io.NopCloser(strings.NewReader("mirror"))}, nil
+				})
+				path := m.root + ".onnx"
+				ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+				defer cancel()
+				start := time.Now()
+				if err := m.download(ctx, "https://github.com/model.onnx", path, "test"); err != nil {
+					t.Fatal("stalled source did not yield to mirror", err)
 				}
-				return &http.Response{StatusCode: 200, ContentLength: 6, Body: io.NopCloser(strings.NewReader("mirror"))}, nil
+				data, _ := os.ReadFile(path)
+				if string(data) != "mirror" || requests != 2 {
+					t.Fatal("wrong source or number of attempts", string(data), requests)
+				}
+				if elapsed := time.Since(start); elapsed != m.idleTimeout {
+					t.Fatal("fallback did not happen at the idle deadline", elapsed)
+				}
 			})
-			path := m.root + ".onnx"
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-			defer cancel()
-			if err := m.download(ctx, "https://github.com/model.onnx", path, "test"); err != nil {
-				t.Fatal("stalled source did not yield to mirror", err)
-			}
-			data, _ := os.ReadFile(path)
-			if string(data) != "mirror" || requests != 2 {
-				t.Fatal("wrong source or number of attempts", string(data), requests)
-			}
 		})
 	}
 }

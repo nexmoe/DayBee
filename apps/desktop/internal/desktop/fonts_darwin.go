@@ -48,6 +48,7 @@ import "C"
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -56,8 +57,14 @@ import (
 	"github.com/egoist/mygo"
 )
 
+var errPublicFontUnavailable = errors.New("public static PingFang faces are unavailable")
+
 func registerFontCompatibility() error {
 	path, err := installedFontPath()
+	if errors.Is(err, errPublicFontUnavailable) {
+		slog.Info("Static PingFang is unavailable; using system font fallback")
+		return nil
+	}
 	if err != nil {
 		return err
 	}
@@ -67,7 +74,7 @@ func registerFontCompatibility() error {
 func installedFontPath() (string, error) {
 	path := C.daybeePublicFontPath()
 	if path == nil {
-		return "", errors.New("public static PingFang faces are unavailable")
+		return "", errPublicFontUnavailable
 	}
 	defer C.free(unsafe.Pointer(path))
 	return C.GoString(path), nil

@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/nexmoe/eve/apps/desktop/internal/config"
-	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/config"
+	"github.com/nexmoe/DayBee/apps/desktop/internal/protocol"
 )
 
 // This deterministic engine is selected only by DAYBEE_E2E_TEST, with an isolated
