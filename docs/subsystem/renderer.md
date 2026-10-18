@@ -60,6 +60,8 @@
 
 浏览器夹具等待上一次快照请求完成后，再间隔 100 毫秒请求下一次，页面卸载时停止轮询；Node 侧只把变化的快照传过绑定，避免慢速 CI 在千条历史场景堆积整份数据。原生驱动持续读取 stdout 和 stderr，只保留最近 64 KiB 诊断日志。
 
+设置重启验收在点击开关后，先等待原生 `Bootstrap` 读到已保存值，再结束隔离测试进程；界面的乐观状态本身不代表写盘完成。
+
 Vitest 只跑 `src/**/*.test.ts`，环境是 node，不挂浏览器。
 
 直接向隔离输出目录写入 JSON 的 E2E 用例要调用 `e2e/fixtures.ts` 的 `app.refreshHistory`。它通过测试引擎的 `RunTranscribe` 走正常的历史刷新路径，不等待五分钟兜底扫描。实时转写用例仍调用 `app.completeSpeech`，验证 `HistoryChanges` 事件即时刷新。

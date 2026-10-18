@@ -186,6 +186,10 @@ test("persists general settings across relaunch", async ({ launchApp }) => {
 
   await switchLocator.click();
   await expect(switchLocator).toHaveAttribute("aria-checked", nextState);
+  // The switch updates optimistically; wait for the native store to persist it.
+  await expect.poll(async () => (await context.page.evaluate(() =>
+    window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"))).settings.desktop.launchAtLogin
+  ).toBe(nextState === "true");
   await context.app.close();
 
   context = await launchApp();
