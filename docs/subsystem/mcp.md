@@ -8,7 +8,7 @@ DayBee 内置本地 stdio MCP 服务，让 MCP 客户端读取应用已经保存
 - `apps/desktop/internal/desktop/mcp.go` 解析当前应用的数据目录和录音目录，生成客户端配置；读取过程不创建或修复设置文件。
 - `apps/desktop/internal/transcriptmcp/server.go` 用官方 Go MCP SDK（`v1.8.0`）注册三个只读工具、文稿索引资源和文稿资源模板；`protocolVersion`（`2026-07-28`）是唯一支持的协议版本。
 - `apps/desktop/internal/transcriptmcp/catalog.go` 负责全文筛选、按实际录音时间排序、分页、摘要和文稿 ID。
-- `apps/desktop/src/renderer/src/components/mcp-settings.tsx` 在「通用」页显示和复制连接配置。配置中的命令是当前运行的 DayBee 可执行文件，参数为 `--mcp`；设置了 `DAYBEE_STORE_DIR` 时保留该隔离目录。
+- `apps/desktop/src/renderer/src/components/mcp-settings.tsx` 在「通用」页显示和复制连接配置。配置中的命令是当前运行的 DayBee 可执行文件，参数为 `--mcp`；设置了 `DAYBEE_STORE_DIR` 时保留该隔离目录，并把路径规范化为本机的绝对路径。
 - MCP 不启动或停止录音，不补转写，不修改文稿、设置或模型。原始音频不作为 MCP 资源返回。
 
 ## 权威来源

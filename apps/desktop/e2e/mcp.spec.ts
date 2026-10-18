@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import { expect, test } from "./fixtures";
 
 test("shows scoped MCP client configuration in the compact General tab", async ({ launchApp, storeDir }) => {
@@ -12,7 +13,7 @@ test("shows scoped MCP client configuration in the compact General tab", async (
   const value = JSON.parse(await field.inputValue());
   expect(value.mcpServers.daybee.args).toEqual(["--mcp"]);
   expect(value.mcpServers.daybee.command).toBeTruthy();
-  expect(value.mcpServers.daybee.env).toEqual({ DAYBEE_STORE_DIR: storeDir });
+  expect(value.mcpServers.daybee.env).toEqual({ DAYBEE_STORE_DIR: resolve(storeDir) });
   expect(await mcp.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
   // Verify the copy action without replacing the user's system clipboard.
   await page.evaluate(() => {
