@@ -48,6 +48,14 @@ jobs:
             echo 'CXX=clang++' >> "$GITHUB_ENV"
             echo 'MACOSX_DEPLOYMENT_TARGET=13.3' >> "$GITHUB_ENV"
           fi
+      - name: Select macOS SDK for SpeechAnalyzer
+        if: runner.os == 'macOS'
+        env:
+          DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+        run: |
+          xcodebuild -version
+          xcrun --sdk macosx --show-sdk-version
+          echo "DEVELOPER_DIR=$DEVELOPER_DIR" >> "$GITHUB_ENV"
       - run: bun install --frozen-lockfile
       - run: bun run check:docs
       - name: Generate bindings and verify unchanged contract

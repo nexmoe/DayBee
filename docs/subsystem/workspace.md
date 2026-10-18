@@ -56,7 +56,7 @@ Windows 的 Go 测试通过 `apps/desktop/scripts/native-test-exec.mjs` 启动�
 
 mygo 再执行 `buildCommand`（`bun run build:web`）并把前端产物从 `out/renderer` 打进 `dist`。macOS 最低系统版本、签名身份、entitlements 和可选公证都在 `mygo.config.ts`。Windows 证书和签名命令只在对应环境变量存在时写入。
 
-macOS 同时由 `apps/desktop/scripts/prepare-speech.mjs` 编译 `apps/desktop/internal/speechanalyzer/native/SpeechBridge.swift`，需要包含 SpeechAnalyzer 的 macOS 26+ SDK。产物 `libdaybee-speech.dylib` 放进同一资源 `lib` 目录，开发和测试通过 `DAYBEE_SPEECH_LIBRARY` 定位，打包后从可执行文件旁的 Resources/lib 加载。桥接的最低目标仍为 13.3，运行时检查 26+ 的 API；Windows 不编译或加载它。`mygo.config.ts` 提供系统语音识别用途说明。
+macOS 同时由 `apps/desktop/scripts/prepare-speech.mjs` 编译 `apps/desktop/internal/speechanalyzer/native/SpeechBridge.swift`，需要包含 SpeechAnalyzer 的 macOS 26+ SDK；版本不足会在编译前明确报错，可通过 `DEVELOPER_DIR` 选择 Xcode。CI 的两种 Mac 架构固定使用 Xcode 26.3，避免镜像默认 Xcode 16.4 缺少这些类型。产物 `libdaybee-speech.dylib` 放进同一资源 `lib` 目录，开发和测试通过 `DAYBEE_SPEECH_LIBRARY` 定位，打包后从可执行文件旁的 Resources/lib 加载。桥接的最低目标仍为 13.3，运行时检查 26+ 的 API；Windows 不编译或加载它。`mygo.config.ts` 提供系统语音识别用途说明。
 
 macOS 配置了公证 profile 时，`desktop.mjs` 先用 mygo 的 `--skip-notarize` 完成签名构建，再由 `apps/desktop/scripts/notarize.mjs` 提交最终架构命名的 DMG。Apple 必须返回 `Accepted`；票据装订错误 65 或 68、验证票据时的网络错误 68，各自最多重试三次，分别等待 5、10、20 秒。重试不重新提交或重新签名，验证重试也不重新装订。最后必须通过 `stapler validate`。拒绝、公证失败、其他装订或验证错误、重试耗尽均以非零退出，阻止发布。
 
