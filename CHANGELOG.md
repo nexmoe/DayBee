@@ -2,27 +2,26 @@
 
 All notable changes to this project are documented in this file.
 
-## [Unreleased]
+## 1.1.0 - 2026-10-18
 
-### Added
+### Features
 
-- Add a built-in stdio MCP server for listing, searching and reading saved transcripts with timestamps and speaker labels, plus client configuration in General settings.
+- Bring all desktop pages into one compact window, with Home, General, Input and Transcribe tabs below the waveform.
+- Add a read-only stdio MCP server for listing, searching and reading full saved transcripts with timestamps and speaker labels. Copy the client configuration from General settings.
+- Add Apple SpeechAnalyzer for on-device transcription on compatible macOS 26+ systems. Existing model choices remain intact; older Macs and Windows default to Whisper Tiny.
 
-### Changed
+### Changes
 
-- Remove Home search and app filtering, including interactive app annotations and search highlighting.
+- Start recording automatically after launch and initial voiceprint setup; archive new segments as lossless FLAC.
+- Show Home voiceprint setup only until a profile is saved, with re-enrollment available in Transcribe settings.
+- Remove the separate main window, sidebar, History page, repeated page headings, Home search and app filters. Keep app names and icons as transcript annotations.
+- Increase the compact window's default height and repair HTTP development-window loading.
+- Use `daybee.co` as the website's canonical URL, add repeatable Cloudflare deployments with Alchemy, and repair product-guide links.
 
-- Retire the History page and its file-list component, styles, translations and filtering branch. Remove repeated page headings below the tabs.
+### Fixes
 
-- Place page tabs below the waveform and keep recording controls and the waveform visible while switching pages.
-
-- Hide the Home voiceprint setup card once a voiceprint is saved; start re-enrollment from Transcribe settings and show setup again after clearing the profile.
-
-- Remove the startup-recording switch and audio-format setting. Always record on launch after voiceprint setup and archive new segments as FLAC, ignoring retired preferences.
-- Exclude FLAC conversion staging files from history and batch transcription scans to prevent temporary duplicate recordings.
-
-- Consolidate desktop pages into the compact window with four tabs: Home, General, Input and Transcribe. Keep recording, transcripts, voiceprint setup and settings in the same window.
-- Use `daybee.co` as the website's canonical URL, add repeatable Cloudflare deployments with Alchemy, and repair links to product guides.
+- Exclude temporary FLAC conversion files from transcript and batch scans to prevent transient duplicate recordings.
+- Preserve platform-independent generated defaults and the existing Windows, native-library, notarization and release-integrity fixes.
 
 ## 1.0.0 - 2026-10-18
 

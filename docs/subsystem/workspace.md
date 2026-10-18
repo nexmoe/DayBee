@@ -16,7 +16,7 @@ Bun workspace 放桌面端、营销站和前后端共用的默认值。桌面端
 
 - 项目名称为 DayBee，源码仓库为 `nexmoe/DayBee`；workspace 包名沿用小写的 `daybee-*` 和 `@daybee/*`。
 - 脚本入口是仓库根 `package.json` 和 `apps/desktop/package.json`。
-- 打包身份在 `apps/desktop/mygo.config.ts` 的 `defineConfig`：产品名取 `productName`，标识 `build.nexmoe.daybee.desktop`，版本取 `apps/desktop/package.json` 的 `version`（当前 1.0.0）。
+- 打包身份在 `apps/desktop/mygo.config.ts` 的 `defineConfig`：产品名取 `productName`，标识 `build.nexmoe.daybee.desktop`，版本取 `apps/desktop/package.json` 的 `version`（当前 1.1.0）。
 - 前后端契约的类型在 `apps/desktop/src/renderer/src/generated/mygo.ts`。默认值在 `packages/shared/src/defaults.ts`，由 `apps/desktop/cmd/contracts/main.go` 的 `main` 写出。
 - Go 模块路径是 `github.com/nexmoe/DayBee/apps/desktop`，见 `apps/desktop/go.mod`。
 
@@ -68,7 +68,7 @@ macOS 配置了公证 profile 时，`desktop.mjs` 先用 mygo 的 `--skip-notari
 
 `.github/workflows/desktop-release.yml` 在 `macos-15`、`macos-15-intel`、`windows-latest` 上跑同一套原生检查。标签 `v*` 才为 macOS 导入 Developer ID 和公证材料，并为三个平台带上 `MYGO_UPDATER_PRIVATE_KEY`。Windows 安装包不做 Authenticode 证书签名；更新归档仍必须通过 Ed25519 签名校验。
 
-三个 native job 和 `notarize-intel` 都通过后，`publish` 用 `apps/desktop/scripts/release-gates.mjs --report` 在日志及 Actions summary 中报告未完成的人工迁移验收。它先下载原生制品，再把已公证的 Intel DMG 下载到同一目标目录，替换原始 DMG 后收集发布文件。根据本次 1.0.0 发布约定，人工报告不阻止发布，也不改写 `docs/migration-verification.json` 的结果。直接运行脚本仍严格检查每个目标的界面、原生推理、最低系统、干净安装、签名更新恢复及至少 8 小时实录，未完成时返回非零。
+三个 native job（含打包后的原生窗口与 MCP 标准输入输出验收）和 `notarize-intel` 都通过后，`publish` 用 `apps/desktop/scripts/release-gates.mjs --report` 在日志及 Actions summary 中报告未完成的人工迁移验收。它先下载原生制品，再把已公证的 Intel DMG 下载到同一目标目录，替换原始 DMG 后收集发布文件。沿用已确认的自动检查发布约定，人工报告不阻止发布，也不改写 `docs/migration-verification.json` 的结果。直接运行脚本仍严格检查每个目标的界面、原生推理、最低系统、干净安装、签名更新恢复及至少 8 小时实录，未完成时返回非零。
 
 `apps/desktop/scripts/collect-release.mjs` 必须验证标签与包版本一致、三个目标的更新版本与包版本一致、更新归档的长度与签名正确、各平台安装包齐全且无同名内容冲突，才会生成校验和并交给 GitHub Release 发布。
 

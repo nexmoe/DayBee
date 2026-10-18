@@ -32,7 +32,7 @@ DayBee is a tray-first desktop recorder built with Go and mygo. It records micro
 - macOS 13.3+: Apple Silicon / Intel `.dmg`
 - Windows: `.exe` (NSIS installer)
 
-The packaged app checks for signed updates on startup and every six hours, then installs and restarts when recording and transcription are idle. The first upgrade from Electron requires a manual installation; see the [migration verification and upgrade notes](docs/migration-verification.md). Migration builds remain unreleased until the acceptance gates pass.
+The packaged app checks for signed updates on startup and every six hours, then installs and restarts when recording and transcription are idle. The first upgrade from Electron requires a manual installation; see the [migration verification and upgrade notes](docs/migration-verification.md). Releases require automated checks on all three platforms; outstanding manual migration acceptance remains recorded in the verification report.
 
 ## Runtime Notes
 

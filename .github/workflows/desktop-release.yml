@@ -79,6 +79,9 @@ jobs:
       - name: Native window smoke
         working-directory: apps/desktop
         run: bun run test:native
+      - name: Headless MCP protocol smoke
+        working-directory: apps/desktop
+        run: bun run test:mcp
       - name: Renderer integration with native Go service
         working-directory: apps/desktop
         run: bunx playwright install chromium && bun run test:e2e

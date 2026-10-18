@@ -31,7 +31,7 @@ DayBee 是使用 Go 和 mygo 构建、以托盘常驻为核心的桌面录音应
 - macOS 13.3+：Apple Silicon / Intel `.dmg`
 - Windows：`.exe`（NSIS 安装包）
 
-应用启动时及每六小时检查签名更新，在录音和批量转写均空闲后安装并重启。从 Electron 首次升级需要手动安装，详见[迁移验证与升级说明](docs/migration-verification.md)。迁移版本须通过全部验收门槛后才能发布。
+应用启动时及每六小时检查签名更新，在录音和批量转写均空闲后安装并重启。从 Electron 首次升级需要手动安装，详见[迁移验证与升级说明](docs/migration-verification.md)。发布须通过三平台自动检查；尚未完成的人工迁移验收继续记录在验收报告中。
 
 ## 运行说明
 
