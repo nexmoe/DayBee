@@ -23,6 +23,7 @@ All notable changes to this project are documented in this file.
 
 ### Fixes
 
+- Normalize public installer filenames before generating release checksums, and reject collisions between original and normalized names.
 - Bound native E2E snapshot polling and diagnostic logs, and avoid sending unchanged large snapshots across the browser bridge.
 - Keep timeline reading-position acceptance anchored to the same visible paragraph, including rows partly clipped at the viewport edge.
 - Check the actual oldest timeline row after narrow-window scrolling, keeping virtualization from changing the acceptance test's target.

@@ -63,7 +63,13 @@ test("release collection verifies three signatures and filename collisions", () 
         GITHUB_REF_TYPE: "tag", GITHUB_REF_NAME: `v${version}`, ...env } });
     const valid = collect("valid");
     assert.equal(valid.status, 0, valid.stderr);
-    assert.equal(readFileSync(join(scratch, "valid", "SHA256SUMS.txt"), "utf8").trim().split("\n").length, 9);
+    const checksumLines = readFileSync(join(scratch, "valid", "SHA256SUMS.txt"), "utf8").trim().split("\n");
+    assert.equal(checksumLines.length, 9);
+    for (const line of checksumLines) {
+      const name = line.slice(66);
+      assert(!/\s/.test(name), "Release checksums must use GitHub-safe asset names");
+      assert.equal(createHash("sha256").update(readFileSync(join(scratch, "valid", name))).digest("hex"), line.slice(0, 64));
+    }
 
     const wrongTag = collect("wrong-tag", { GITHUB_REF_NAME: "v0.0.0" });
     assert.notEqual(wrongTag.status, 0);
@@ -81,6 +87,13 @@ test("release collection verifies three signatures and filename collisions", () 
     assert.notEqual(collision.status, 0);
     assert.match(collision.stderr, /Release filename collision/);
     rmSync(join(paths[1], installer));
+
+    const normalizedAlias = join(paths[1], installer.replaceAll(" ", "."));
+    writeFileSync(normalizedAlias, "different installer under its published name");
+    const normalizedCollision = collect("normalized-collision");
+    assert.notEqual(normalizedCollision.status, 0);
+    assert.match(normalizedCollision.stderr, /Release filename collision/);
+    rmSync(normalizedAlias);
 
     const manifestPath = join(paths[0], `update-${targets[0]}.json`);
     writeFileSync(manifestPath, JSON.stringify({ ...manifests[0], version: "0.0.0" }));

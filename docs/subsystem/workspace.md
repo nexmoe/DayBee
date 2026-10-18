@@ -68,6 +68,8 @@ macOS 配置了公证 profile 时，`desktop.mjs` 先用 mygo 的 `--skip-notari
 
 `apps/desktop/scripts/collect-release.mjs` 必须验证标签与包版本一致、三个目标的更新版本与包版本一致、更新归档的长度与签名正确、各平台安装包齐全且无同名内容冲突，才会生成校验和并交给 GitHub Release 发布。
 
+GitHub 会规范化上传资产的文件名。收集阶段先将空格替换为点号，再检查重名、复制文件及生成校验和，保证 `SHA256SUMS.txt` 引用实际公开下载名；原生构建目录里的文件名不受影响，更新归档及签名内容不变。
+
 ## 约束与失败行为
 
 - `desktop.mjs` 比对 `go version` 输出里的 `go1.27.1 `。版本不对就退出。
