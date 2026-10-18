@@ -273,6 +273,7 @@ function buildCustomSettings(storeDir: string): AppSettings {
       ...DEFAULT_SETTINGS.recording,
       audioFormat: "wav",
       asrLanguage: "ja",
+      echoCancellation: process.platform === "darwin",
       autoSwitchConfirmations: 3,
       autoSwitchDevice: false,
       device: "usb-mic",

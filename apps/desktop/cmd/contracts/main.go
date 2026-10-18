@@ -11,7 +11,8 @@ import (
 )
 
 func main() {
-	settings, err := json.MarshalIndent(protocol.DefaultSettings("recordings"), "", "  ")
+	// The shared file is platform-independent; native bootstrap supplies host defaults.
+	settings, err := json.MarshalIndent(protocol.DefaultSettingsForPlatform("recordings", "darwin"), "", "  ")
 	if err != nil {
 		panic(err)
 	}

@@ -22,6 +22,7 @@ All notable changes to this project are documented in this file.
 
 ### Fixes
 
+- Generate identical shared defaults on every build platform while preserving native platform capabilities.
 - Define Windows Core Audio GUIDs when compiling microphone activity detection, and allow the system font fallback when optional static PingFang faces are absent.
 - Reject releases with mismatched tag/update versions or missing installers.
 - Restore an intact native library when older Xcode tools cannot strip its symbols, and preserve Windows executable search paths while preparing native dependencies.

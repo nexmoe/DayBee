@@ -28,7 +28,7 @@ Bun workspace 放桌面端、营销站和前后端共用的默认值。桌面端
 
 `bun run --cwd apps/desktop generate` 进入 `apps/desktop/scripts/desktop.mjs`。它先跑 `prepareNative`，再执行 `go run ./cmd/contracts`，然后调用 mygo CLI 的 `generate`。
 
-`cmd/contracts` 调用 `protocol.DefaultSettings` 和 `protocol.DefaultStatus`，把 JSON 写进 `packages/shared/src/defaults.ts`。mygo 根据 `mygo.config.ts` 的 `bindings` 生成 `src/renderer/src/generated/mygo.ts`。CI 在生成后对这两个文件做 `git diff --exit-code`。
+`cmd/contracts` 调用 `protocol.DefaultSettingsForPlatform("recordings", "darwin")` 和 `protocol.DefaultStatus`，把 JSON 写进 `packages/shared/src/defaults.ts`。共享文件固定使用参考平台的默认值，不能随生成机器变化；应用启动后的设置来自原生 `Bootstrap`，仍遵守本机能力。mygo 根据 `mygo.config.ts` 的 `bindings` 生成 `src/renderer/src/generated/mygo.ts`。CI 在生成后对这两个文件做 `git diff --exit-code`。
 
 改契约要改 Go 声明，不要手改生成文件。
 
