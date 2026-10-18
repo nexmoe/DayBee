@@ -1,0 +1,4 @@
+.astro/
+.alchemy/
+node_modules/
+dist/

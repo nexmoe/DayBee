@@ -1,0 +1,93 @@
+---
+import { site } from "../data/site";
+
+const repo = site.github;
+const columns: {
+	title: string;
+	links: { label: string; href: string; external?: boolean }[];
+}[] = [
+	{
+		title: "DayBee",
+		links: [
+			{ label: "Features", href: "/#features" },
+			{ label: "Models", href: "/#models" },
+			{ label: "App", href: "/#video" },
+			{ label: "Local", href: "/#pricing" },
+			{ label: "Questions", href: "/#faqs" },
+			{ label: "Download", href: "/#get-started" },
+		],
+	},
+	{
+		title: "Guides",
+		links: [
+			{ label: "System audio", href: `${repo}/blob/main/docs/system-audio.md`, external: true },
+			{ label: "Voiceprint", href: `${repo}/blob/main/docs/voiceprint.md`, external: true },
+			{ label: "Echo cancellation", href: `${repo}/blob/main/docs/echo-cancellation.md`, external: true },
+			{ label: "Microphone activity", href: `${repo}/blob/main/docs/microphone-activity.md`, external: true },
+			{ label: "Development", href: `${repo}/blob/main/docs/subsystem/workspace.md`, external: true },
+		],
+	},
+	{
+		title: "Project",
+		links: [
+			{ label: "Source", href: repo, external: true },
+			{ label: "Releases", href: site.releases, external: true },
+			{ label: "Changelog", href: `${repo}/blob/main/CHANGELOG.md`, external: true },
+			{ label: "Issues", href: `${repo}/issues`, external: true },
+		],
+	},
+];
+---
+
+<footer class="miko-footer">
+  <div class="miko-footer-inner">
+    <div class="miko-footer-brand">
+      <a class="miko-portrait" href="/#hero" aria-label="DayBee">
+        <span class="site-logo" aria-hidden="true">
+          <img class="avatar-photo avatar-photo--miko" src="/assets/daybee.png" alt="" />
+        </span>
+      </a>
+      <a class="miko-footer-name" href="/#hero">DayBee</a>
+      <p class="miko-footer-line">Record your day. Transcribe it locally.</p>
+      <p class="miko-footer-meta">DayBee · Open source</p>
+      <div class="miko-footer-tools">
+        <button
+          class="miko-theme"
+          type="button"
+          data-theme-toggle
+          aria-label="Switch to dark mode"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              fill-rule="evenodd"
+              d="M12 3a9 9 0 1 0 8.48 12.03A7 7 0 0 1 12 3Zm0 2a5 5 0 0 0 0 10 7 7 0 0 0 5.66-2.9A7 7 0 0 1 12 5Z"
+              clip-rule="evenodd"
+            />
+          </svg>
+        </button>
+        <a class="miko-footer-repo" href={repo} target="_blank" rel="me noopener noreferrer">nexmoe/eve</a>
+      </div>
+    </div>
+    <nav class="miko-footer-nav" aria-label="Footer">
+      {columns.map((column) => (
+        <div class="miko-footer-col">
+          <p>{column.title}</p>
+          <ul>
+            {column.links.map((link) => (
+              <li>
+                <a
+                  href={link.href}
+                  target={link.external ? "_blank" : undefined}
+                  rel={link.external ? "noopener noreferrer" : undefined}
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </nav>
+  </div>
+</footer>

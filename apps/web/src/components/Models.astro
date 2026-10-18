@@ -1,0 +1,55 @@
+---
+// Same layout as the reference integrations grid, with text tiles instead of logos.
+const models = [
+	{ name: "Qwen3 ASR", tag: "0.6B", role: "Default model" },
+	{ name: "FireRedASR2", tag: "AED", role: "Accurate Mandarin + English" },
+	{ name: "FireRedASR2", tag: "CTC", role: "Faster decoding" },
+	{ name: "SenseVoice", tag: "Small", role: "2025 multilingual" },
+	{ name: "Silero", tag: "VAD", role: "Voice activity detection" },
+];
+const platforms = [
+	{ name: "macOS", tag: "13.3+", role: "Apple Silicon and Intel" },
+	{ name: "Windows", tag: "x64", role: "NSIS installer" },
+	{ name: "System audio", tag: "macOS", role: "ScreenCaptureKit" },
+];
+---
+<section id="models">
+  <div class="mx-auto w-full max-w-[var(--site-content-width)] px-4 py-20 sm:px-6 sm:py-28">
+    <div class="integration-group">
+      <div class="mx-auto max-w-3xl text-center">
+        <h2 class="font-display text-3xl tracking-tight text-balance sm:text-4xl">Speech models</h2>
+        <p class="text-theme-text-muted mt-6 text-base leading-relaxed text-pretty sm:text-lg">Pick the model that fits your languages and hardware. DayBee downloads it the first time it's needed, then runs it offline with sherpa-onnx.</p>
+      </div>
+      <div class="integration-logos">
+        {models.map(item => <div class="integration-item"><span class="model-tile" aria-hidden="true">{item.tag}</span><h3 class="text-theme-text m-0 text-sm font-medium">{item.name}</h3><span class="text-theme-text-muted text-xs">{item.role}</span></div>)}
+      </div>
+    </div>
+    <div class="integration-group">
+      <div class="mx-auto max-w-3xl text-center">
+        <h2 class="font-display text-3xl tracking-tight text-balance sm:text-4xl">Platforms</h2>
+        <p class="text-theme-text-muted mt-6 text-base leading-relaxed text-pretty sm:text-lg">Native installers for macOS and Windows, with signed automatic updates.</p>
+      </div>
+      <div class="integration-logos integration-logos-three">
+        {platforms.map(item => <div class="integration-item"><span class="model-tile" aria-hidden="true">{item.tag}</span><h3 class="text-theme-text m-0 text-sm font-medium">{item.name}</h3><span class="text-theme-text-muted text-xs">{item.role}</span></div>)}
+      </div>
+    </div>
+    <ol class="integration-flow text-sm" aria-label="DayBee workflow">
+      <li><span class="integration-step-number" aria-hidden="true">1</span><span>Microphone + system audio</span></li>
+      <li><span class="integration-step-number" aria-hidden="true">2</span><span>VAD + local ASR</span></li>
+      <li><span class="integration-step-number" aria-hidden="true">3</span><span>Audio files &amp; transcripts</span></li>
+    </ol>
+  </div>
+</section>
+<style>
+  .integration-group + .integration-group { margin-top: 72px; }
+  .integration-logos { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 28px 20px; margin: 40px auto 0; max-width: 880px; }
+  .integration-logos-three { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 560px; }
+  .integration-item { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+  .model-tile { display: grid; place-items: center; width: 104px; height: 104px; margin-bottom: 10px; border-radius: 24px; background: var(--color-theme-card-03-hex); border: 1px solid var(--color-theme-border); font-family: var(--font-display, inherit); font-size: 20px; letter-spacing: -.02em; }
+  .integration-flow { display: flex; align-items: center; justify-content: center; list-style: none; gap: 16px; margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--color-theme-border); }
+  .integration-flow li { display: flex; align-items: center; gap: 8px; }
+  .integration-step-number { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 22px; height: 22px; border: 1px solid var(--color-theme-border); border-radius: 50%; font-size: 12px; font-weight: 600; }
+  .integration-flow li:not(:last-child)::after { content: "→"; margin-left: 8px; opacity: .35; }
+  @media(max-width: 767px) { .integration-flow { flex-direction: column; align-items: flex-start; width: fit-content; margin-inline: auto; } .integration-flow li:not(:last-child)::after { display: none; } }
+  @media(max-width: 767px) { .integration-logos, .integration-logos-three { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 28px 12px; margin-top: 36px; } .model-tile { width: 76px; height: 76px; border-radius: 18px; font-size: 15px; } .integration-item > span:last-child { font-size: 10px; } .integration-flow { gap: 10px; font-size: 11px; } }
+</style>

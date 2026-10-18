@@ -1,0 +1,30 @@
+---
+import Faqs from "../components/Faqs.astro";
+import Features from "../components/Features.astro";
+import GetStarted from "../components/GetStarted.astro";
+import Hero from "../components/Hero.astro";
+import Models from "../components/Models.astro";
+import Pricing from "../components/Pricing.astro";
+import Video from "../components/Video.astro";
+import { homeJsonLd } from "../data/site";
+import Layout from "../layouts/Layout.astro";
+
+interface Props {
+	canonicalPath?: string;
+}
+
+const { canonicalPath } = Astro.props;
+if (!Astro.site) {
+	throw new Error("Set site in astro.config.mjs before building the website.");
+}
+---
+
+<Layout canonicalPath={canonicalPath} jsonLd={homeJsonLd(Astro.site)}>
+  <Hero />
+  <Models />
+  <Features />
+  <Video />
+  <Pricing />
+  <Faqs />
+  <GetStarted />
+</Layout>

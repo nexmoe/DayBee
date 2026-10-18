@@ -1,0 +1,107 @@
+---
+import { site } from "../data/site";
+
+const transcript = [
+	{ time: "09:12", speaker: "Me", text: "Let's move the launch review to Thursday.", me: true },
+	{ time: "09:12", speaker: "Speaker", text: "Works for me. I'll update the calendar.", me: false },
+	{ time: "09:13", speaker: "Me", text: "Great. Send the draft notes after the call.", me: true },
+];
+---
+
+<section id="hero">
+  <div class="mx-auto flex w-full max-w-[var(--site-content-width)] flex-col items-center gap-12 px-4 pt-32 pb-20 text-center sm:gap-16 sm:px-6 sm:pt-[148px] sm:pb-28">
+    <div class="flex w-full min-w-0 flex-col items-center">
+      <div class="hero-heading">
+        <img class="hero-logo" src="/assets/daybee.png" width="120" height="120" alt="DayBee" />
+        <h1 class="font-display w-full min-w-0 max-w-4xl text-4xl leading-[1.05] tracking-tight text-balance sm:text-5xl lg:text-6xl">
+          Record your day. Transcribe it on your computer.
+        </h1>
+      </div>
+      <p
+        class="text-theme-text-muted mt-4 w-full min-w-0 max-w-xl text-base leading-relaxed text-pretty sm:mt-5 sm:max-w-2xl sm:text-lg sm:leading-relaxed"
+      >
+        DayBee lives in your menu bar or system tray. It records long sessions, keeps only speech, and writes live transcripts with local sherpa-onnx models. Nothing leaves your machine.
+      </p>
+      <div
+        class="mt-6 sm:mt-7"
+        style="opacity: 1; filter: blur(0px); transform: none;"
+      >
+        <div class="flex flex-col items-center gap-3">
+          <div class="flex items-center justify-center gap-2 md:gap-3">
+            <a
+              class="inline-flex items-center justify-center rounded-full transition-colors bg-theme-accent hover:bg-theme-accent-hover text-theme-accent-contrast h-9 gap-1.5 px-4 text-sm font-normal md:h-11 md:px-6 md:text-base"
+              href="#get-started"
+            >
+              Download
+            </a>
+            <a
+              class="inline-flex items-center justify-center rounded-full transition-colors bg-theme-card-03-hex text-theme-text transition-colors duration-200 ease-out hover:bg-theme-fg-10 h-9 gap-1.5 px-4 text-sm font-normal md:h-11 md:px-6 md:text-base"
+              href={site.github}
+              target="_blank"
+              rel="me noopener noreferrer"
+            >
+              View on GitHub
+            </a>
+          </div>
+          <p class="text-theme-text-muted text-xs">Free and open source · macOS 13.3+ and Windows</p>
+        </div>
+      </div>
+    </div>
+    <div class="hero-demo" aria-label="Example: DayBee recording and transcribing a call">
+      <div class="hero-demo-bar">
+        <span class="hero-demo-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>DayBee <span class="hero-demo-divider">/</span> Home</span>
+        <span class="hero-demo-live"><span class="hero-rec-dot" aria-hidden="true"></span>Recording</span>
+      </div>
+      <div class="hero-demo-body">
+        <div class="hero-wave" aria-hidden="true">
+          {Array.from({ length: 48 }, (_, i) => <span style={`--h:${18 + Math.round(Math.abs(Math.sin(i * 0.7) * Math.cos(i * 0.23)) * 82)}%`}></span>)}
+        </div>
+        <div class="hero-meta"><span>Qwen3 ASR 0.6B</span><span>Silero VAD</span><span>FLAC</span></div>
+        <ol class="hero-lines">
+          {transcript.map((line) => (
+            <li class:list={[{ me: line.me }]}>
+              <time>{line.time}</time>
+              <span class="hero-speaker">{line.speaker}</span>
+              <p>{line.text}</p>
+            </li>
+          ))}
+        </ol>
+        <p class="hero-app-note">Zoom detected on the microphone</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero-demo { width:100%; max-width:760px; overflow:hidden; border-radius:16px; background:var(--color-theme-bg); border:1px solid var(--color-theme-border); box-shadow:0 24px 64px #30234114,0 4px 12px #3023410a; text-align:left; }
+  .hero-demo-bar { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px; height:42px; padding:0 16px; border-bottom:1px solid var(--color-theme-border); color:var(--color-theme-text-muted); font-size:11px; }
+  .hero-demo-dots { display:flex; gap:6px; }
+  .hero-demo-dots i { display:block; width:9px; height:9px; border-radius:50%; background:#e5aaa5; }
+  .hero-demo-dots i:nth-child(2) { background:#e3c48c; } .hero-demo-dots i:last-child { background:#9ec8ae; }
+  .hero-demo-divider { padding:0 7px; opacity:.6; }
+  .hero-demo-live { justify-self:end; display:flex; align-items:center; gap:6px; color:#c25d55; font-size:10px; }
+  .hero-rec-dot { width:6px; height:6px; border-radius:50%; background:currentColor; animation:heroPulse 1.6s ease-in-out infinite; }
+  .hero-demo-body { display:flex; flex-direction:column; gap:16px; padding:24px; }
+  .hero-wave { display:flex; align-items:center; gap:3px; height:56px; padding:0 14px; border-radius:14px; background:color-mix(in srgb,var(--color-theme-text) 5%,var(--color-theme-bg)); }
+  .hero-wave span { flex:1; height:var(--h); border-radius:2px; background:color-mix(in srgb,#c59448 70%,var(--color-theme-bg)); }
+  .hero-meta { display:flex; flex-wrap:wrap; gap:6px; }
+  .hero-meta span { padding:4px 10px; border-radius:30px; font-size:11px; color:var(--color-theme-text-muted); box-shadow:inset 0 0 0 1px var(--color-theme-border); }
+  .hero-lines { list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+  .hero-lines li { display:grid; grid-template-columns:40px 64px minmax(0,1fr); align-items:baseline; gap:8px; padding:10px 14px; border-radius:12px; background:color-mix(in srgb,var(--color-theme-text) 4%,var(--color-theme-bg)); font-size:13px; }
+  .hero-lines li.me { background:color-mix(in srgb,#c59448 10%,var(--color-theme-bg)); }
+  .hero-lines time { font-size:11px; color:var(--color-theme-text-muted); font-variant-numeric:tabular-nums; }
+  .hero-speaker { font-size:11px; font-weight:500; }
+  .hero-lines li.me .hero-speaker { color:color-mix(in srgb,#c59448 80%,var(--color-theme-text)); }
+  .hero-lines p { margin:0; }
+  .hero-app-note { margin:0; text-align:center; font-size:11px; color:var(--color-theme-text-muted); }
+  @keyframes heroPulse { 50% { opacity:.35; } }
+  @media(max-width:639px) {
+    .hero-demo-bar { height:34px; padding:0 10px; font-size:10px; }
+    .hero-demo-body { padding:14px; gap:12px; }
+    .hero-wave { height:44px; gap:2px; }
+    .hero-lines li { grid-template-columns:1fr; gap:2px; padding:9px 12px; font-size:12px; }
+    .hero-lines time { display:none; }
+  }
+  @media(prefers-reduced-motion:reduce) { .hero-rec-dot { animation:none; } }
+</style>

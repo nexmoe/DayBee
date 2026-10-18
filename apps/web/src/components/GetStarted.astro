@@ -1,0 +1,44 @@
+---
+import { site } from "../data/site";
+---
+
+<section id="get-started">
+  <div class="mx-auto w-full max-w-[var(--site-content-width)] px-4 pt-24 pb-16 sm:px-6 sm:pt-32 sm:pb-20">
+    <div class="mx-auto flex max-w-xl flex-col gap-8">
+      <div class="flex flex-col items-center gap-3 text-center">
+        <h2 class="font-display text-3xl tracking-tight text-balance sm:text-4xl">Get DayBee running.</h2>
+        <p class="text-theme-text-muted text-base leading-relaxed">Install it, allow the microphone, and press record.</p>
+      </div>
+      <ol class="quickstart-steps">
+        <li>
+          <span class="quickstart-number" aria-hidden="true">1</span>
+          <div><h3 class="text-base font-medium">Download the installer</h3><p class="text-theme-text-muted mt-2 text-sm leading-relaxed">Get the <code>.dmg</code> for macOS 13.3+ or the <code>.exe</code> for Windows from the latest GitHub release.</p></div>
+        </li>
+        <li>
+          <span class="quickstart-number" aria-hidden="true">2</span>
+          <div><h3 class="text-base font-medium">Open it from the tray</h3><p class="text-theme-text-muted mt-2 text-sm leading-relaxed">DayBee starts in the menu bar or system tray. Grant microphone access when asked. On macOS, screen recording permission enables system audio capture.</p></div>
+        </li>
+        <li>
+          <span class="quickstart-number" aria-hidden="true">3</span>
+          <div><h3 class="text-base font-medium">Start recording</h3><p class="text-theme-text-muted mt-2 text-sm leading-relaxed">The first run downloads the speech model. After that, transcripts appear on the Home timeline as you speak, fully offline.</p></div>
+        </li>
+      </ol>
+      <p class="text-theme-text-muted text-xs leading-relaxed">Prefer building from source? DayBee is a Go app. See the development guide in the repository.</p>
+      <div class="flex flex-wrap justify-center gap-3">
+        <a class="inline-flex items-center justify-center rounded-full bg-theme-accent hover:bg-theme-accent-hover text-theme-accent-contrast h-11 px-6 text-sm" href={`${site.releases}/latest`}>Download latest release ↗</a>
+        <a class="inline-flex items-center justify-center rounded-full bg-theme-card-03-hex text-theme-text h-11 px-6 text-sm" href={`${site.github}/blob/main/docs/subsystem/workspace.md`}>Build from source ↗</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.quickstart-steps { list-style:none; padding:0; margin:0; display:grid; gap:28px; }
+.quickstart-steps > li { display:grid; grid-template-columns:28px minmax(0,1fr); gap:16px; }
+.quickstart-number { display:grid; place-items:center; width:28px; height:28px; border:1px solid var(--color-theme-border); border-radius:50%; font-size:12px; }
+.quickstart-command { display:flex; align-items:flex-start; gap:12px; width:100%; margin:16px 0 0; padding:16px; background:var(--color-theme-card-03-hex); border:1px solid var(--color-theme-border); border-radius:12px; box-sizing:border-box; }
+.quickstart-command code { flex:1; min-width:0; overflow-wrap:anywhere; white-space:pre-wrap; font-size:13px; line-height:1.5; }
+.quickstart-command button { flex-shrink:0; font-size:12px; cursor:pointer; padding:4px; }
+.quickstart-status:empty { display:none; }
+@media(max-width:639px) { .quickstart-steps > li { gap:12px; } .quickstart-command { padding:12px; gap:8px; } .quickstart-command code { font-size:12px; } }
+</style>
