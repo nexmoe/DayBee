@@ -1,0 +1,275 @@
+{
+  "date": "2026-10-09",
+  "flacGo": "1.0.14",
+  "referenceDecoder": "Xiph flac 1.5.0",
+  "checks": [
+    {
+      "bits": 8,
+      "channels": 1,
+      "samples": 1,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 8,
+      "channels": 1,
+      "samples": 15,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 8,
+      "channels": 1,
+      "samples": 16,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 8,
+      "channels": 1,
+      "samples": 4095,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 8,
+      "channels": 1,
+      "samples": 4096,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 8,
+      "channels": 1,
+      "samples": 4097,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 8,
+      "channels": 1,
+      "samples": 16037,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 8,
+      "channels": 2,
+      "samples": 1,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 8,
+      "channels": 2,
+      "samples": 15,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 8,
+      "channels": 2,
+      "samples": 16,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 8,
+      "channels": 2,
+      "samples": 4095,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 8,
+      "channels": 2,
+      "samples": 4096,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 8,
+      "channels": 2,
+      "samples": 4097,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 8,
+      "channels": 2,
+      "samples": 16037,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 16,
+      "channels": 1,
+      "samples": 1,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 16,
+      "channels": 1,
+      "samples": 15,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 16,
+      "channels": 1,
+      "samples": 16,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 16,
+      "channels": 1,
+      "samples": 4095,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 16,
+      "channels": 1,
+      "samples": 4096,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 16,
+      "channels": 1,
+      "samples": 4097,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 16,
+      "channels": 1,
+      "samples": 16037,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 16,
+      "channels": 2,
+      "samples": 1,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 16,
+      "channels": 2,
+      "samples": 15,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 16,
+      "channels": 2,
+      "samples": 16,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 16,
+      "channels": 2,
+      "samples": 4095,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 16,
+      "channels": 2,
+      "samples": 4096,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 16,
+      "channels": 2,
+      "samples": 4097,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 16,
+      "channels": 2,
+      "samples": 16037,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 24,
+      "channels": 1,
+      "samples": 1,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 24,
+      "channels": 1,
+      "samples": 15,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 24,
+      "channels": 1,
+      "samples": 16,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 24,
+      "channels": 1,
+      "samples": 4095,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 24,
+      "channels": 1,
+      "samples": 4096,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 24,
+      "channels": 1,
+      "samples": 4097,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 24,
+      "channels": 1,
+      "samples": 16037,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 24,
+      "channels": 2,
+      "samples": 1,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 24,
+      "channels": 2,
+      "samples": 15,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 24,
+      "channels": 2,
+      "samples": 16,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 24,
+      "channels": 2,
+      "samples": 4095,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 24,
+      "channels": 2,
+      "samples": 4096,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 24,
+      "channels": 2,
+      "samples": 4097,
+      "pcmIdentical": true
+    },
+    {
+      "bits": 24,
+      "channels": 2,
+      "samples": 16037,
+      "pcmIdentical": true
+    }
+  ],
+  "speech": {
+    "sourceBytes": 364250,
+    "flacBytes": 290886,
+    "encodeAndDecodeSeconds": 0.05194245800000008,
+    "pcmSHA256": "2525cf94a851958f38300c4b62c484ee978566d57568d0f66d03811a1e25a900",
+    "pcmIdentical": true
+  },
+  "externalCodecRequiredAtRuntime": false,
+  "cgoEnabled": false,
+  "packagedBinaryEmptyPATH": true,
+  "obsoleteFFmpegBuildCachesRemoved": true,
+  "codecTestCrossCompilation": {
+    "darwin-amd64": "pass",
+    "windows-amd64": "pass",
+    "scope": "CGO_ENABLED=0 test binaries compiled; not platform runtime acceptance"
+  }
+}

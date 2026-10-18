@@ -1,0 +1,195 @@
+.transcription-timeline {
+  position: relative;
+  container-type: inline-size;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  --transcript-secondary: color-mix(in srgb, var(--foreground) 70%, transparent);
+}
+
+/* Every row is a node on the same rail, including across app/source changes.
+   Row padding is measured by the virtualizer, so adjacent rail segments meet. */
+.transcript-event {
+  position: absolute;
+  inset: 0 0 auto;
+  --timeline-inset: 1.25rem;
+  --timeline-rail: 0.3125rem;
+  padding: 0 0 1.5rem var(--timeline-inset);
+}
+
+.transcript-event[data-last="true"] { padding-bottom: 0.5rem; }
+
+.transcript-event:not([data-last="true"])::before {
+  content: "";
+  position: absolute;
+  top: 0.75rem;
+  bottom: -0.75rem;
+  left: calc(var(--timeline-rail) - 0.5px);
+  width: 1px;
+  background: var(--border);
+}
+
+.transcript-entry {
+  position: relative;
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.transcript-turn::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 0.5rem;
+  left: calc(var(--timeline-rail) - var(--timeline-inset) - 0.25rem);
+  box-sizing: border-box;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.transcript-event[data-audio-source="system"] .transcript-turn::before {
+  border: 1.5px solid var(--muted);
+  background: var(--surface);
+}
+
+.transcript-turn[data-voice-identity="me"]::before {
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.transcript-entry-header > .audio-source-label {
+  color: var(--transcript-secondary);
+  font-weight: 500;
+  line-height: inherit;
+}
+.transcript-entry > .recording-contexts { min-width: 0; max-width: 100%; gap: 0.25rem; }
+
+.transcript-entry-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.125rem 0.5rem;
+  min-height: 1.5rem;
+  font-size: 0.75rem;
+  line-height: 1.5rem;
+}
+
+.transcript-speaker-name {
+  min-width: 0;
+  color: var(--transcript-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.transcript-turn[data-voice-identity="me"] .transcript-speaker-name { color: var(--accent); }
+
+.transcript-time-range {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.1875rem;
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.6875rem;
+}
+
+.transcript-clock {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.transcript-prose {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--foreground);
+  font-size: 0.875rem;
+  line-height: 1.75;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.transcript-paragraph { margin: 0; }
+
+.transcript-prose mark {
+  border-radius: 0.15rem;
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  color: inherit;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.transcript-empty {
+  display: grid;
+  justify-items: start;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+}
+
+.recording-contexts { display: flex; flex-wrap: wrap; align-items: start; gap: 0.375rem; }
+.recording-context {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--surface-soft);
+  color: var(--foreground);
+  text-align: left;
+  font: inherit;
+}
+button.recording-context { cursor: pointer; }
+button.recording-context:hover { background: var(--surface); border-color: var(--muted); }
+button.recording-context:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.recording-context > img, .recording-context > svg, .recording-context-filter > img,
+.recording-context-filter > svg { flex: 0 0 18px; width: 18px; height: 18px; object-fit: contain; }
+.recording-context > span { min-width: 0; overflow-wrap: anywhere; }
+.recording-context-fallback { color: var(--muted); }
+
+.transcript-entry .recording-context {
+  min-height: 1.25rem;
+  padding: 0 0.375rem 0 0.25rem;
+  border-color: transparent;
+  border-radius: 999px;
+  color: var(--transcript-secondary);
+  font-size: 0.6875rem;
+  line-height: 1.25rem;
+}
+
+.transcript-entry button.recording-context:hover { border-color: transparent; color: var(--foreground); }
+
+.transcript-entry .recording-context > :is(img, svg) { flex-basis: 14px; width: 14px; height: 14px; }
+
+.microphone-notice { margin-bottom: 1.25rem; color: var(--muted); }
+.active-microphone-apps {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  padding-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.active-microphone-label { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--muted); }
+.active-microphone-label > svg { flex-shrink: 0; color: var(--accent); }
+.active-microphone-apps > .recording-contexts { min-width: 0; }
+
+@container (min-width: 32rem) {
+  .transcript-event { padding-bottom: 1.75rem; --timeline-inset: 1.5rem; --timeline-rail: 0.375rem; }
+  .transcript-event[data-last="true"] { padding-bottom: 0.5rem; }
+  .transcript-speaker-name { font-size: 0.875rem; }
+  .transcript-time-range { font-size: 0.75rem; }
+  .transcript-prose { font-size: 0.9375rem; line-height: 1.8; }
+}
+
+.recording-context-files { list-style: none; margin: 1rem 0 0; padding: 0; }
+.recording-context-file { display: flex; align-items: start; gap: 0.75rem; padding: 0.75rem 0; border-top: 1px solid var(--border); }
+.recording-context-file .recording-contexts { margin-top: 0.5rem; }

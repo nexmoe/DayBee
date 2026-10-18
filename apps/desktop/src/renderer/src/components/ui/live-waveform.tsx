@@ -1,12 +1,10 @@
+import { desktopEvents } from "@/lib/desktop-api";
 import { cn } from "@/lib/cn";
-import { type HTMLAttributes, useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { type HTMLAttributes, useEffect, useRef } from "react";
 
 export type LiveWaveformProps = HTMLAttributes<HTMLDivElement> & {
   active?: boolean;
   processing?: boolean;
-  deviceId?: string;
-  sharedStream?: MediaStream | null;
-  requireSharedStream?: boolean;
   barWidth?: number;
   barGap?: number;
   barRadius?: number;
@@ -15,27 +13,18 @@ export type LiveWaveformProps = HTMLAttributes<HTMLDivElement> & {
   fadeWidth?: number;
   height?: string | number;
   sensitivity?: number;
-  smoothingTimeConstant?: number;
-  fftSize?: number;
   historySize?: number;
   updateRate?: number;
   mode?: "scrolling" | "static";
   centerStaticBars?: boolean;
   processingSpeed?: number;
-  onError?: (error: Error) => void;
-  onStreamReady?: (stream: MediaStream) => void;
-  onStreamEnd?: () => void;
 };
 /**
- * LiveWaveform renders a microphone-driven audio visualization.
- * It can attach to a shared MediaStream to avoid requesting a second microphone feed.
+ * LiveWaveform renders the native frequency spectrum using the original canvas.
  */
 export const LiveWaveform = ({
   active = false,
   processing = false,
-  deviceId,
-  sharedStream,
-  requireSharedStream = false,
   barWidth = 3,
   barGap = 1,
   barRadius = 1.5,
@@ -44,27 +33,17 @@ export const LiveWaveform = ({
   fadeWidth = 24,
   height = 64,
   sensitivity = 1,
-  smoothingTimeConstant = 0.8,
-  fftSize = 256,
   historySize = 60,
   updateRate = 30,
   mode = "static",
   centerStaticBars = false,
   processingSpeed = 0.03,
-  onError,
-  onStreamReady,
-  onStreamEnd,
   className,
   ...props
 }: LiveWaveformProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const historyRef = useRef<number[]>([]);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const ownsStreamRef = useRef(false);
-  const animationRef = useRef<number>(0);
   const lastUpdateRef = useRef<number>(0);
   const processingAnimationRef = useRef<number | null>(null);
   const lastActiveDataRef = useRef<number[]>([]);
@@ -74,39 +53,12 @@ export const LiveWaveform = ({
   const gradientCacheRef = useRef<CanvasGradient | null>(null);
   const lastWidthRef = useRef(0);
   const frequencyDataRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
+  const rectRef = useRef({ width: 0, height: 0 });
+  const colorRef = useRef("#000");
+  const fadeRafRef = useRef<number | null>(null);
+  const scheduleDrawRef = useRef<() => void>(() => {});
 
   const heightStyle = typeof height === "number" ? `${height}px` : height;
-
-  /**
-   * Dispose of audio resources created by the waveform visualizer.
-   * @param shouldStopTracks Whether the underlying media tracks should be stopped.
-   */
-  const cleanupResources = useCallback(
-    (shouldStopTracks: boolean) => {
-      if (streamRef.current && shouldStopTracks) {
-        streamRef.current.getTracks().forEach((track) => {
-          track.stop();
-        });
-      }
-
-      if (streamRef.current) {
-        streamRef.current = null;
-        ownsStreamRef.current = false;
-        onStreamEnd?.();
-      }
-
-      if (audioContextRef.current && audioContextRef.current.state !== "closed") {
-        void audioContextRef.current.close();
-        audioContextRef.current = null;
-      }
-
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = 0;
-      }
-    },
-    [onStreamEnd]
-  );
 
   // Handle canvas resizing
   useEffect(() => {
@@ -116,8 +68,12 @@ export const LiveWaveform = ({
       return;
     }
 
-    const resizeObserver = new ResizeObserver(() => {
+    const readColor = () => {
+      colorRef.current = barColor || getComputedStyle(canvas).color || "#000";
+    };
+    const applyRect = () => {
       const rect = container.getBoundingClientRect();
+      rectRef.current = { width: rect.width, height: rect.height };
       const dpr = window.devicePixelRatio || 1;
 
       canvas.width = rect.width * dpr;
@@ -132,14 +88,40 @@ export const LiveWaveform = ({
 
       gradientCacheRef.current = null;
       lastWidthRef.current = rect.width;
+      readColor();
       needsRedrawRef.current = true;
-    });
+      scheduleDrawRef.current();
+    };
+
+    const onTheme = () => {
+      readColor();
+      needsRedrawRef.current = true;
+      scheduleDrawRef.current();
+    };
+    const resizeObserver = new ResizeObserver(applyRect);
+    const themeObserver = new MutationObserver(onTheme);
+    const colorScheme = window.matchMedia("(prefers-color-scheme: dark)");
 
     resizeObserver.observe(container);
-    return () => resizeObserver.disconnect();
-  }, []);
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    colorScheme.addEventListener("change", onTheme);
+    applyRect();
+    return () => {
+      resizeObserver.disconnect();
+      themeObserver.disconnect();
+      colorScheme.removeEventListener("change", onTheme);
+    };
+  }, [barColor]);
 
   useEffect(() => {
+    const cancelFade = () => {
+      if (fadeRafRef.current !== null) {
+        cancelAnimationFrame(fadeRafRef.current);
+        fadeRafRef.current = null;
+      }
+    };
+    cancelFade();
+
     if (processing && !active) {
       let time = 0;
       transitionProgressRef.current = 0;
@@ -149,9 +131,7 @@ export const LiveWaveform = ({
         transitionProgressRef.current = Math.min(1, transitionProgressRef.current + 0.02);
 
         const processingData: number[] = [];
-        const barCount = Math.floor(
-          (containerRef.current?.getBoundingClientRect().width || 200) / (barWidth + barGap)
-        );
+        const barCount = Math.floor((rectRef.current.width || 200) / (barWidth + barGap));
 
         if (mode === "static") {
           const halfCount = Math.floor(barCount / 2);
@@ -208,15 +188,23 @@ export const LiveWaveform = ({
         }
 
         needsRedrawRef.current = true;
+        if (document.hidden) return;
         processingAnimationRef.current = requestAnimationFrame(animateProcessing);
+        scheduleDrawRef.current();
       };
 
-      animateProcessing();
+      const onVisibility = () => {
+        if (!document.hidden) animateProcessing();
+      };
+      document.addEventListener("visibilitychange", onVisibility);
+      if (!document.hidden) animateProcessing();
 
       return () => {
+        document.removeEventListener("visibilitychange", onVisibility);
         if (processingAnimationRef.current) {
           cancelAnimationFrame(processingAnimationRef.current);
         }
+        cancelFade();
       };
     }
     if (!(active || processing)) {
@@ -236,107 +224,25 @@ export const LiveWaveform = ({
               historyRef.current = historyRef.current.map((value) => value * (1 - fadeProgress));
             }
             needsRedrawRef.current = true;
-            requestAnimationFrame(fadeToIdle);
+            fadeRafRef.current = requestAnimationFrame(fadeToIdle);
+            scheduleDrawRef.current();
           } else if (mode === "static") {
             staticBarsRef.current = [];
           } else {
             historyRef.current = [];
           }
         };
-        fadeToIdle();
+        if (!document.hidden) fadeToIdle();
       }
     }
-    // Return undefined for other cases to satisfy TypeScript
-    return undefined;
+    return () => {
+      cancelFade();
+    };
   }, [processing, active, barWidth, barGap, mode, processingSpeed]);
 
-  // Synchronous cleanup on unmount to ensure microphone is released immediately
-  useLayoutEffect(() => {
-    return () => {
-      cleanupResources(ownsStreamRef.current);
-    };
-  }, [cleanupResources]);
-
-  // Handle microphone setup and teardown
-  useEffect(() => {
-    if (!active) {
-      cleanupResources(ownsStreamRef.current);
-      return undefined;
-    }
-
-    const sharedStreamProvided = typeof sharedStream !== "undefined";
-    if (requireSharedStream && sharedStreamProvided && !sharedStream) {
-      return undefined;
-    }
-
-    let cancelled = false;
-
-    const setupMicrophone = async () => {
-      try {
-        const stream =
-          sharedStreamProvided && sharedStream
-            ? sharedStream
-            : await navigator.mediaDevices.getUserMedia({
-                audio: {
-                  deviceId: deviceId ? { exact: deviceId } : undefined,
-                  echoCancellation: true,
-                  noiseSuppression: true,
-                  autoGainControl: true
-                }
-              });
-
-        if (cancelled) {
-          if (!(sharedStreamProvided && sharedStream)) {
-            stream.getTracks().forEach((track) => {
-              track.stop();
-            });
-          }
-          return;
-        }
-
-        cleanupResources(ownsStreamRef.current);
-
-        streamRef.current = stream;
-        ownsStreamRef.current = !(sharedStreamProvided && sharedStream);
-        onStreamReady?.(stream);
-
-        const AudioContextConstructor =
-          window.AudioContext ||
-          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-        const audioContext = new AudioContextConstructor();
-        const analyser = audioContext.createAnalyser();
-        analyser.fftSize = fftSize;
-        analyser.smoothingTimeConstant = smoothingTimeConstant;
-
-        const source = audioContext.createMediaStreamSource(stream);
-        source.connect(analyser);
-
-        audioContextRef.current = audioContext;
-        analyserRef.current = analyser;
-
-        historyRef.current = [];
-      } catch (error) {
-        onError?.(error as Error);
-      }
-    };
-
-    void setupMicrophone();
-
-    return () => {
-      cancelled = true;
-      cleanupResources(ownsStreamRef.current);
-    };
-  }, [
-    active,
-    fftSize,
-    smoothingTimeConstant,
-    deviceId,
-    sharedStream,
-    requireSharedStream,
-    onError,
-    onStreamReady,
-    cleanupResources
-  ]);
+  useEffect(() => desktopEvents.onWaveform(({ spectrum }) => {
+    frequencyDataRef.current = Uint8Array.from(spectrum);
+  }), []);
 
   // Animation loop
   useEffect(() => {
@@ -350,24 +256,31 @@ export const LiveWaveform = ({
       return;
     }
 
-    let rafId: number;
+    let rafId = 0;
+    let queued = false;
+
+    const hasBars = () =>
+      mode === "static" ? staticBarsRef.current.length > 0 : historyRef.current.length > 0;
+    const wantsFrame = () =>
+      !document.hidden && (active || processing || needsRedrawRef.current || hasBars());
+    const schedule = () => {
+      if (queued || !wantsFrame()) return;
+      queued = true;
+      rafId = requestAnimationFrame(animate);
+    };
+    scheduleDrawRef.current = schedule;
 
     const animate = (currentTime: number) => {
-      // Render waveform
-      const rect = canvas.getBoundingClientRect();
+      queued = false;
+      if (!wantsFrame()) return;
+      const rect = rectRef.current;
 
       // Update audio data if active
       if (active && currentTime - lastUpdateRef.current > updateRate) {
         lastUpdateRef.current = currentTime;
 
-        if (analyserRef.current) {
-          // Reuse the typed array across frames to avoid per-frame allocation.
-          const binCount = analyserRef.current.frequencyBinCount;
-          if (!frequencyDataRef.current || frequencyDataRef.current.length !== binCount) {
-            frequencyDataRef.current = new Uint8Array(binCount);
-          }
+        if (frequencyDataRef.current) {
           const dataArray = frequencyDataRef.current;
-          analyserRef.current.getByteFrequencyData(dataArray);
 
           if (mode === "static") {
             // For static mode, update bars in place
@@ -418,23 +331,15 @@ export const LiveWaveform = ({
         }
       }
 
-      // Only redraw if needed
       if (!(needsRedrawRef.current || active)) {
-        rafId = requestAnimationFrame(animate);
+        schedule();
         return;
       }
 
       needsRedrawRef.current = active;
       ctx.clearRect(0, 0, rect.width, rect.height);
 
-      const computedBarColor =
-        barColor ||
-        (() => {
-          const style = getComputedStyle(canvas);
-          // Try to get the computed color value directly
-          const color = style.color;
-          return color || "#000";
-        })();
+      const computedBarColor = colorRef.current;
 
       const step = barWidth + barGap;
       const barCount = Math.floor(rect.width / step);
@@ -525,15 +430,16 @@ export const LiveWaveform = ({
 
       ctx.globalAlpha = 1;
 
-      rafId = requestAnimationFrame(animate);
+      schedule();
     };
 
-    rafId = requestAnimationFrame(animate);
+    document.addEventListener("visibilitychange", schedule);
+    schedule();
 
     return () => {
-      if (rafId) {
-        cancelAnimationFrame(rafId);
-      }
+      scheduleDrawRef.current = () => {};
+      document.removeEventListener("visibilitychange", schedule);
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, [
     active,

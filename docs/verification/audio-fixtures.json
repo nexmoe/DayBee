@@ -1,0 +1,10 @@
+{
+  "source": "sherpa-onnx official Qwen3 March 25 model archive test_wavs/fast1.wav",
+  "sourceArchiveSHA256": "393f8a14e2f5fb96746aaab342997a40641001fbd5bf9592a080a8329178ee96",
+  "fixtures": {
+    "short.wav": "58e64aaf98e523ff9deee2a26ce22645ff2a942c7a09e4c0243554762e9a2f80",
+    "chinese.wav": "370db915c91a8ce24288d744cb9676c6924ca8eae2ac206781c3973949a719fb",
+    "silence.wav": "d303811b8c84619667cd0501342f84ec6cbe69f7aa3856dcf52fabda374c92b8",
+    "long.wav": "bd595ae5b0661a9e28247b20570eacc013006b3fa92e1ea4b7829445d046ba23"
+  }
+}

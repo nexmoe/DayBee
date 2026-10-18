@@ -1,0 +1,341 @@
+{
+  "note": "Offline public-data voiceprint eval. Numbers only: no audio, no speaker ids, no personal data. Scores use the app's ProfileScore and the mean of 3-point-median-smoothed window scores. Decide's extra 70% window vote is not part of these ROCs. AISHELL-3 is studio read speech, and the echo set is synthetic residue from other speakers, so these thresholds are not a product default until checked on the user's own mic and room.",
+  "date": "2026-10-11",
+  "runtime": {
+    "sherpa": "1.13.8",
+    "provider": "cpu",
+    "numThreads": 2,
+    "windowSeconds": 1.5,
+    "bench": "5 warmup embeddings then 30 timed embeddings of one 1.5s enrollment window"
+  },
+  "data": {
+    "source": "AISHELL-3",
+    "split": "test",
+    "url": "https://huggingface.co/datasets/AISHELL/AISHELL-3",
+    "sampleRate": 16000,
+    "channels": 1,
+    "speakers": 13,
+    "utterances": 353,
+    "seconds": 744.23,
+    "meanEnrollSec": 23.133620192307692,
+    "meanTestSec": 35.494961538461546
+  },
+  "protocol": {
+    "env": [
+      "EVE_VOICEPRINT_EVAL_DIR",
+      "EVE_VOICEPRINT_EVAL_MODEL"
+    ],
+    "enroll": "Earliest utterances concatenated up to 24s. Later utterances are held out and concatenated with 200ms gaps.",
+    "profileScore": "max(cosine to the arithmetic-mean centroid, mean of the top-3 cosines)",
+    "windows": "1.5s window, 0.5s hop; a crop of 0.8-1.5s is one window of the whole crop",
+    "chunkScore": "mean of 3-point median-smoothed window scores",
+    "accept": "chunk score >= threshold",
+    "eer": "interpolated operating point where FAR equals FRR",
+    "thresholdFA1": "lowest finite threshold whose false-accept rate is <= 0.01",
+    "tMe": "max of the 1-2s other-speaker FA<=1% threshold, each duration bucket's echo FA<=1% threshold, and the pooled-echo FA<=1% threshold",
+    "trialSeed": "math/rand/v2 PCG(20261011, 1)",
+    "trialsPerSpeaker": {
+      "1-2s": {
+        "target": 16,
+        "other": 40,
+        "echo": 40
+      },
+      "2-4s": {
+        "target": 16,
+        "other": 40,
+        "echo": 40
+      },
+      ">4s": {
+        "target": 12,
+        "other": 40,
+        "echo": 40
+      }
+    },
+    "realizedTrials": {
+      "1-2s": {
+        "nTarget": 208,
+        "nOther": 520,
+        "nEcho": 520
+      },
+      "2-4s": {
+        "nTarget": 208,
+        "nOther": 520,
+        "nEcho": 520
+      },
+      ">4s": {
+        "nTarget": 156,
+        "nOther": 520,
+        "nEcho": 520
+      },
+      "echoAll": 1560
+    },
+    "echo": "Utterances from speakers other than the enrolled one. Convolve with a 200ms exponential-decay noise impulse (direct path 1, tail energy 1, amplitude down 60dB at 200ms), delay uniform in 40-120ms, scale by 0.1 (-20dB), then add Kellet pink noise at 15dB SNR versus the wet residue."
+  },
+  "decision": {
+    "baseline": "3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx",
+    "baselineTMe": 0.5385116338729858,
+    "recommendedTMe": 0.539,
+    "recommendedTMeNote": "0.539 is the measured CAM++ zh-cn TMe 0.5385116338729858 rounded up to three decimals. Raising the threshold cannot increase false accepts. At the measured point, 1-2s other-speaker FA is 5/520 and 1-2s target FR is 6/208. Pooled echo FA is 0.",
+    "compareModel": "3dspeaker_speech_eres2netv2_sv_zh-cn_16k-common.onnx",
+    "eer1to2sOtherBaseline": 0.019230769230769232,
+    "eer1to2sOtherEres2netv2": 0.011538461538461539,
+    "relativeEerDrop": 0.4,
+    "relativeEerDropRequired": 0.15,
+    "msPerWindowEres2netv2": 35.7021,
+    "rtfEres2netv2": 0.0238014,
+    "rtfLimit": 0.1,
+    "shipEres2netv2": true,
+    "reason": "1-2s other-speaker EER falls from 0.019230769230769232 to 0.011538461538461539, a 40% relative drop, above the 15% bar. 35.7021 ms per 1.5s window is RTF 0.0238014, below 0.1.",
+    "also": {
+      "campplusZhEnAdvancedRelativeEerDrop": 0.25,
+      "eres2netBase200kRelativeEerDrop": 0.4,
+      "note": "The ship rule compares only ERes2NetV2 with CAM++ zh-cn. CAM++ zh_en advanced drops 1-2s EER by 25% and is the fastest model. ERes2Net base_200k matches V2's 1-2s EER and is faster, at dimension 512, with a higher false-reject rate at its own TMe."
+    }
+  },
+  "models": [
+    {
+      "model": "3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx",
+      "dim": 192,
+      "speakers": 13,
+      "utterances": 353,
+      "meanEnrollSec": 23.133620192307692,
+      "meanTestSec": 35.494961538461546,
+      "embeddings": 3096,
+      "msPerWindow": 7.680933333333333,
+      "rtf": 0.0051206222222222215,
+      "numThreads": 2,
+      "buckets": [
+        {
+          "bucket": "1-2s",
+          "nTarget": 208,
+          "nOther": 520,
+          "nEcho": 520,
+          "eerOther": 0.019230769230769232,
+          "thresholdFA1Other": 0.5385116338729858,
+          "frAtFA1Other": 0.028846153846153848,
+          "eerEcho": 0.009615384615384616,
+          "thresholdFA1Echo": 0.44884636998176575,
+          "frAtFA1Echo": 0.009615384615384616
+        },
+        {
+          "bucket": "2-4s",
+          "nTarget": 208,
+          "nOther": 520,
+          "nEcho": 520,
+          "eerOther": 0.004807692307692308,
+          "thresholdFA1Other": 0.5567827939987182,
+          "frAtFA1Other": 0.004807692307692308,
+          "eerEcho": 0.004807692307692308,
+          "thresholdFA1Echo": 0.4376397654414177,
+          "frAtFA1Echo": 0.004807692307692308
+        },
+        {
+          "bucket": ">4s",
+          "nTarget": 156,
+          "nOther": 520,
+          "nEcho": 520,
+          "eerOther": 0.00641025641025641,
+          "thresholdFA1Other": 0.5491676124242636,
+          "frAtFA1Other": 0.00641025641025641,
+          "eerEcho": 0,
+          "thresholdFA1Echo": 0.4414848940713065,
+          "frAtFA1Echo": 0
+        }
+      ],
+      "echoAll": {
+        "n": 1560,
+        "eer": 0.005244755244755245,
+        "thresholdFA1": 0.43964930943080355,
+        "frAtFA1": 0.005244755244755245
+      },
+      "tMe": 0.5385116338729858,
+      "frAtTMe1to2s": 0.028846153846153848,
+      "faOtherAtTMe1to2s": 0.009615384615384616,
+      "faEchoAtTMe": 0,
+      "bytes": 28281138
+    },
+    {
+      "model": "3dspeaker_speech_campplus_sv_zh_en_16k-common_advanced.onnx",
+      "dim": 192,
+      "speakers": 13,
+      "utterances": 353,
+      "meanEnrollSec": 23.133620192307692,
+      "meanTestSec": 35.494961538461546,
+      "embeddings": 3096,
+      "msPerWindow": 6.6865,
+      "rtf": 0.004457666666666666,
+      "numThreads": 2,
+      "buckets": [
+        {
+          "bucket": "1-2s",
+          "nTarget": 208,
+          "nOther": 520,
+          "nEcho": 520,
+          "eerOther": 0.014423076923076924,
+          "thresholdFA1Other": 0.512148380279541,
+          "frAtFA1Other": 0.014423076923076924,
+          "eerEcho": 0.013461538461538462,
+          "thresholdFA1Echo": 0.4671614170074463,
+          "frAtFA1Echo": 0.014423076923076924
+        },
+        {
+          "bucket": "2-4s",
+          "nTarget": 208,
+          "nOther": 520,
+          "nEcho": 520,
+          "eerOther": 0.009615384615384616,
+          "thresholdFA1Other": 0.5297224819660187,
+          "frAtFA1Other": 0.009615384615384616,
+          "eerEcho": 0.004807692307692308,
+          "thresholdFA1Echo": 0.46256282180547714,
+          "frAtFA1Echo": 0.004807692307692308
+        },
+        {
+          "bucket": ">4s",
+          "nTarget": 156,
+          "nOther": 520,
+          "nEcho": 520,
+          "eerOther": 0,
+          "thresholdFA1Other": 0.5256506067055923,
+          "frAtFA1Other": 0,
+          "eerEcho": 0,
+          "thresholdFA1Echo": 0.44843103736639023,
+          "frAtFA1Echo": 0
+        }
+      ],
+      "echoAll": {
+        "n": 1560,
+        "eer": 0.006993006993006993,
+        "thresholdFA1": 0.4609147310256958,
+        "frAtFA1": 0.006993006993006993
+      },
+      "tMe": 0.512148380279541,
+      "frAtTMe1to2s": 0.014423076923076924,
+      "faOtherAtTMe1to2s": 0.009615384615384616,
+      "faEchoAtTMe": 0.0019230769230769232,
+      "bytes": 28281164
+    },
+    {
+      "model": "3dspeaker_speech_eres2netv2_sv_zh-cn_16k-common.onnx",
+      "dim": 192,
+      "speakers": 13,
+      "utterances": 353,
+      "meanEnrollSec": 23.133620192307692,
+      "meanTestSec": 35.494961538461546,
+      "embeddings": 3096,
+      "msPerWindow": 35.7021,
+      "rtf": 0.0238014,
+      "numThreads": 2,
+      "buckets": [
+        {
+          "bucket": "1-2s",
+          "nTarget": 208,
+          "nOther": 520,
+          "nEcho": 520,
+          "eerOther": 0.011538461538461539,
+          "thresholdFA1Other": 0.5366560816764832,
+          "frAtFA1Other": 0.014423076923076924,
+          "eerEcho": 0.0019230769230769232,
+          "thresholdFA1Echo": 0.4634977877140045,
+          "frAtFA1Echo": 0
+        },
+        {
+          "bucket": "2-4s",
+          "nTarget": 208,
+          "nOther": 520,
+          "nEcho": 520,
+          "eerOther": 0.004807692307692308,
+          "thresholdFA1Other": 0.5127931460738182,
+          "frAtFA1Other": 0.004807692307692308,
+          "eerEcho": 0.004807692307692308,
+          "thresholdFA1Echo": 0.47286199033260345,
+          "frAtFA1Echo": 0.004807692307692308
+        },
+        {
+          "bucket": ">4s",
+          "nTarget": 156,
+          "nOther": 520,
+          "nEcho": 520,
+          "eerOther": 0,
+          "thresholdFA1Other": 0.5159512839534066,
+          "frAtFA1Other": 0,
+          "eerEcho": 0,
+          "thresholdFA1Echo": 0.460732706955501,
+          "frAtFA1Echo": 0
+        }
+      ],
+      "echoAll": {
+        "n": 1560,
+        "eer": 0.0034965034965034965,
+        "thresholdFA1": 0.4616922565868923,
+        "frAtFA1": 0.0017482517482517483
+      },
+      "tMe": 0.5366560816764832,
+      "frAtTMe1to2s": 0.014423076923076924,
+      "faOtherAtTMe1to2s": 0.009615384615384616,
+      "faEchoAtTMe": 0.001282051282051282,
+      "bytes": 71441526
+    },
+    {
+      "model": "3dspeaker_speech_eres2net_base_200k_sv_zh-cn_16k-common.onnx",
+      "dim": 512,
+      "speakers": 13,
+      "utterances": 353,
+      "meanEnrollSec": 23.133620192307692,
+      "meanTestSec": 35.494961538461546,
+      "embeddings": 3096,
+      "msPerWindow": 13.341266666666666,
+      "rtf": 0.008894177777777778,
+      "numThreads": 2,
+      "buckets": [
+        {
+          "bucket": "1-2s",
+          "nTarget": 208,
+          "nOther": 520,
+          "nEcho": 520,
+          "eerOther": 0.011538461538461539,
+          "thresholdFA1Other": 0.5118070244789124,
+          "frAtFA1Other": 0.019230769230769232,
+          "eerEcho": 0.007692307692307693,
+          "thresholdFA1Echo": 0.47537046670913696,
+          "frAtFA1Echo": 0.004807692307692308
+        },
+        {
+          "bucket": "2-4s",
+          "nTarget": 208,
+          "nOther": 520,
+          "nEcho": 520,
+          "eerOther": 0.004807692307692308,
+          "thresholdFA1Other": 0.5040452281634012,
+          "frAtFA1Other": 0.004807692307692308,
+          "eerEcho": 0.004807692307692308,
+          "thresholdFA1Echo": 0.48420576453208924,
+          "frAtFA1Echo": 0.004807692307692308
+        },
+        {
+          "bucket": ">4s",
+          "nTarget": 156,
+          "nOther": 520,
+          "nEcho": 520,
+          "eerOther": 0,
+          "thresholdFA1Other": 0.5274375677108765,
+          "frAtFA1Other": 0,
+          "eerEcho": 0,
+          "thresholdFA1Echo": 0.48453304171562195,
+          "frAtFA1Echo": 0
+        }
+      ],
+      "echoAll": {
+        "n": 1560,
+        "eer": 0.006993006993006993,
+        "thresholdFA1": 0.47568851709365845,
+        "frAtFA1": 0.0034965034965034965
+      },
+      "tMe": 0.5118070244789124,
+      "frAtTMe1to2s": 0.019230769230769232,
+      "faOtherAtTMe1to2s": 0.009615384615384616,
+      "faEchoAtTMe": 0.0057692307692307696,
+      "bytes": 39593765
+    }
+  ]
+}

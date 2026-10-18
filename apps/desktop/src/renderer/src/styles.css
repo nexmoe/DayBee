@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "./fluid.css";
+@import "./window-layout.css";
+
 @plugin "tailwindcss-animate";
 
 :root {
@@ -19,6 +22,7 @@
   --shadow-raised: 0 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   --shadow-raised-sm: 0 0.5px 1.5px rgba(0, 0, 0, 0.06), inset 0 0.5px 0 rgba(255, 255, 255, 0.5);
   --shadow-knob: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.06);
+
 }
 
 @media (prefers-color-scheme: dark) {
@@ -59,9 +63,64 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Load the installed public faces through WebKit's custom-font path. Installed
+   name lookup can select the variable UI face, changing the old Latin metrics. */
+@supports (font: -apple-system-body) {
+  @font-face {
+    font-family: "DayBee Legacy System";
+    src: url("daybee-font://system/pingfang.ttc#PingFangSC-Regular");
+    font-weight: 400;
+  }
+  @font-face {
+    font-family: "DayBee Legacy System";
+    src: url("daybee-font://system/pingfang.ttc#PingFangSC-Medium");
+    font-weight: 500;
+  }
+  @font-face {
+    font-family: "DayBee Legacy System";
+    src: url("daybee-font://system/pingfang.ttc#PingFangSC-Semibold");
+    font-weight: 600 700;
+  }
+  body {
+    font-family: "DayBee Legacy System", "PingFang SC", -apple-system, "SF Pro Text", "Segoe UI Variable", "Inter", sans-serif;
+    font-optical-sizing: none;
+  }
+  :root { --text-xs--line-height: 1rem; }
+}
+
 button,
 input {
   font: inherit;
+}
+
+.update-button {
+  color: #854d0e;
+  background: linear-gradient(180deg, #fff5d6, #fde68a);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 0 0 1px rgba(245, 158, 11, 0.45),
+    0 0 12px rgba(245, 158, 11, 0.28);
+}
+
+.update-button:not(:disabled):is(:hover, :focus-visible) {
+  background: linear-gradient(180deg, #fff8e7, #fcd34d);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 0 2px rgba(245, 158, 11, 0.6),
+    0 0 16px rgba(245, 158, 11, 0.4);
+}
+
+.dark .update-button {
+  color: #fde68a;
+  background: linear-gradient(180deg, #754515, #57340d);
+  box-shadow: inset 0 1px 0 rgba(253, 230, 138, 0.18),
+    0 0 0 1px rgba(251, 191, 36, 0.55),
+    0 0 12px rgba(245, 158, 11, 0.25);
+}
+
+.dark .update-button:not(:disabled):is(:hover, :focus-visible) {
+  background: linear-gradient(180deg, #92591a, #754515);
+  box-shadow: inset 0 1px 0 rgba(253, 230, 138, 0.25),
+    0 0 0 2px rgba(251, 191, 36, 0.7),
+    0 0 16px rgba(245, 158, 11, 0.4);
 }
 
 /* Tray panel entrance animation */
@@ -69,7 +128,7 @@ input {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 4.75rem 0 1rem;
+  padding: var(--panel-gutter) 0 1rem;
   animation: tray-panel-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
@@ -96,7 +155,21 @@ input {
   right: 0;
   height: 38px;
   -webkit-app-region: drag;
+  --app-region: drag;
   z-index: 50;
+}
+
+[data-window="compact"] .drag-region {
+  height: var(--panel-gutter);
+}
+
+/* Windows keeps room for its custom minimize and close controls. */
+[data-window="compact"]:has(.windows-window-controls) .tray-panel {
+  padding-top: 4.75rem;
+}
+
+[data-window="compact"]:has(.windows-window-controls) .drag-region {
+  height: 38px;
 }
 
 .home-github-star {
@@ -139,7 +212,6 @@ input {
     background: color-mix(in srgb, #ff5f57 30%, var(--surface));
   }
 }
-
 
 .home-github-star__icon {
   display: grid;
@@ -184,10 +256,13 @@ input,
 [role="tablist"],
 a {
   -webkit-app-region: no-drag;
+  --app-region: no-drag;
 }
 
 /* Status indicator dot */
 .status-dot {
+  position: relative;
+  isolation: isolate;
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -199,67 +274,45 @@ a {
 
 .status-dot[data-tone="recording"] {
   background: #34c759;
-  box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.2);
+}
+
+.status-dot[data-tone="recording"]::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: -1;
+  width: 8px;
+  height: 8px;
+  border-radius: inherit;
+  background: rgba(52, 199, 89, 0.2);
+  transform: translate(-50%, -50%) scale(1.75);
   animation: pulse-dot 2s ease-in-out infinite;
 }
 
 @keyframes pulse-dot {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.2); }
-  50% { box-shadow: 0 0 0 6px rgba(52, 199, 89, 0.06); }
+  0%, 100% { transform: translate(-50%, -50%) scale(1.75); opacity: 1; }
+  50% { transform: translate(-50%, -50%) scale(2.5); opacity: 0.3; }
 }
 
-/* Metric stack — device full-width, level + vad side-by-side */
-.metric-stack {
+@media (prefers-reduced-motion: reduce) {
+  .status-dot[data-tone="recording"]::after {
+    animation: none;
+  }
+}
+
+/* Daily speech statistics. */
+.capture-card {
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: 0.75rem;
   background: var(--surface);
-  overflow: hidden;
   box-shadow: var(--shadow-raised-sm);
 }
 
-.metric-row-inner {
-  display: flex;
-  border-top: 1px solid var(--border);
-}
-
-.metric-row-inner > .metric-cell + .metric-cell {
-  border-left: 1px solid var(--border);
-}
-
-.metric-row-inner > .metric-cell {
-  flex: 1;
-}
-
-.metric-cell {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  min-width: 0;
-}
-
-.metric-copy {
-  display: grid;
-  gap: 0.18rem;
-  min-width: 0;
-  flex: 1;
-}
-
-.metric-label-compact {
-  color: var(--muted);
-  font-size: 0.625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  line-height: 1.2;
-  white-space: normal;
-}
-
-.metric-value-compact {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
-  overflow-wrap: anywhere;
+.capture-card > .speech-activity {
+  margin: 0;
+  padding: 0.625rem 0.75rem 0.75rem;
 }
 
 /* Eyebrow label */

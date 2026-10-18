@@ -6,12 +6,12 @@ import type {
   AudioFormat,
   DesktopSnapshot,
   ThemeMode
-} from "@eve/shared";
+} from "@daybee/shared";
 import type { MessageKey } from "@/lib/i18n";
 import { desktopActions } from "@/lib/desktop-store";
 import { FolderOpen, Github, Star } from "lucide-react";
 import { SettingField } from "@/components/setting-field";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/legacy-button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -21,6 +21,9 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { VoiceprintDiagnostics } from "@/components/voiceprint-diagnostics";
+import { VoiceprintSettings } from "@/components/voiceprint-settings";
+import { ASRModelSettings } from "@/components/asr-model-settings";
 
 type Translator = (key: MessageKey, params?: Record<string, number | string>) => string;
 type SelectOption<T extends string | number> = { label: string; value: T };
@@ -149,6 +152,7 @@ export function InputTab({
 }: TabProps & {
   updateRecording: (patch: Partial<AppSettings["recording"]>) => void;
 }) {
+  const supportsEchoCancellation = window.mygo?.platform === "darwin";
   return (
     <div className="space-y-2">
       <SettingField
@@ -158,8 +162,21 @@ export function InputTab({
         title={t("recordingDeviceTitle")}
       />
       <SettingField
+        control={<Switch checked={settings.recording.recordSystemAudio} disabled={!supportsEchoCancellation} onCheckedChange={(value: boolean) => updateRecording({ recordSystemAudio: value })} />}
+        description={t(supportsEchoCancellation ? "recordSystemAudioDescription" : "recordSystemAudioUnavailable")}
+        testId="system-audio-field"
+        title={t("recordSystemAudioTitle")}
+      />
+      <SettingField
+        control={<Switch checked={settings.recording.echoCancellation} disabled={!supportsEchoCancellation} onCheckedChange={(value: boolean) => updateRecording({ echoCancellation: value })} />}
+        description={t(supportsEchoCancellation ? "echoCancellationDescription" : "echoCancellationUnavailable")}
+        testId="echo-cancellation-field"
+        title={t("echoCancellationTitle")}
+      />
+      <SettingField
         control={<Switch checked={settings.recording.autoSwitchDevice} onCheckedChange={(value: boolean) => updateRecording({ autoSwitchDevice: value })} />}
-        description={t("autoSwitchDescription")}
+        description={t(settings.recording.echoCancellation ? "autoSwitchEchoCancellation" : "autoSwitchDescription")}
+        testId="auto-switch-input-field"
         title={t("autoSwitchTitle")}
       />
       <SettingField
@@ -178,15 +195,22 @@ export function TranscribeTab({
   snapshot,
   t,
   updateRecording,
-  updateTranscribe
+  onInitializeVoiceprint
 }: TabProps & {
   snapshot: DesktopSnapshot;
   updateRecording: (patch: Partial<AppSettings["recording"]>) => void;
-  updateTranscribe: (patch: Partial<AppSettings["transcribe"]>) => void;
+  onInitializeVoiceprint: () => void;
 }) {
   return (
     <div className="space-y-2">
-      <SettingField control={<Switch checked={!settings.recording.disableAsr} onCheckedChange={(value: boolean) => updateRecording({ disableAsr: !value })} />} description={t("realtimeAsrDescription")} title={t("realtimeAsrTitle")} />
+      <VoiceprintSettings
+        snapshot={snapshot}
+        t={t}
+        onAdaptation={(enabled) => updateRecording({ voiceprintAdaptation: enabled })}
+        onInitialize={onInitializeVoiceprint}
+      />
+      <SettingField control={<Switch checked={!settings.recording.disableAsr} onCheckedChange={(value: boolean) => updateRecording({ disableAsr: !value })} />} description={t("realtimeAsrDescription")} testId="realtime-asr-field" title={t("realtimeAsrTitle")} />
+      <ASRModelSettings snapshot={snapshot} t={t} />
       <SettingField control={<SelectField options={options.asrLanguageOptions} value={settings.recording.asrLanguage} onChange={(value) => updateRecording({ asrLanguage: value })} />} description={t("asrLanguageDescription")} title={t("asrLanguageTitle")} />
       <SettingField
         control={
@@ -202,22 +226,12 @@ export function TranscribeTab({
         layout="stacked"
         title={t("modelStatusTitle")}
       />
-      <SettingField
-        control={
-          <div className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-xs leading-5 text-[color:var(--foreground)]">
-            {snapshot.status.ffmpegAvailable ? t("ffmpegReady") : t("ffmpegMissing")}
-          </div>
-        }
-        description={t("ffmpegStatusDescription")}
-        layout="stacked"
-        title={t("ffmpegStatusTitle")}
-      />
-      <SettingField control={<Switch checked={settings.transcribe.watch} onCheckedChange={(value: boolean) => updateTranscribe({ watch: value })} />} description={t("batchWatchDescription")} title={t("batchWatchTitle")} />
+      <VoiceprintDiagnostics snapshot={snapshot} t={t} />
     </div>
   );
 }
 
-export function buildSettingsOptions(snapshot: DesktopSnapshot, t: Translator) {
+export function buildSettingsOptions(snapshot: Pick<DesktopSnapshot, "app" | "devices" | "updater">, t: Translator) {
   return {
     appVersionLabel: `${snapshot.app.name} v${snapshot.app.version}`,
     languageOptions: [
@@ -255,6 +269,9 @@ export function buildSettingsOptions(snapshot: DesktopSnapshot, t: Translator) {
 }
 
 function formatUpdateStatus(updater: AutoUpdateSnapshot, t: Translator): string {
+  if (updater.phase === "available") {
+    return t("updateStatusAvailable", { version: updater.latestVersion ?? updater.currentVersion });
+  }
   if (updater.phase === "checking") {
     return t("updateStatusChecking");
   }
@@ -265,12 +282,7 @@ function formatUpdateStatus(updater: AutoUpdateSnapshot, t: Translator): string 
   }
   if (updater.phase === "downloaded") {
     const version = updater.downloadedVersion ?? updater.latestVersion ?? updater.currentVersion;
-    return t(
-      updater.installDeferredUntilIdle
-        ? "updateStatusDownloadedDeferred"
-        : "updateStatusDownloadedAuto",
-      { version }
-    );
+    return t("updateStatusRestarting", { version });
   }
   if (updater.phase === "error") {
     return t("updateStatusError", {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_STATUS } from "@eve/shared";
+import { DEFAULT_STATUS } from "@daybee/shared";
 import { statusTone } from "./status-tone";
 
 describe("statusTone", () => {

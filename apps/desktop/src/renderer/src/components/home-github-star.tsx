@@ -1,6 +1,6 @@
 import { Github, Star } from "lucide-react";
-import type { DesktopSnapshot } from "@eve/shared";
-import { Button } from "@/components/ui/button";
+import type { DesktopSnapshot } from "@daybee/shared";
+import { Button } from "@/components/ui/legacy-button";
 import { createT } from "@/lib/i18n";
 import { desktopActions } from "@/lib/desktop-store";
 

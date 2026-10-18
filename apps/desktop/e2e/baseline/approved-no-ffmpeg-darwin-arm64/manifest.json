@@ -1,0 +1,14 @@
+{
+  "sourceCommit": "a7216969f8a69ca89fae9da33475681b65a2c41d",
+  "approvedChange": "remove-ffmpeg-status",
+  "sha256": {
+    "en-US-light/transcribe.json": "75a683a7499fef065662a9d436c274f2b5f9a9e36786d4ad091221e38e45e84e",
+    "en-US-light/transcribe.png": "8a199127533a2d93cd2af2de6693668ee95b3f4c61d4fe2b5994515eb756c7f5",
+    "en-US-dark/transcribe.json": "1119e4b202f621de7346099fb0a4cf8bd38d0dd3119d283521fbc44754521d49",
+    "en-US-dark/transcribe.png": "08e1748e255b784e4f1f55c4c4725e5b2d3ed2e22a74f48bdfee1d94d3b2283e",
+    "zh-CN-light/transcribe.json": "ba0680cf981b0bfa2c983e67abca72d90f51012f96841c02ccd5567288d60113",
+    "zh-CN-light/transcribe.png": "e6cffab3f829ae1d28dee12a9cc04ffb6a85277efb9a9d060dc82d0281f3b508",
+    "zh-CN-dark/transcribe.json": "7981145a6ced4008577dc8346ec2e1b85157e9aeb9b5acdd66fc7c2548d6ab4e",
+    "zh-CN-dark/transcribe.png": "99a2a19a5bc83b3266aead3192b41db436f9cb25fc1f2e3731bca2e98b35116f"
+  }
+}

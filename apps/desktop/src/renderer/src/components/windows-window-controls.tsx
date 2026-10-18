@@ -1,13 +1,13 @@
 import { Minus, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { desktopActions } from "@/lib/desktop-store";
+import { Button } from "@/components/ui/legacy-button";
+import { desktopActions, useDesktopSelector } from "@/lib/desktop-store";
 import { createT } from "@/lib/i18n";
-import type { DesktopSnapshot } from "@eve/shared";
 
 const isWindows = navigator.userAgent.toLowerCase().includes("windows");
 
-export function WindowsWindowControls({ snapshot }: { snapshot: DesktopSnapshot }) {
-  const t = createT(snapshot.settings.desktop.language);
+export function WindowsWindowControls() {
+  const language = useDesktopSelector((current) => current.settings.desktop.language);
+  const t = createT(language);
 
   if (!isWindows) {
     return null;

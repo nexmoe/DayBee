@@ -1,0 +1,204 @@
+{
+  "date": "2026-10-12",
+  "platform": "darwin-arm64",
+  "syntheticOnly": true,
+  "react": "19.3.0",
+  "durationSeconds": 180,
+  "updates": 867,
+  "payloadBytes": 663669,
+  "oldVersionContract": {
+    "react": "19.2.4",
+    "durationSeconds": 5,
+    "updates": 24,
+    "retainedReactMeasures": 8125,
+    "limit": 1000,
+    "passed": false
+  },
+  "newVersionContract": {
+    "retainedReactMeasures": 0,
+    "limit": 1000,
+    "passed": true
+  },
+  "samples": [
+    {
+      "seconds": 0,
+      "updates": 0,
+      "nativeRSSKiB": 127856,
+      "compactRSSKiB": 122432,
+      "mainRSSKiB": 203056,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    },
+    {
+      "seconds": 10,
+      "updates": 49,
+      "nativeRSSKiB": 134320,
+      "compactRSSKiB": 226960,
+      "mainRSSKiB": 375568,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    },
+    {
+      "seconds": 20,
+      "updates": 97,
+      "nativeRSSKiB": 134528,
+      "compactRSSKiB": 271536,
+      "mainRSSKiB": 408928,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    },
+    {
+      "seconds": 30,
+      "updates": 145,
+      "nativeRSSKiB": 134688,
+      "compactRSSKiB": 272064,
+      "mainRSSKiB": 415360,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    },
+    {
+      "seconds": 40,
+      "updates": 194,
+      "nativeRSSKiB": 134816,
+      "compactRSSKiB": 274704,
+      "mainRSSKiB": 508960,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    },
+    {
+      "seconds": 50,
+      "updates": 242,
+      "nativeRSSKiB": 134864,
+      "compactRSSKiB": 290576,
+      "mainRSSKiB": 509152,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    },
+    {
+      "seconds": 60,
+      "updates": 290,
+      "nativeRSSKiB": 134880,
+      "compactRSSKiB": 295856,
+      "mainRSSKiB": 509968,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    },
+    {
+      "seconds": 70,
+      "updates": 338,
+      "nativeRSSKiB": 135968,
+      "compactRSSKiB": 297808,
+      "mainRSSKiB": 510048,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    },
+    {
+      "seconds": 80,
+      "updates": 387,
+      "nativeRSSKiB": 135968,
+      "compactRSSKiB": 295920,
+      "mainRSSKiB": 511696,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    },
+    {
+      "seconds": 90,
+      "updates": 435,
+      "nativeRSSKiB": 135984,
+      "compactRSSKiB": 296112,
+      "mainRSSKiB": 512912,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    },
+    {
+      "seconds": 100,
+      "updates": 483,
+      "nativeRSSKiB": 136016,
+      "compactRSSKiB": 297792,
+      "mainRSSKiB": 517744,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    },
+    {
+      "seconds": 110,
+      "updates": 531,
+      "nativeRSSKiB": 136080,
+      "compactRSSKiB": 297312,
+      "mainRSSKiB": 517584,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    },
+    {
+      "seconds": 120,
+      "updates": 579,
+      "nativeRSSKiB": 136144,
+      "compactRSSKiB": 298720,
+      "mainRSSKiB": 639664,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    },
+    {
+      "seconds": 130,
+      "updates": 627,
+      "nativeRSSKiB": 136144,
+      "compactRSSKiB": 298720,
+      "mainRSSKiB": 639760,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    },
+    {
+      "seconds": 140,
+      "updates": 675,
+      "nativeRSSKiB": 136160,
+      "compactRSSKiB": 298720,
+      "mainRSSKiB": 639840,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    },
+    {
+      "seconds": 150,
+      "updates": 723,
+      "nativeRSSKiB": 136192,
+      "compactRSSKiB": 297728,
+      "mainRSSKiB": 640320,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    },
+    {
+      "seconds": 160,
+      "updates": 771,
+      "nativeRSSKiB": 136192,
+      "compactRSSKiB": 298080,
+      "mainRSSKiB": 640960,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    },
+    {
+      "seconds": 170,
+      "updates": 819,
+      "nativeRSSKiB": 136240,
+      "compactRSSKiB": 298080,
+      "mainRSSKiB": 640784,
+      "mainMeasures": 0,
+      "compactMeasures": 0,
+      "mainRows": 10
+    }
+  ]
+}

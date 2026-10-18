@@ -1,185 +1,118 @@
-name: Desktop Release
-
+name: Desktop checks and release
 on:
+  pull_request:
   push:
-    tags:
-      - "v*"
-
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
 permissions:
-  contents: write
-
+  contents: read
 jobs:
-  checks:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: "22"
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.3.2"
-
-      - name: Install workspace dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Typecheck desktop
-        run: bun run typecheck
-
-      - name: Test desktop
-        run: bun run test
-
-  build:
-    needs: checks
-    runs-on: ${{ matrix.os }}
+  native:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
-            build_target: --mac
-            artifact_name: eve-dist-macos
-            artifact_pattern: |
-              apps/desktop/dist/*.dmg
-              apps/desktop/dist/*.zip
-              apps/desktop/dist/*.blockmap
-              apps/desktop/dist/latest-mac.yml
-          - os: windows-latest
-            build_target: --win
-            artifact_name: eve-dist-windows
-            artifact_pattern: |
-              apps/desktop/dist/*.exe
-              apps/desktop/dist/*.blockmap
-              apps/desktop/dist/latest*.yml
-
+          - {os: macos-15, target: darwin-arm64}
+          - {os: macos-15-intel, target: darwin-amd64}
+          - {os: windows-latest, target: windows-amd64}
+    runs-on: ${{ matrix.os }}
+    env:
+      CGO_ENABLED: "1"
+      GOFLAGS: -mod=mod
+      DAYBEE_BUILD_TARGET: ${{ matrix.target }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup Node
-        uses: actions/setup-node@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
         with:
-          node-version: "22"
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+          go-version: "1.27.1"
+          cache-dependency-path: apps/desktop/go.sum
+      - uses: actions/setup-node@v5
+        with: {node-version: "24"}
+      - uses: oven-sh/setup-bun@v2
+        with: {bun-version: "1.3.2"}
+      - uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows'
         with:
-          bun-version: "1.3.2"
-
-      - name: Install workspace dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Patch isbinaryfile
-        run: node ./scripts/patch-isbinaryfile.mjs
-
-      - name: Build desktop package
+          msystem: MINGW64
+          install: mingw-w64-x86_64-gcc make diffutils
+      - name: Select native C compiler
         shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            echo 'C:\msys64\mingw64\bin' >> "$GITHUB_PATH"
+            echo 'CC=gcc' >> "$GITHUB_ENV"
+            echo 'CXX=g++' >> "$GITHUB_ENV"
+          else
+            echo 'CC=clang' >> "$GITHUB_ENV"
+            echo 'CXX=clang++' >> "$GITHUB_ENV"
+            echo 'MACOSX_DEPLOYMENT_TARGET=13.3' >> "$GITHUB_ENV"
+          fi
+      - run: bun install --frozen-lockfile
+      - run: bun run check:docs
+      - name: Generate bindings and verify unchanged contract
         working-directory: apps/desktop
+        run: bun run generate
+      - run: git diff --exit-code -- apps/desktop/src/renderer/src/generated/mygo.ts packages/shared/src/defaults.ts
+      - run: bun run typecheck && bun run test
+      - run: bun run --cwd apps/desktop test:release
+      - run: bun run --cwd apps/desktop test:race
+      - name: Vet
+        working-directory: apps/desktop
+        run: node scripts/desktop.mjs vet
+      - name: Import signing credentials for releases
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
         env:
-          MATRIX_BUILD_TARGET: ${{ matrix.build_target }}
           MAC_CERT_P12_BASE64: ${{ secrets.MAC_CERT_P12_BASE64 }}
           MAC_CERT_P12_PASSWORD: ${{ secrets.MAC_CERT_P12_PASSWORD }}
-          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
-          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
           APPLE_API_KEY_P8_BASE64: ${{ secrets.APPLE_API_KEY_P8_BASE64 }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-        run: |
-          set -euo pipefail
-          # Match Linkhoard's signing flow: import a Developer ID certificate into a temporary
-          # keychain and let electron-builder discover it there. When secrets are absent we still
-          # build, but the resulting macOS artifacts are unsigned and not notarized.
-          extra_args=()
-          if [[ "${RUNNER_OS}" == "macOS" ]]; then
-            ENTITLEMENTS_PATH="$PWD/build/entitlements.mac.plist"
-            ENTITLEMENTS_INHERIT_PATH="$PWD/build/entitlements.mac.inherit.plist"
-            extra_args+=(
-              "--config.mac.entitlements=$ENTITLEMENTS_PATH"
-              "--config.mac.entitlementsInherit=$ENTITLEMENTS_INHERIT_PATH"
-            )
-            if [[ -n "${MAC_CERT_P12_BASE64:-}" ]] && [[ -n "${MAC_CERT_P12_PASSWORD:-}" ]]; then
-              CERT_PATH="$RUNNER_TEMP/mac_cert.p12"
-              KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain"
-
-              echo "$MAC_CERT_P12_BASE64" | base64 --decode > "$CERT_PATH"
-
-              security create-keychain -p "$MAC_CERT_P12_PASSWORD" "$KEYCHAIN_PATH"
-              security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-              security unlock-keychain -p "$MAC_CERT_P12_PASSWORD" "$KEYCHAIN_PATH"
-
-              INTERMEDIATE_CERT="$RUNNER_TEMP/devidg2.der"
-              curl -sSfL -o "$INTERMEDIATE_CERT" https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer
-              security import "$INTERMEDIATE_CERT" -k "$KEYCHAIN_PATH" -T /usr/bin/codesign
-              security import "$CERT_PATH" -k "$KEYCHAIN_PATH" -P "$MAC_CERT_P12_PASSWORD" -T /usr/bin/codesign -T /usr/bin/productbuild
-              security list-keychain -d user -s "$KEYCHAIN_PATH"
-              security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$MAC_CERT_P12_PASSWORD" "$KEYCHAIN_PATH"
-
-              export CSC_KEYCHAIN="$KEYCHAIN_PATH"
-              export CSC_KEY_PASSWORD="$MAC_CERT_P12_PASSWORD"
-              export CSC_IDENTITY_AUTO_DISCOVERY=true
-
-              if [[ -n "${APPLE_API_KEY_P8_BASE64:-}" ]] && [[ -n "${APPLE_API_KEY_ID:-}" ]] && [[ -n "${APPLE_API_ISSUER:-}" ]]; then
-                API_KEY_PATH="$RUNNER_TEMP/AuthKey.p8"
-                echo "$APPLE_API_KEY_P8_BASE64" | base64 --decode > "$API_KEY_PATH"
-                export APPLE_API_KEY="$API_KEY_PATH"
-                export APPLE_API_KEY_ID="$APPLE_API_KEY_ID"
-                export APPLE_API_ISSUER="$APPLE_API_ISSUER"
-              fi
-            else
-              export CSC_IDENTITY_AUTO_DISCOVERY=false
-              extra_args+=("--config.mac.identity=null" "--config.pkg.identity=null")
-            fi
-          fi
-          bun run build
-          bun run prepare:sherpa-runtime
-          if (( ${#extra_args[@]} )); then
-            bunx electron-builder "${MATRIX_BUILD_TARGET}" --publish never "${extra_args[@]}"
-          else
-            bunx electron-builder "${MATRIX_BUILD_TARGET}" --publish never
-          fi
-
-      - name: Smoke-check build output
-        shell: bash
-        run: |
-          while IFS= read -r pattern; do
-            [[ -z "$pattern" ]] && continue
-            compgen -G "$pattern" > /dev/null
-          done <<< "${{ matrix.artifact_pattern }}"
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+          WIN_CERT_P12_BASE64: ${{ secrets.WIN_CERT_P12_BASE64 }}
+        run: node apps/desktop/scripts/signing.mjs
+      - name: Build native app and signed updates
+        working-directory: apps/desktop
+        env:
+          MYGO_UPDATER_PRIVATE_KEY: ${{ startsWith(github.ref, 'refs/tags/v') && secrets.MYGO_UPDATER_PRIVATE_KEY || '' }}
+          MYGO_WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WIN_CERT_P12_PASSWORD }}
+        run: bun run build
+      - name: Native window smoke
+        working-directory: apps/desktop
+        run: bun run test:native
+      - name: Renderer integration with native Go service
+        working-directory: apps/desktop
+        run: bunx playwright install chromium && bun run test:e2e
+      - name: Verify bundled native dependencies
+        working-directory: apps/desktop
+        run: node scripts/verify-package.mjs
+      - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}
-          path: ${{ matrix.artifact_pattern }}
+          name: daybee-${{ matrix.target }}
+          path: apps/desktop/dist/${{ matrix.target }}/
           if-no-files-found: error
-
   publish:
-    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: native
     runs-on: ubuntu-latest
+    permissions: {contents: write}
     steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: eve-dist-*
-          merge-multiple: true
-          path: dist
-
-      - name: Create checksums
-        run: sha256sum dist/* > dist/SHA256SUMS.txt
-
-      - name: Create release
-        uses: softprops/action-gh-release@v2
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with: {node-version: "24"}
+      - name: Enforce UI, native inference, minimum OS and endurance acceptance
+        run: node apps/desktop/scripts/release-gates.mjs
+      - uses: actions/download-artifact@v4
+        with: {pattern: daybee-*, path: artifacts}
+      - name: Collect installers, signed updates and checksums
+        run: node apps/desktop/scripts/collect-release.mjs artifacts dist
+      - uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/*.dmg
-            dist/*.zip
-            dist/*.exe
-            dist/*.blockmap
-            dist/latest*.yml
+            dist/*Setup*.exe
+            dist/*.tar.gz
+            dist/*.delta
+            dist/update-*.json
             dist/SHA256SUMS.txt
           generate_release_notes: true

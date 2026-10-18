@@ -1,48 +1,77 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { expect, test as base, type ElectronApplication, type Page } from "@playwright/test";
-import { _electron as electron } from "playwright";
+import { test as base, expect, type Page } from "@playwright/test";
+import { launchNative } from "./native-driver";
+import { DEFAULT_SETTINGS, type DesktopSnapshot } from "@daybee/shared";
 
-const currentDir = dirname(fileURLToPath(import.meta.url));
-const appRoot = resolve(currentDir, "..");
-
-type AppContext = {
-  app: ElectronApplication;
-  page: Page;
-};
+type AppContext = { app: {
+  close(): Promise<void>;
+  completeSpeech(text: string): Promise<unknown>;
+  refreshHistory(): Promise<unknown>;
+  setFixture(snapshot: DesktopSnapshot): Promise<unknown>;
+}; page: Page };
 
 export const test = base.extend<{
-  launchApp: () => Promise<AppContext>;
+  launchApp: (options?: { voiceprintSetup?: "pending" | "skipped" | "ready" }) => Promise<AppContext>;
   storeDir: string;
 }>({
   storeDir: async ({}, use) => {
-    const directory = mkdtempSync(`${tmpdir()}/eve-desktop-e2e-`);
-    try {
-      await use(directory);
-    } finally {
-      rmSync(directory, { force: true, recursive: true });
-    }
+    const directory = mkdtempSync(`${tmpdir()}/daybee-mygo-e2e-`);
+    try { await use(directory); } finally { rmSync(directory, { force: true, recursive: true }); }
   },
-  launchApp: async ({ storeDir }, use) => {
-    await use(async () => {
-      const app = await electron.launch({
-        args: [appRoot],
-        cwd: appRoot,
-        env: {
-          ...process.env,
-          CI: "1",
-          EVE_E2E_TEST: "1",
-          EVE_STORE_DIR: storeDir
+  launchApp: async ({ browser, storeDir }, use) => {
+    const cleanup: (() => Promise<void>)[] = [];
+    try {
+      await use(async (options) => {
+        const settingsPath = join(storeDir, "desktop-settings.json");
+        if (!existsSync(settingsPath)) {
+          const settings = structuredClone(DEFAULT_SETTINGS);
+          settings.desktop.voiceprintSetup = options?.voiceprintSetup ?? "skipped";
+          settings.desktop.startRecordingOnLaunch = false;
+          settings.desktop.launchAtLogin = false;
+          settings.recording.outputDir = join(storeDir, "recordings");
+          writeFileSync(settingsPath, JSON.stringify({ settings, nativeDevices: true }));
         }
+        const native = await launchNative(storeDir);
+        const page = await browser.newPage({ viewport: { width: 420, height: 620 } });
+        let closed = false;
+        const close = async () => { if (closed) return; closed = true; try { await page.close(); } finally { await native.close(); } };
+        cleanup.push(close);
+        await page.exposeFunction("__nativeCall", native.call);
+        await page.exposeFunction("__nativeSnapshot", native.snapshot);
+        await page.addInitScript(({ platform }) => {
+          const testWindow = window as unknown as {
+            __nativeCall(method: string, args: unknown[]): Promise<unknown>;
+            __nativeSnapshot(): Promise<unknown>;
+          };
+          const listeners = new Map<string, Set<(payload: unknown) => void>>();
+          window.mygo = {
+            platform, windowId: 1, version: "0.3.4",
+            call: (method: string, ...args: unknown[]) => testWindow.__nativeCall(method, args),
+            on: (name: string, listener: (payload: unknown) => void) => {
+              if (!listeners.has(name)) listeners.set(name, new Set());
+              listeners.get(name)!.add(listener);
+              return () => { listeners.get(name)?.delete(listener); };
+            }
+          } as NonNullable<Window["mygo"]>;
+          setInterval(() => { void testWindow.__nativeSnapshot().then(snapshot => {
+            listeners.get("desktop:snapshot")?.forEach(listener => listener(snapshot));
+          }); }, 100);
+        }, { platform: process.platform === "win32" ? "windows" : "darwin" });
+        await page.goto("/");
+        await expect(page.getByRole("button", { name: /Start recording|开始录音|Stop|停止/ })).toBeVisible();
+        return { app: {
+          close, completeSpeech: native.completeSpeech, setFixture: native.setFixture,
+          refreshHistory: async () => {
+            const snapshot = await native.snapshot() as DesktopSnapshot;
+            // The mock batch operation refreshes disk fixtures through the normal
+            // service path without waiting for the five-minute fallback scan.
+            return native.call("DesktopService.RunTranscribe", [snapshot.settings.recording.outputDir]);
+          }
+        }, page };
       });
-      const page = await app.firstWindow();
-      await page.waitForLoadState("domcontentloaded");
-      await expect(page.getByRole("button", { name: /Start recording|开始录音|Stop|停止/ })).toBeVisible();
-      return { app, page };
-    });
+    } finally { for (const close of cleanup) await close(); }
   }
 });
-
 export { expect };

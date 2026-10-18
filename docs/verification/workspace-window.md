@@ -1,0 +1,58 @@
+# Workspace window verification
+
+Updated: 2026-10-09. Scope: the user-requested two-window layout, tested on macOS arm64.
+
+## Behavior
+
+- The compact 420×620 recorder retains status, waveform, device metrics and recording controls. The separate live-transcript card is removed. Its tabs are replaced by an “Open main window” shortcut. Below that shortcut it displays the same complete transcription timeline as Home, replacing daily recording summaries and folder actions. Its empty state omits the main window's shortcut back to the recorder. File and daily history remains available in the main window.
+- On macOS the compact recorder is frameless, hiding the close, minimize and zoom buttons while retaining its native rounded corners, shadow and drag region. The main window retains all three native window buttons.
+- The macOS recorder's top content margin matches its 16 px side margins. Its native and CSS drag regions are both 16 px high, ending before the first row of controls. Windows keeps its existing space for custom window controls.
+- The main window opens on demand at 1000×760, with Home, History, General, Input and Transcribe in the Fluid Functionalism Sidebar. Home is the initial page. The existing page content and controls retain the recorder's colors, materials and rounded cards.
+- The sidebar uses the application icon and one brand label. The page name appears once in a compact toolbar beside the sidebar toggle; the repeated large heading and explanatory subtitle are removed. The timeline starts directly below it, with consistent content padding at desktop and narrow widths.
+- Home joins temporally continuous transcription fragments and reflows the full text at sentences and natural paragraph breaks. Different recording sessions, gaps exceeding 60 seconds and groups exceeding five minutes start separate timeline entries. It displays paragraphs by source time, latest first, preserving reading order within the same time. Audio-file rotation within a continuous session can still merge naturally. New transcriptions update automatically; History retains its original file and daily actions.
+- New recordings persist a session identity and each completed utterance's start/end times from the VAD sample offsets, including silence. Inference time does not move these timestamps, and a pause inside one long archive still splits the timeline. Legacy records use their existing recording times with the same gap/duration limits. Batch reprocessing preserves recording identity and discards stale timed chunks; filename recording times take precedence over legacy batch-completion timestamps.
+- Every completed speech recognition atomically updates its audio segment's transcript JSON, including while recording continues. A buffered recorder notification makes the desktop service reload and broadcast history immediately to both windows. Finalization and batch transcription also notify; the two-second scan remains a fallback for externally changed files. WAV-to-FLAC finalization updates the same metadata instead of duplicating the live text.
+- Home's toolbar contains an accessible search field that filters merged paragraphs, matches literal text without case sensitivity, highlights matches and retains complete paragraph context and source times. Search continues receiving new matching results while recording; Escape and the clear button restore the full timeline. Search state survives sidebar navigation, and an explicit empty result state appears when nothing matches.
+- Repeated opens reuse one main window. Closing it hides that window; recording remains owned by the Go service. Its footer can reopen the compact recorder.
+- Both windows subscribe to the same recording and settings snapshots. Their window controls target the window that contains them, and the directory picker uses the focused window.
+- The sidebar supports keyboard navigation, collapse, drag resizing and a mobile drawer below 768 px. Inter Variable is loaded locally for its weight animation; reduced-motion preferences are respected.
+
+## Component source
+
+Installed the requested [Base UI registry](https://www.fluidfunctionalism.com/r/base/sidebar.json) with the shadcn CLI and `--overwrite`. The [documented Sidebar API](https://www.fluidfunctionalism.com/docs/sidebar) is composed with props and classes in `main-window.tsx`.
+
+Upstream modules exceeding the repository's 500-line limit were split into smaller modules with their public barrel exports retained. Shared animation values and behavior were preserved. Existing recorder buttons and scroll areas use their retained legacy components so the registry installation does not restyle those controls. The Inter OFL notice is included in the application resources.
+
+## Results
+
+| Check | Result |
+| --- | --- |
+| TypeScript and production renderer build | Pass |
+| Vitest | 12 pass, including timeline gap/session boundaries, five-minute limits, capture times, ordering, full text and stable live paragraph identity |
+| Playwright | 28 pass: compact/main separation, identical complete transcripts in both windows, continuity-aware merging and reflow without content loss, source-time ordering, long silence within one audio file, completed recognition visible within one second while recording continues, search/highlighting including active-search updates, microphone activity, full file history in the main window, empty states, scroll restoration, both languages/themes, narrow layout, start/stop, pure recording, settings persistence, keyboard navigation, collapse and mobile navigation |
+| Native double-window smoke | Pass: completed speech appears in both actual WebViews within one second while recording continues, compact shortcut, singleton reuse, five sidebar pages, shared settings/status, close/reopen/reload during recording, application unhide and stop from the main window; AppKit reports zero visible native buttons on the compact recorder and three on the main window |
+| Go race tests | Pass, including incremental transcript persistence beyond the five-item status preview, VAD capture timestamps, session identity across rotation and stop/start, finalization without duplicates, WAV-to-FLAC handoff, late recognition after rotation and batch identity preservation |
+| Native speech timing | Pass with cached Silero VAD and the fixed Chinese WAV: offsets retain silence and reset with the VAD origin |
+| Release artifact unit tests | 2 pass |
+| macOS arm64 application build | Pass; development signature |
+| Package verification | Pass: native library loading, bundled notices including Inter, pure Go FLAC, legacy recordings, resampling and signed update archive |
+| Real application UI | Desktop control confirmed the compact recorder without its old live-transcript card and the main Home search field, filtered full paragraphs, highlighted matches and clear-search behavior in the production-engine app |
+| Source file size and whitespace | All source files remain within 500 lines; `git diff --check` passes |
+
+The native smoke harness uses an isolated mock engine and closes its windows after the run. It tests window and service behavior, not microphone capture or recognition quality. Earlier production-engine recording evidence is recorded separately in [real-recording.json](real-recording.json).
+
+The timeline checks saved nineteen screenshots: eight Home screenshots across both languages, both themes and desktop/narrow sizes, eight compact-recorder screenshots at 420×620 and 380×480, a narrow Home search-results capture and two captures reproducing the reported hour-long gaps as separate entries. They also check that the title and sidebar toggle share a row, the application icon loads, and the first timestamp appears near the top of Home. The browser tests supply the native window's background color beneath the transparent renderer. These screenshots verify layout and readability, not native-window pixel parity.
+
+The compact-toolbar revision passed all 15 Playwright tests, type checking, the renderer build and a separate macOS arm64 application build. The native double-window smoke passed against that separate bundle. After the user approved ending the active recording, it was saved and the production app was restarted with the new build. All 11 recording-directory files retained their hashes during replacement; the recorder displayed five transcribed recordings. Desktop control then confirmed the single-row header, application icon and full timeline in the visible main window.
+
+The recorder spacing revision passed type checking, the application build, native window smoke and Playwright checks of equal top/side content margins and a drag region that ends before the controls. The geometry check waits for the entrance animation to finish. The other 14 Playwright checks passed in the same verification cycle.
+
+The compact transcription revision passed all 19 Playwright tests, type checking, a separate macOS arm64 application build and native window smoke. The tests verify full text across four recording dates, automatic updates, merged audio segments, minimum-width wrapping/scrolling and exact text/time parity with Home. After confirming the production app was idle, it was restarted with the verified build; all 11 recording-directory files retained their hashes. Desktop control confirmed source times and complete transcript paragraphs in the compact recorder, with no recording-history cards and the existing 16 px margins preserved.
+
+The immediate-update/search revision passed all 22 Playwright tests, the full Go race suite, type checking, a separate macOS arm64 application build and native window smoke. A regression test first reproduced the missing timeline text while recording; the fix persists completed recognition before stopping or rotating the audio segment. Native smoke verifies the two real WebViews receive mock-completed speech within one second. After confirming the production app was idle, it was restarted with the verified build; all 13 recording-directory files retained their hashes. Desktop control confirmed the compact card removal and searched existing Chinese transcript text in Home, verified filtering/highlighting, then cleared the search to restore the full timeline.
+
+The timeline-continuity revision first reproduced the reported hour-long merge with failing regression tests. It passed 12 Vitest tests, all 28 Playwright tests, Go race tests, real Silero speech-offset/reset checks, type checking, a macOS arm64 application build and native two-window smoke. The signed update archive and bundle signature were verified. After confirming the production app was idle, it was restarted with the verified build; all 13 recording-directory files retained their hashes. Desktop control confirmed that 12:56:20, 12:18:57 and 11:16:27 appear as separate entries in both actual windows, while the reprocessed older recording uses its original 11:12:48 filename time.
+
+The native capture mode now requests 24 new-layout screenshots across both languages and themes. A full native capture run remains incomplete: the strict visibility check rejected a main window reported as occluded/inactive even while the session was unlocked. No native screenshot set or pixel-parity pass is claimed for the new layout. The original 52 Electron references remain unchanged and describe the earlier tab layout.
+
+Windows and Intel Mac were not tested on hardware for this change. This feature verification does not close the migration's minimum-OS, native-window, signing, clean-install or endurance release gates in [the migration report](../migration-verification.md).

@@ -1,4 +1,4 @@
-import type { RecorderStatusSnapshot } from "@eve/shared";
+import type { RecorderStatusSnapshot } from "@daybee/shared";
 
 export const statusTone = (
   status: RecorderStatusSnapshot

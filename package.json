@@ -1,5 +1,5 @@
 {
-  "name": "eve-workspace",
+  "name": "daybee-workspace",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -12,10 +12,12 @@
     "dev:desktop": "bun run --filter ./apps/desktop dev",
     "build": "bun run --filter ./apps/desktop build",
     "build:desktop": "bun run --filter ./apps/desktop build",
-    "setup:ffmpeg": "bun run --cwd apps/desktop setup:ffmpeg",
+    "dev:web": "bun run --filter ./apps/web dev",
+    "build:web": "bun run --filter ./apps/web build",
     "test": "bun run --filter ./apps/desktop test",
     "test:e2e": "bun run --filter ./apps/desktop test:e2e",
     "typecheck": "bun run --filter ./apps/desktop typecheck",
-    "lint": "bun run --filter ./apps/desktop lint"
+    "lint": "bun run --filter ./apps/desktop lint",
+    "check:docs": "node scripts/check-doc-links.mjs"
   }
 }

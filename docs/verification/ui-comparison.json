@@ -1,0 +1,326 @@
+{
+  "target": "darwin-arm64",
+  "sourceCommit": "a7216969f8a69ca89fae9da33475681b65a2c41d",
+  "approvedUIChanges": [
+    "remove-ffmpeg-status"
+  ],
+  "geometryTolerance": 0.125,
+  "canvasTolerance": 1e-10,
+  "visible": true,
+  "cases": [
+    {
+      "name": "en-US-light/history",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-light/general",
+      "largestDelta": 0.109375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-light/input",
+      "largestDelta": 0.109375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-light/transcribe",
+      "largestDelta": 0.109375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-light/recording",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-light/transcribing",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-light/pure-recording",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-light/stopped",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-light/download",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-light/error",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-light/permission",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-light/populated-history",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-light/dropdown",
+      "largestDelta": 0.109375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-dark/history",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-dark/general",
+      "largestDelta": 0.109375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-dark/input",
+      "largestDelta": 0.109375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-dark/transcribe",
+      "largestDelta": 0.109375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-dark/recording",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-dark/transcribing",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-dark/pure-recording",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-dark/stopped",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-dark/download",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-dark/error",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-dark/permission",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-dark/populated-history",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "en-US-dark/dropdown",
+      "largestDelta": 0.109375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-light/history",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-light/general",
+      "largestDelta": 0.109375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-light/input",
+      "largestDelta": 0.109375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-light/transcribe",
+      "largestDelta": 0.109375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-light/recording",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-light/transcribing",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-light/pure-recording",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-light/stopped",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-light/download",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-light/error",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-light/permission",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-light/populated-history",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-light/dropdown",
+      "largestDelta": 0.109375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-dark/history",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-dark/general",
+      "largestDelta": 0.109375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-dark/input",
+      "largestDelta": 0.109375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-dark/transcribe",
+      "largestDelta": 0.109375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-dark/recording",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-dark/transcribing",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-dark/pure-recording",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-dark/stopped",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-dark/download",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-dark/error",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-dark/permission",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-dark/populated-history",
+      "largestDelta": 0.0234375,
+      "identicalPNG": false,
+      "differences": []
+    },
+    {
+      "name": "zh-CN-dark/dropdown",
+      "largestDelta": 0.109375,
+      "identicalPNG": false,
+      "differences": []
+    }
+  ],
+  "passed": true,
+  "windowAcceptance": false
+}

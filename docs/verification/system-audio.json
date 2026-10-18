@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-09",
+  "platform": "macOS 27.0 arm64",
+  "default": "system audio opt-in, microphone AEC retained",
+  "nativeHardware": {
+    "test": "TestSystemAudioHardwareCapture",
+    "passed": true,
+    "systemSamples": 197120,
+    "microphoneSamples": 198628,
+    "lateCallbacks": 0,
+    "playback": "official Qwen3 fast1.wav fixture",
+    "screenFramesDelivered": false
+  },
+  "nativeTranscription": {
+    "test": "TestNativeDualSourceTranscription",
+    "passed": true,
+    "runtime": "sherpa-onnx 1.13.8 / Qwen3 ASR / Silero VAD",
+    "archives": "separate FLAC and JSON per source",
+    "microphoneExpected": "回声消除测试",
+    "systemExpected": "慢动作",
+    "crossSourceExpectedPhrasesAbsent": true,
+    "microphoneInput": "previously authorized human speech capture, reused without recording again",
+    "systemInput": "system audio captured during the native hardware test"
+  },
+  "interface": {
+    "passed": true,
+    "tests": 5,
+    "coverage": [
+      "default off and persistent opt-in",
+      "source labels in compact and main timelines",
+      "history source counts",
+      "echo cancellation preference",
+      "existing speech continuity"
+    ]
+  },
+  "unitCoverage": [
+    "interleaved partial windows do not mix PCM",
+    "source preserved in audio-only mode and repeat batch transcription",
+    "late system packets ignored after disabling",
+    "permission failure rolls settings back and stops safely"
+  ],
+  "limitations": [
+    "Hardware validation limited to this Mac and current macOS.",
+    "Minimum OS, other output routes, permission revocation, and long-running sessions not hardware verified.",
+    "Windows system audio capture is unsupported."
+  ]
+}

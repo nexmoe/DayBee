@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-13",
+  "productName": "DayBee",
+  "workspacePackage": "daybee-workspace",
+  "desktopPackage": "daybee-desktop",
+  "sharedPackage": "@daybee/shared",
+  "bundleIdentifier": "build.nexmoe.daybee.desktop",
+  "developmentRoute": "daybee.localhost",
+  "environmentPrefix": "DAYBEE_",
+  "newRecordingPrefix": "daybee_",
+  "githubRepository": "nexmoe/eve",
+  "repositoryRenamed": false,
+  "dataCompatibility": {
+    "canonicalDirectory": "DayBee",
+    "legacyDirectories": ["Eve Recorder", "RecBee", "eve-desktop"],
+    "settingsImportedWithBackup": true,
+    "voiceprintAndMicrophoneActivityCopiedOnce": true,
+    "existingDayBeeStateNotOverwritten": true,
+    "clearedVoiceprintNotReimported": true,
+    "modelsReadFromLegacyCache": true,
+    "recordingsNotMovedOrRenamed": true,
+    "legacyDefaultRecordingFoldersRemainInHistory": true
+  },
+  "checks": {
+    "goTestAll": "passed",
+    "migrationRaceChecks": "passed",
+    "frontendUnitTests": 82,
+    "releaseArtifactTests": 2,
+    "typecheck": "passed",
+    "macOSArm64Build": "passed",
+    "bundleMetadataInspected": "passed",
+    "packageVerification": "passed",
+    "nativeWindowSmoke": "passed",
+    "playwright": {
+      "totalCases": 100,
+      "initialPassed": 98,
+      "remainingPassedAfterTestCorrections": 2,
+      "corrections": [
+        "Scope the compact-control assertion to the workspace toolbar; enrollment has a separate recording action.",
+        "Use real keyboard focus to verify legend tooltips."
+      ]
+    }
+  },
+  "retainedLegacyReferences": [
+    "The user requested retaining GitHub repository URLs and the matching Go module path.",
+    "Legacy data paths and the archived Electron adapter remain for compatibility.",
+    "Historical verification records, released changelog entries and immutable visual baselines retain their original names."
+  ],
+  "limitations": [
+    "Native build and package verification were run on macOS arm64; Windows and Intel runtime verification remain CI tasks.",
+    "Tests used isolated stores and a mock recording engine; no system permissions were granted or changed."
+  ]
+}

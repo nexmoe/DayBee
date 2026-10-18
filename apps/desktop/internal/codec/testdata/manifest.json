@@ -1,0 +1,32 @@
+{
+  "reference-stereo": {
+    "file": "reference-stereo.flac",
+    "encoder": "Xiph reference flac 1.5.0 --verify, default compression",
+    "rate": 48000,
+    "channels": 2,
+    "bits": 16,
+    "samples": 48000,
+    "sha256": "4fdcccf0b4a9c921c44b14709346edbc719bc6393cf719ccab5bf7932897e0a1",
+    "pcmSHA256": "77ee14dc4cba3db4cf0a1453068fe7c28d0f5b0d97c5fa02b7d4c05ac1f8862f"
+  },
+  "reference-24bit": {
+    "file": "reference-24bit.flac",
+    "encoder": "Xiph reference flac 1.5.0 --verify, default compression",
+    "rate": 44100,
+    "channels": 1,
+    "bits": 24,
+    "samples": 44100,
+    "sha256": "9cabc51aad26a2338eb63c330472301c70dcd7ec37af83b80de5f31f807a7a9d",
+    "pcmSHA256": "02ca32d95b9fbe0a7251b22b2a0c6d9d4843e9cc52fa7d994e63305bd45fc93a"
+  },
+  "legacy-mono": {
+    "file": "legacy-mono.flac",
+    "encoder": "previous bundled FFmpeg 8.0.1 (fixture generation only)",
+    "rate": 16000,
+    "channels": 1,
+    "bits": 16,
+    "samples": 16037,
+    "sha256": "ae79bead102b8373774504faa04a1d808e12a6d459e0fe59dcc5a149530c93ef",
+    "pcmSHA256": "dd09aa11c3533de4b048c3020f246c683431059b04ee66a15d91ee429458a220"
+  }
+}

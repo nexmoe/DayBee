@@ -1,0 +1,45 @@
+{
+  "appHidden": false,
+  "bounds": {
+    "X": 644,
+    "Y": 32,
+    "Width": 420,
+    "Height": 620
+  },
+  "display": {
+    "ID": 1,
+    "Label": "Built-in Retina Display",
+    "Bounds": {
+      "X": 0,
+      "Y": 0,
+      "Width": 1496,
+      "Height": 967
+    },
+    "WorkArea": {
+      "X": 0,
+      "Y": 28,
+      "Width": 1417,
+      "Height": 939
+    },
+    "ScaleFactor": 2,
+    "Rotation": 0,
+    "Internal": true,
+    "Primary": true
+  },
+  "focused": true,
+  "native": {
+    "appActive": true,
+    "collectionBehavior": 128,
+    "level": 0,
+    "number": 39130,
+    "occluded": false,
+    "onActiveSpace": true
+  },
+  "tray": {
+    "X": 837,
+    "Y": 0,
+    "Width": 34,
+    "Height": 28
+  },
+  "visible": true
+}

@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-09",
+  "platform": "macOS 27.0 arm64",
+  "regression": "Enabling echo cancellation previously forced autoSwitchEnabled false and disabled the input switch despite the saved preference.",
+  "reproduction": "TestEchoCancellationToggleReopensCaptureAndPreservesRecording failed before the fix with echo cancellation must not silently disable the auto-switch preference.",
+  "fix": "Keep the settings independent; compare raw current/candidate probes under AEC; preserve processing and system capture when switching.",
+  "hardware": {
+    "test": "TestRawProbesKeepVoiceCaptureRunning",
+    "passed": true,
+    "concurrentRawProbes": 2,
+    "liveAECSamples": 17827,
+    "captureErrors": 0
+  },
+  "checks": [
+    "Full Go race suite passed with microphone hardware tests enabled.",
+    "28 renderer unit tests and typecheck passed.",
+    "Native build and go vet passed.",
+    "Three Playwright tests passed, including independent settings, persisted preferences and system audio source labels.",
+    "Restarted the native app and toggled auto-switch off and on while echo cancellation stayed enabled and recording remained active.",
+    "Source-aware switching, thresholds, confirmations, stale decisions, excluded keywords and disabled preferences covered."
+  ],
+  "limitations": [
+    "Concurrent probing verified on this Mac with its default built-in microphone.",
+    "Switching between two distinct physical microphones is covered by deterministic recorder tests; additional hardware configurations need separate validation."
+  ]
+}

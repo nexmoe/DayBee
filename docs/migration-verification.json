@@ -1,0 +1,31 @@
+{
+  "targets": {
+    "darwin-arm64": {
+      "uiIdentical": false,
+      "nativeInference": true,
+      "minimumOS": false,
+      "cleanInstall": false,
+      "signedUpdateRecovery": false,
+      "enduranceHours": 0,
+      "evidence": "docs/migration-verification.md"
+    },
+    "darwin-amd64": {
+      "uiIdentical": false,
+      "nativeInference": false,
+      "minimumOS": false,
+      "cleanInstall": false,
+      "signedUpdateRecovery": false,
+      "enduranceHours": 0,
+      "evidence": ""
+    },
+    "windows-amd64": {
+      "uiIdentical": false,
+      "nativeInference": false,
+      "minimumOS": false,
+      "cleanInstall": false,
+      "signedUpdateRecovery": false,
+      "enduranceHours": 0,
+      "evidence": ""
+    }
+  }
+}

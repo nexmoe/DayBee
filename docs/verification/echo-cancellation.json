@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-09",
+  "platform": "macOS 27.0, arm64",
+  "devices": "MacBook Pro built-in microphone and speakers",
+  "implementation": "AVAudioEngine Voice Processing, mono microphone client format, persistent 16 kHz conversion",
+  "speakerComparison": {
+    "capture": "simultaneous raw and processed microphone capture during the same afplay playback",
+    "source": "existing official Qwen3 Chinese WAV fixture",
+    "rawTranscriptContainsKnownPlayback": true,
+    "processedTranscript": "",
+    "note": "Total RMS is diagnostic only because native processing changes gain and noise floor. Earlier all-silent captures and non-speaking trials were excluded from acceptance."
+  },
+  "nearSpeech": {
+    "durationSeconds": 10.0854375,
+    "rms": 0.053759,
+    "expectedTranscript": "这是回声消除测试。今天我在验证录音和转写效果。",
+    "actualTranscript": "这是回声消除测试。今天我在验证录音和转写效果。"
+  },
+  "acceptanceTest": "TestEchoCancellationSpeechAcceptance passed using Qwen3 ASR 1.13.8",
+  "limitations": [
+    "Simultaneous near speech and speaker playback was requested, but the presence of video playback during the human speech trial was not independently confirmed.",
+    "Other microphones, output routes, macOS versions, and long sessions require additional hardware validation.",
+    "Windows retains unprocessed capture."
+  ]
+}

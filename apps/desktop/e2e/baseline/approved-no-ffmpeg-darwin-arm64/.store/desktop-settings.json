@@ -1,0 +1,29 @@
+{
+	"settings": {
+		"desktop": {
+			"hideWindowOnClose": true,
+			"language": "zh-CN",
+			"launchAtLogin": false,
+			"startRecordingOnLaunch": false,
+			"theme": "dark"
+		},
+		"recording": {
+			"audioFormat": "flac",
+			"asrLanguage": "auto",
+			"autoSwitchConfirmations": 2,
+			"autoSwitchDevice": true,
+			"device": "default",
+			"disableAsr": false,
+			"excludeDeviceKeywords": "iphone,continuity",
+			"outputDir": "/tmp/eve-migration-baseline/recordings",
+			"segmentMinutes": 60
+		},
+		"transcribe": {
+			"watch": false
+		}
+	},
+	"windowState": {
+		"width": 420,
+		"height": 620
+	}
+}

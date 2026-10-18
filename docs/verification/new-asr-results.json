@@ -1,0 +1,44 @@
+{
+  "sherpa": "1.13.8",
+  "onnxruntime": "1.28.2",
+  "target": "darwin-arm64",
+  "initializationMilliseconds": 1064.899,
+  "results": [
+    {
+      "file": "chinese.wav",
+      "sha256": "370db915c91a8ce24288d744cb9676c6924ca8eae2ac206781c3973949a719fb",
+      "samples": 182086,
+      "rate": 16000,
+      "milliseconds": 1723.659,
+      "text": "放出来之后，左手、右手接一个慢动作，右边再直接拉到车上面之后，直接拉到这个轮车上上面，再接过去之后，然后上面再直接拉到这个位置了之后，右边再直接这个位置接，倒回去的时候再倒一下，然后右边再直接抓住这个上面了之后，直接从这边上面过去了之后，直接抓住这个车刹，然后这个车直接倒着这个车刹。",
+      "language": ""
+    },
+    {
+      "file": "long.wav",
+      "sha256": "bd595ae5b0661a9e28247b20570eacc013006b3fa92e1ea4b7829445d046ba23",
+      "samples": 578258,
+      "rate": 16000,
+      "milliseconds": 2206.878,
+      "text": "蹦出来之后，左手、右手接一个慢动作。右边再直接拉到线上面之后，直接拉到这个",
+      "language": ""
+    },
+    {
+      "file": "short.wav",
+      "sha256": "58e64aaf98e523ff9deee2a26ce22645ff2a942c7a09e4c0243554762e9a2f80",
+      "samples": 48000,
+      "rate": 16000,
+      "milliseconds": 454.691,
+      "text": "放出来之后，左手右手接一个慢动作，右边的直接拉到车上面之后，直接拉到这个轮。",
+      "language": ""
+    },
+    {
+      "file": "silence.wav",
+      "sha256": "d303811b8c84619667cd0501342f84ec6cbe69f7aa3856dcf52fabda374c92b8",
+      "samples": 48000,
+      "rate": 16000,
+      "milliseconds": 220.744,
+      "text": "",
+      "language": ""
+    }
+  ]
+}

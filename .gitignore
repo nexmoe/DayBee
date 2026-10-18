@@ -17,7 +17,8 @@ editable_install/
 .generated/
 !apps/desktop/build/
 !apps/desktop/build/entitlements.mac.plist
-!apps/desktop/build/entitlements.mac.inherit.plist
+!apps/desktop/build/mygo-update.pub
+*.tsbuildinfo
 
 # Virtual environments
 .venv/
@@ -51,7 +52,13 @@ logs/
 
 # Node / desktop
 node_modules/
+apps/desktop/.mygo/
 apps/desktop/out/
 apps/desktop/dist/
-apps/desktop/.electron-cache/
-apps/desktop/.electron-builder-cache/
+apps/desktop/resources/darwin-arm64/
+apps/desktop/resources/darwin-amd64/
+apps/desktop/resources/windows-amd64/
+apps/desktop/e2e/results/
+apps/desktop/test-results/
+apps/desktop/playwright-report/
+mygo-update.key

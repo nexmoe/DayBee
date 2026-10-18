@@ -1,0 +1,133 @@
+{
+  "app": {
+    "name": "Eve Recorder",
+    "repositoryUrl": "https://github.com/nexmoe/eve",
+    "version": "0.8.6"
+  },
+  "devices": [
+    {
+      "id": "default",
+      "index": 0,
+      "isDefault": true,
+      "label": "MacBook Pro Microphone"
+    },
+    {
+      "id": "usb-mic",
+      "index": 1,
+      "isDefault": false,
+      "label": "USB Podcast Mic"
+    }
+  ],
+  "engineReady": true,
+  "history": [],
+  "permission": {
+    "message": "麦克风权限已授权。",
+    "state": "authorized",
+    "supported": true
+  },
+  "settings": {
+    "desktop": {
+      "hideWindowOnClose": true,
+      "language": "en-US",
+      "launchAtLogin": false,
+      "startRecordingOnLaunch": false,
+      "theme": "light"
+    },
+    "recording": {
+      "audioFormat": "flac",
+      "asrLanguage": "auto",
+      "autoSwitchConfirmations": 2,
+      "autoSwitchDevice": true,
+      "device": "default",
+      "disableAsr": false,
+      "excludeDeviceKeywords": "iphone,continuity",
+      "outputDir": "/tmp/eve-migration-baseline/recordings",
+      "segmentMinutes": 60
+    },
+    "transcribe": {
+      "watch": false
+    }
+  },
+  "status": {
+    "asrEnabled": true,
+    "asrHistory": [],
+    "asrPreview": "",
+    "autoSwitchEnabled": true,
+    "db": -80,
+    "downloadMessage": "",
+    "downloadProgress": null,
+    "deviceLabel": "MacBook Pro Microphone",
+    "elapsed": "00:00:00",
+    "error": null,
+    "ffmpegAvailable": true,
+    "inSpeech": false,
+    "levelRatio": 0,
+    "downloading": false,
+    "recording": false,
+    "rms": 0,
+    "senseVoiceReady": true,
+    "statusMessage": "E2E desktop engine ready.",
+    "vadReady": true,
+    "waveformBins": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "updater": {
+    "currentVersion": "0.8.6",
+    "downloadedVersion": null,
+    "downloadedVersionReady": false,
+    "errorMessage": null,
+    "installDeferredUntilIdle": false,
+    "latestVersion": null,
+    "phase": "idle",
+    "statusMessage": "Automatic updates are ready."
+  },
+  "windowPinned": false
+}

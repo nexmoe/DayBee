@@ -1,0 +1,43 @@
+{
+  "platform": "darwin-arm64",
+  "source": "Real mouse input through the desktop automation tool, authenticated native window/page diagnostics",
+  "beforeFix": {
+    "startBounds": {
+      "X": 639,
+      "Y": 32,
+      "Width": 420,
+      "Height": 620
+    },
+    "endBounds": {
+      "X": 639,
+      "Y": 32,
+      "Width": 420,
+      "Height": 620
+    },
+    "events": [
+      {
+        "type": "mousedown",
+        "trusted": true,
+        "x": 200,
+        "y": 18,
+        "region": "drag"
+      },
+      {
+        "type": "mouseup",
+        "trusted": true,
+        "x": 250,
+        "y": 68
+      }
+    ],
+    "expectedMovement": [
+      50,
+      50
+    ],
+    "observedMovement": [
+      0,
+      0
+    ],
+    "passed": false
+  },
+  "afterFix": null
+}

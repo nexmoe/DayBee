@@ -1,14 +1,18 @@
+import { desktopApi, desktopEvents } from "@/lib/desktop-api";
+import { windowRole } from "@/lib/window-role";
 import {
   DEFAULT_SETTINGS,
   DEFAULT_STATUS,
   type AppSettings,
+  type ASRModel,
   type DesktopSnapshot,
   type MicrophonePermissionStatus,
   type RecorderStatusSnapshot
-} from "@eve/shared";
-import { useSyncExternalStore } from "react";
+} from "@daybee/shared";
+import { useRef, useSyncExternalStore } from "react";
 import { createT } from "@/lib/i18n";
 import { toastActions } from "@/lib/toast-store";
+import { voiceprintErrorCopy, voiceprintExportErrorCopy } from "@/lib/voiceprint-copy";
 
 const defaultPermission = (): MicrophonePermissionStatus => ({
   message: createT(DEFAULT_SETTINGS.desktop.language)("permissionPending"),
@@ -17,14 +21,16 @@ const defaultPermission = (): MicrophonePermissionStatus => ({
 });
 
 let snapshot: DesktopSnapshot = {
+  asrModels: { items: [], busy: false, downloadingModel: null },
   app: {
-    name: "eve",
+    name: "DayBee",
     repositoryUrl: "https://github.com/nexmoe/eve",
     version: "0.0.0"
   },
   devices: [],
   engineReady: false,
   history: [],
+  microphoneActivity: { supported: true, error: null, items: [] },
   permission: defaultPermission(),
   settings: DEFAULT_SETTINGS,
   status: DEFAULT_STATUS,
@@ -38,14 +44,44 @@ let snapshot: DesktopSnapshot = {
     phase: "idle",
     statusMessage: "Automatic updates are ready."
   },
-  windowPinned: false
+  windowPinned: false,
+  voiceprint: {
+    enrolled: false,
+    phase: "idle",
+    step: 0,
+    speechSeconds: 0,
+    targetSeconds: 8,
+    level: 0,
+    progress: null,
+    message: "",
+    error: null
+  }
 };
 
 const listeners = new Set<() => void>();
-const bridge = window.eve;
+
+const subscribe = (listener: () => void): (() => void) => {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+};
+const bridge = desktopApi;
 let saveSequence = 0;
 let lastStatusError: string | null = null;
+let lastVoiceprintError: string | null = null;
 let pendingSettings: AppSettings | null = null;
+
+const toastVoiceprint = (message: string): void => {
+  const text = message.trim();
+  if (!text || text === lastVoiceprintError) return;
+  lastVoiceprintError = text;
+  const t = createT(snapshot.settings.desktop.language);
+  toastActions.show({
+    message: voiceprintErrorCopy(text, t, snapshot.voiceprint.targetSeconds).message,
+    title: t("errorVoiceprintFailed")
+  });
+};
 
 const publish = (): void => {
   for (const listener of listeners) {
@@ -67,11 +103,16 @@ const updateSnapshot = (nextSnapshot: DesktopSnapshot): void => {
   if (!nextError) {
     lastStatusError = null;
   }
+  const voiceError = nextSnapshot.voiceprint.error?.trim() || null;
+  // Enrollment errors already have an actionable message in the main guide.
+  if (voiceError && windowRole === "main" && nextSnapshot.voiceprint.phase === "error") lastVoiceprintError = voiceError;
+  else if (voiceError) toastVoiceprint(voiceError);
+  else lastVoiceprintError = null;
   publish();
 };
 
 if (!bridge) {
-  console.error("[eve-renderer] preload bridge is unavailable.");
+  console.error("[daybee-renderer] native desktop bridge is unavailable.");
   updateSnapshot({
     ...snapshot,
     permission: {
@@ -81,36 +122,44 @@ if (!bridge) {
     }
   });
 } else {
+  desktopEvents.onSnapshot(updateSnapshot);
+  desktopEvents.onStatus(({ status, voiceprint }) => updateSnapshot({ ...snapshot, status, voiceprint }));
   void bridge.bootstrap().then(updateSnapshot);
-  bridge.onSnapshot(updateSnapshot);
 }
 
 export const useDesktopSnapshot = (): DesktopSnapshot => {
-  return useSyncExternalStore(
-    (listener) => {
-      listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
-    },
-    () => snapshot
-  );
+  return useSyncExternalStore(subscribe, () => snapshot);
+};
+
+// `use-sync-external-store/with-selector` is not a dependency. Cache the last
+// selected value so a 10 Hz status publish does not re-render a subscriber
+// whose slice is still equal.
+export const useDesktopSelector = <T>(
+  selector: (current: DesktopSnapshot) => T,
+  isEqual: (left: T, right: T) => boolean = Object.is
+): T => {
+  const selectorRef = useRef(selector);
+  const isEqualRef = useRef(isEqual);
+  const selectedRef = useRef<T>(undefined as T);
+  const hasSelectedRef = useRef(false);
+  selectorRef.current = selector;
+  isEqualRef.current = isEqual;
+
+  return useSyncExternalStore(subscribe, () => {
+    const next = selectorRef.current(snapshot);
+    if (hasSelectedRef.current && isEqualRef.current(selectedRef.current, next)) {
+      return selectedRef.current;
+    }
+    hasSelectedRef.current = true;
+    selectedRef.current = next;
+    return next;
+  });
 };
 
 export const getDesktopSnapshot = (): DesktopSnapshot => snapshot;
 
 const rejectBridgeCall = async <T>(): Promise<T> => {
   throw new Error(createT(snapshot.settings.desktop.language)("errorBridgeUnavailable"));
-};
-
-const requestBrowserMicrophonePermission = async (): Promise<void> => {
-  if (!navigator.mediaDevices?.getUserMedia) {
-    return;
-  }
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  stream.getTracks().forEach((track) => {
-    track.stop();
-  });
 };
 
 const getErrorMessage = (error: unknown): string => {
@@ -145,14 +194,41 @@ const withToast = async <T>(title: string, task: () => Promise<T>): Promise<T> =
 };
 
 export const desktopActions = {
+  async selectASRModel(id: ASRModel, activate = true): Promise<void> {
+    updateSnapshot(await withToast(createT(snapshot.settings.desktop.language)("errorASRModelFailed"), () =>
+      bridge?.prepareASRModel(id) ?? rejectBridgeCall()
+    ));
+    // Enrollment or offline transcription may start during the download.
+    // Live recording can activate a prepared model at a segment boundary.
+    if (!activate || (snapshot.asrModels.busy && !snapshot.status.recording)) return;
+    await desktopActions.saveSettings({
+      ...snapshot.settings,
+      recording: { ...snapshot.settings.recording, asrModel: id }
+    });
+  },
+  async installUpdate(): Promise<void> {
+    await withToast(createT(snapshot.settings.desktop.language)("errorInstallUpdateFailed"), () =>
+      bridge?.installUpdate() ?? rejectBridgeCall()
+    );
+  },
   async closeWindow(): Promise<void> {
     await withToast(createT(snapshot.settings.desktop.language)("errorUpdateWindowStateFailed"), () =>
-      bridge?.closeWindow() ?? rejectBridgeCall()
+      bridge?.closeWindow(windowRole) ?? rejectBridgeCall()
     );
   },
   async minimizeWindow(): Promise<void> {
     await withToast(createT(snapshot.settings.desktop.language)("errorUpdateWindowStateFailed"), () =>
-      bridge?.minimizeWindow() ?? rejectBridgeCall()
+      bridge?.minimizeWindow(windowRole) ?? rejectBridgeCall()
+    );
+  },
+  async openMainWindow(): Promise<void> {
+    await withToast(createT(snapshot.settings.desktop.language)("errorUpdateWindowStateFailed"), () =>
+      bridge?.openMainWindow() ?? rejectBridgeCall()
+    );
+  },
+  async openRecorderWindow(): Promise<void> {
+    await withToast(createT(snapshot.settings.desktop.language)("errorUpdateWindowStateFailed"), () =>
+      bridge?.openRecorderWindow() ?? rejectBridgeCall()
     );
   },
   async openExternal(target: string): Promise<void> {
@@ -170,6 +246,18 @@ export const desktopActions = {
       bridge?.pickDirectory(defaultPath) ?? rejectBridgeCall()
     );
   },
+  async exportVoiceprintSamples(recordingID: string, destinationDir: string): Promise<string> {
+    const t = createT(snapshot.settings.desktop.language);
+    try {
+      return await bridge?.exportVoiceprintSamples(recordingID, destinationDir) ?? rejectBridgeCall();
+    } catch (error) {
+      toastActions.show({
+        message: voiceprintExportErrorCopy(getErrorMessage(error), t),
+        title: t("voiceprintExportFailed")
+      });
+      throw error;
+    }
+  },
   async runTranscribe(inputDir: string): Promise<void> {
     updateSnapshot(
       await withToast(createT(snapshot.settings.desktop.language)("errorRunTranscribeFailed"), () =>
@@ -181,14 +269,7 @@ export const desktopActions = {
     const permission = await withToast(
       createT(snapshot.settings.desktop.language)("errorRequestPermissionFailed"),
       async () => {
-        const requested = await (bridge?.requestMicrophonePermission() ?? rejectBridgeCall());
-        if (requested.state === "authorized") {
-          return requested;
-        }
-        await requestBrowserMicrophonePermission();
-        const refreshed = await (bridge?.bootstrap() ?? rejectBridgeCall());
-        updateSnapshot(refreshed);
-        return refreshed.permission;
+        return bridge?.requestMicrophonePermission() ?? rejectBridgeCall<MicrophonePermissionStatus>();
       }
     );
     updateSnapshot({ ...snapshot, permission });
@@ -198,12 +279,21 @@ export const desktopActions = {
     const requestId = ++saveSequence;
     pendingSettings = settings;
     updateSnapshot({ ...snapshot, settings: pendingSettings });
-    const saved = await withToast(createT(settings.desktop.language)("errorSaveSettingsFailed"), () =>
-      bridge?.saveSettings(pendingSettings ?? settings) ?? rejectBridgeCall()
-    );
-    if (requestId === saveSequence) {
-      pendingSettings = null;
-      updateSnapshot({ ...snapshot, settings: saved });
+    try {
+      const saved = await withToast<AppSettings>(createT(settings.desktop.language)("errorSaveSettingsFailed"), () =>
+        bridge?.saveSettings(pendingSettings ?? settings) ?? rejectBridgeCall()
+      );
+      if (requestId === saveSequence) {
+        pendingSettings = null;
+        updateSnapshot({ ...snapshot, settings: saved });
+      }
+    } catch (error) {
+      if (requestId === saveSequence && bridge) {
+        pendingSettings = null;
+        const restored = await bridge.bootstrap();
+        if (requestId === saveSequence) updateSnapshot(restored);
+      }
+      throw error;
     }
   },
   async setWindowPinned(pinned: boolean): Promise<void> {
@@ -214,15 +304,22 @@ export const desktopActions = {
     );
   },
   async startRecording(): Promise<void> {
+    if (snapshot.settings.desktop.voiceprintSetup === "pending") {
+      updateSnapshot(await withToast(createT(snapshot.settings.desktop.language)("errorStartRecordingFailed"), () =>
+        bridge?.startRecording() ?? rejectBridgeCall()
+      ));
+      return;
+    }
     const title = createT(snapshot.settings.desktop.language)("errorStartRecordingFailed");
-    if (snapshot.status.downloading && !snapshot.settings.recording.disableAsr) {
+    if (snapshot.status.downloading && !snapshot.settings.recording.disableAsr &&
+      (!snapshot.status.vadReady || !snapshot.status.senseVoiceReady)) {
       showDownloadBlockedToast();
       return;
     }
     if (snapshot.permission.state === "not-determined") {
       await desktopActions.requestPermission();
     }
-    const nextSnapshot = await withToast(title, () =>
+    const nextSnapshot = await withToast<DesktopSnapshot>(title, () =>
       bridge?.startRecording() ?? rejectBridgeCall()
     );
     updateSnapshot(nextSnapshot);
@@ -253,5 +350,45 @@ export const desktopActions = {
     return withToast(createT(snapshot.settings.desktop.language)("errorOpenSystemSettingsFailed"), () =>
       bridge?.openMicrophoneSettings() ?? rejectBridgeCall()
     );
+  },
+  async openSystemAudioSettings(): Promise<boolean> {
+    const title = createT(snapshot.settings.desktop.language)("errorOpenSystemSettingsFailed");
+    return withToast(title, async () => {
+      const opened = await (bridge?.openSystemAudioSettings() ?? rejectBridgeCall<boolean>());
+      if (!opened) throw new Error(title);
+      return opened;
+    });
+  },
+  async retryVoiceprintReference(): Promise<void> {
+    updateSnapshot(await withToast(createT(snapshot.settings.desktop.language)("voiceprintReferenceRetryFailed"), () =>
+      bridge?.retryVoiceprintReference() ?? rejectBridgeCall()
+    ));
+  },
+  async startVoiceprintEnrollment(): Promise<void> {
+    await runVoiceprint(() => bridge?.startVoiceprintEnrollment() ?? rejectBridgeCall());
+  },
+  async advanceVoiceprintEnrollment(): Promise<void> {
+    await runVoiceprint(() => bridge?.advanceVoiceprintEnrollment() ?? rejectBridgeCall());
+  },
+  async cancelVoiceprintEnrollment(): Promise<void> {
+    await runVoiceprint(() => bridge?.cancelVoiceprintEnrollment() ?? rejectBridgeCall());
+  },
+  async skipVoiceprintSetup(): Promise<void> {
+    await runVoiceprint(() => bridge?.skipVoiceprintSetup() ?? rejectBridgeCall());
+  },
+  async clearVoiceprint(): Promise<void> {
+    await runVoiceprint(() => bridge?.clearVoiceprint() ?? rejectBridgeCall());
+  },
+  async clearVoiceprintAdaptation(): Promise<void> {
+    await runVoiceprint(() => bridge?.clearVoiceprintAdaptation() ?? rejectBridgeCall());
+  }
+};
+
+const runVoiceprint = async (task: () => Promise<DesktopSnapshot>): Promise<void> => {
+  try {
+    updateSnapshot(await task());
+  } catch (error) {
+    toastVoiceprint(getErrorMessage(error));
+    throw error;
   }
 };

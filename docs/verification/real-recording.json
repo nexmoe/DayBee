@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-09",
+  "target": "darwin-arm64",
+  "engine": "production recorder.Engine",
+  "mockEngine": false,
+  "controls": "real native UI through desktop automation",
+  "microphone": {
+    "device": "MacBook Pro Microphone",
+    "waveformVisible": true,
+    "sampleRate": 16000,
+    "archivedSpeechSamples": 94816,
+    "flacBytes": 109556,
+    "transcriptionCharacters": 77,
+    "status": "ok",
+    "diagnostics": [],
+    "recordingStopped": true
+  },
+  "batch": {
+    ".flac": {
+      "status": "ok",
+      "textCharacters": 142,
+      "textSHA256": "82e0157783f7e1012c9c6cca6fb966f30ec486e354c929426c2135ed894fbd1a"
+    },
+    ".wav": {
+      "status": "ok",
+      "textCharacters": 142,
+      "textSHA256": "82e0157783f7e1012c9c6cca6fb966f30ec486e354c929426c2135ed894fbd1a"
+    }
+  },
+  "batchHistory": "3 recordings, 3 transcribed",
+  "noExternalCodec": true,
+  "scope": "Short live microphone test and two fixed-file batch inputs; not endurance or cross-platform acceptance"
+}

@@ -1,0 +1,49 @@
+AISHELL-3 cohort embeddings
+==========================
+
+This directory contains speaker embeddings derived from the AISHELL-3
+Mandarin speech corpus. The original recordings are not included.
+
+Source
+------
+Dataset:    AISHELL-3
+Identifier: OpenSLR SLR93
+URL:        https://openslr.org/93/
+Publisher:  Beijing Shell Shell Technology Co., Ltd.
+External:   http://www.aishelltech.com/aishell_3
+License:    Apache License, Version 2.0
+License file: LICENSE.txt (the Apache License, Version 2.0, applied to
+              this derivative embedding bundle)
+
+Citation
+--------
+Yao Shi, Hui Bu, Xin Xu, Shaoji Zhang, and Ming Li.
+"AISHELL-3: A Multi-speaker Mandarin TTS Corpus and the Baselines."
+https://arxiv.org/abs/2010.11567
+
+What is bundled
+---------------
+cohort_eres2netv2.f32
+  288 little-endian float32 embeddings, 192 dimensions each.
+  Nine non-held-out speakers, 32 windows each.
+cohort_meta.json
+  For every window: source WAV name, sample offset, sample count,
+  SHA-256 of the source WAV, and SHA-256 of the window PCM.
+
+Speakers included
+-----------------
+SSB0193, SSB0407, SSB0686, SSB0702, SSB0711,
+SSB0716, SSB0717, SSB0736, SSB0749
+
+Speakers held out of this cohort
+--------------------------------
+SSB0434, SSB0544, SSB0693, SSB0700
+No window from these four speakers is present in the embedding file.
+
+Model used to compute the embeddings
+------------------------------------
+3dspeaker_speech_eres2netv2_sv_zh-cn_16k-common.onnx
+
+The embeddings are a derivative work of AISHELL-3. AISHELL-3 is published
+by Beijing Shell Shell Technology Co., Ltd. under the Apache License,
+Version 2.0. This NOTICE does not replace LICENSE.txt.

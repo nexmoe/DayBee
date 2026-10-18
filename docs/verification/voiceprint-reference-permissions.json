@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-13",
+  "developmentApp": "RecBee Dev",
+  "tccAttribution": {
+    "source": "Local tccd AttributionChain log for the running development process",
+    "responsible": "sh.paseo.desktop",
+    "accessing": "build.nexmoe.eve.desktop.dev"
+  },
+  "bundleMetadata": {
+    "developmentAndPackagedAppChecked": true,
+    "audioCaptureUsageDescriptionPresent": true,
+    "microphoneUsageDescriptionPresent": true
+  },
+  "hardwareProbe": {
+    "test": "TestSystemReferenceHardwareProbe",
+    "passed": true,
+    "seconds": 8,
+    "systemSamples": 128640,
+    "microphoneOpened": false,
+    "playedSound": false,
+    "savedSamples": false
+  },
+  "limitations": [
+    "The existing stopped stream's native NSError was discarded by the previous build; its exact stop cause cannot be recovered.",
+    "A short native probe does not establish long-running stability or confirm learning in the user's active recording.",
+    "Independent packaged-app first authorization was not exercised; no system permissions were changed."
+  ]
+}
