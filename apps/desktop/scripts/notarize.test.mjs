@@ -2,15 +2,18 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { notarizeImage } from "./notarize.mjs";
 
-function fixture({ status = "Accepted", failures = 0, errorCode = 68 } = {}) {
+function fixture({ status = "Accepted", failures = 0, errorCode = 68, validationFailures = 0 } = {}) {
   const calls = [], delays = [];
-  let attempts = 0;
+  let attempts = 0, validationAttempts = 0;
   return { calls, delays, options: {
     run(command, args) {
       assert.equal(command, "xcrun"); calls.push(args);
       if (args[0] === "notarytool") return JSON.stringify({ status, id: "acceptance-fixture" });
       if (args[1] === "staple" && attempts++ < failures) {
         throw Object.assign(new Error("The staple and validate action failed! Error " + errorCode), { status: errorCode });
+      }
+      if (args[1] === "validate" && validationAttempts++ < validationFailures) {
+        throw Object.assign(new Error("The validate action failed! Error 68"), { status: 68 });
       }
       return "";
     },
@@ -49,12 +52,30 @@ test("ticket lookup retries are bounded and validation never runs after exhausti
 });
 
 test("ticket validation failures remain fatal after successful stapling", async () => {
-  const f = fixture();
-  const run = f.options.run;
-  f.options.run = (command, args) => {
-    if (args[1] === "validate") throw new Error("Invalid stapled ticket");
-    return run(command, args);
-  };
-  await assert.rejects(notarizeImage("app.dmg", "profile", f.options), /Invalid stapled ticket/);
-  assert.deepEqual(f.delays, []);
+  for (const status of [64, 65, undefined]) {
+    const f = fixture();
+    const run = f.options.run;
+    f.options.run = (command, args) => {
+      if (args[1] === "validate") throw Object.assign(new Error("Invalid stapled ticket"), { status });
+      return run(command, args);
+    };
+    await assert.rejects(notarizeImage("app.dmg", "profile", f.options), /Invalid stapled ticket/);
+    assert.deepEqual(f.delays, []);
+  }
+});
+
+test("retries transient ticket validation network failures without resubmitting or restapling", async () => {
+  const f = fixture({ validationFailures: 1 });
+  await notarizeImage("app.dmg", "profile", f.options);
+  assert.equal(f.calls.filter(args => args[0] === "notarytool").length, 1);
+  assert.equal(f.calls.filter(args => args[1] === "staple").length, 1);
+  assert.equal(f.calls.filter(args => args[1] === "validate").length, 2);
+  assert.deepEqual(f.delays, [5000]);
+});
+
+test("persistent ticket validation network failures still block release", async () => {
+  const f = fixture({ validationFailures: 10 });
+  await assert.rejects(notarizeImage("app.dmg", "profile", f.options), /Error 68/);
+  assert.equal(f.calls.filter(args => args[1] === "validate").length, 4);
+  assert.deepEqual(f.delays, [5000, 10000, 20000]);
 });

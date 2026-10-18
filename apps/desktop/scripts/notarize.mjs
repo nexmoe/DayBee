@@ -9,18 +9,20 @@ export async function notarizeImage(path, profile, { run = execFileSync, wait = 
     "--wait", "--output-format", "json"], { encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] });
   const result = JSON.parse(output.slice(output.lastIndexOf("{")));
   if (result.status !== "Accepted") throw new Error(`Notarization rejected: ${result.status} (${result.id})`);
-  for (let attempt = 0; ; attempt++) {
-    try {
-      run("xcrun", ["stapler", "staple", path], { stdio: "inherit" });
-      break;
-    } catch (error) {
-      if (![65, 68].includes(error.status) || attempt >= 3) throw error;
-      const pause = 5000 * 2 ** attempt;
-      warn(`Apple ticket lookup failed (${error.status}); retrying stapling in ${pause / 1000}s.`);
-      await wait(pause);
+  for (const action of ["staple", "validate"]) {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        run("xcrun", ["stapler", action, path], { stdio: "inherit" });
+        break;
+      } catch (error) {
+        const retryable = action === "staple" ? [65, 68] : [68];
+        if (!retryable.includes(error.status) || attempt >= 3) throw error;
+        const pause = 5000 * 2 ** attempt;
+        warn(`Apple ticket ${action} failed (${error.status}); retrying in ${pause / 1000}s.`);
+        await wait(pause);
+      }
     }
   }
-  run("xcrun", ["stapler", "validate", path], { stdio: "inherit" });
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

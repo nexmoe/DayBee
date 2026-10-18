@@ -29,7 +29,7 @@ All notable changes to this project are documented in this file.
 - Verify Windows title-bar clearance and platform-specific recovery controls in renderer acceptance tests, with local platform emulation for regression coverage.
 - Preserve the intended Windows content viewport by compensating for invisible frameless resize borders.
 - Load locked native DLLs beside Windows test executables, close FLAC test files explicitly, and use portable storage-failure fixtures. Preserve microphone archive retries when its directory is blocked.
-- Retry temporary Apple notarization ticket lookup failures without resubmitting the signed image, and require successful stapling validation.
+- Retry temporary Apple notarization ticket lookup failures during both stapling and validation without resubmitting the signed image, and require successful validation.
 - Generate identical shared defaults on every build platform while preserving native platform capabilities.
 - Define Windows Core Audio GUIDs when compiling microphone activity detection, and allow the system font fallback when optional static PingFang faces are absent.
 - Reject releases with mismatched tag/update versions or missing installers.
