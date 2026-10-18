@@ -152,7 +152,7 @@ func TestSpeechLanguagePreparationFailurePreservesRecordingAndSelection(t *testi
 	}
 }
 
-func TestSpeechAutoLanguageUsesChineseAppLanguage(t *testing.T) {
+func TestSpeechAutoLanguagePreservesSystemSelectionAcrossUIChanges(t *testing.T) {
 	e, _, assets, _ := systemTestEngine(t, &fakeRuntime{}, "")
 	settings := e.Settings()
 	settings.Recording.ASRLanguage = "auto"
@@ -160,16 +160,16 @@ func TestSpeechAutoLanguageUsesChineseAppLanguage(t *testing.T) {
 	if err := e.Apply(settings); err != nil {
 		t.Fatal(err)
 	}
-	if assets.ASRPath() != speechanalyzer.ModelKey("zh-CN") {
-		t.Fatal("Chinese UI with default transcription language used the system's English recognizer", assets.ASRPath())
+	if assets.ASRPath() != speechanalyzer.ModelKey("auto") {
+		t.Fatal("UI language overrode the system transcription language", assets.ASRPath())
 	}
-	// Changing only the UI language must refresh an inherited speech language.
+	// UI language changes must leave system-language transcription selected.
 	settings.Desktop.Language = protocol.LanguageEnglish
 	if err := e.Apply(settings); err != nil {
 		t.Fatal(err)
 	}
-	if assets.ASRPath() != speechanalyzer.ModelKey("en-US") {
-		t.Fatal("inherited language did not follow an app-language change", assets.ASRPath())
+	if assets.ASRPath() != speechanalyzer.ModelKey("auto") {
+		t.Fatal("system transcription language changed with the UI", assets.ASRPath())
 	}
 	settings.Recording.ASRLanguage = "ja"
 	settings.Desktop.Language = protocol.LanguageChinese

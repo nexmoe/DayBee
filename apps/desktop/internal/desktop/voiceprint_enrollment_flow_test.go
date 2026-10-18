@@ -209,23 +209,26 @@ func TestEnrollmentRejectsEchoChangeBeforeCapture(t *testing.T) {
 func TestEnrollmentRejectsAnInconsistentGroup(t *testing.T) {
 	for _, call := range []int{1, 2, 3} {
 		t.Run(string(rune('0'+call)), func(t *testing.T) {
-			v, profiles, closed, _ := enrollmentHarness(t, true, true)
-			profiles.outlier = call
-			if err := v.Start(); err != nil {
-				t.Fatal(err)
-			}
-			for range voiceprintSamples - 1 {
-				waitEnrollment(t, v, protocol.VoiceprintSampleReady)
-				if err := v.Advance(); err != nil {
+			// Virtual time keeps accelerated capture from outrunning a busy CI worker.
+			synctest.Test(t, func(t *testing.T) {
+				v, profiles, closed, _ := enrollmentHarness(t, true, true)
+				profiles.outlier = call
+				if err := v.Start(); err != nil {
 					t.Fatal(err)
 				}
-			}
-			waitEnrollment(t, v, protocol.VoiceprintError)
-			message := enrollmentError(v)
-			v.Cancel()
-			if message != voiceprintErrInconsistent || profiles.saved.Load() != 0 || profiles.embedded.Load() != voiceprintSamples || closed.Load() != voiceprintSamples {
-				t.Fatalf("%q embedded %d closed %d", message, profiles.embedded.Load(), closed.Load())
-			}
+				for range voiceprintSamples - 1 {
+					waitEnrollment(t, v, protocol.VoiceprintSampleReady)
+					if err := v.Advance(); err != nil {
+						t.Fatal(err)
+					}
+				}
+				waitEnrollment(t, v, protocol.VoiceprintError)
+				message := enrollmentError(v)
+				v.Cancel()
+				if message != voiceprintErrInconsistent || profiles.saved.Load() != 0 || profiles.embedded.Load() != voiceprintSamples || closed.Load() != voiceprintSamples {
+					t.Fatalf("%q embedded %d closed %d", message, profiles.embedded.Load(), closed.Load())
+				}
+			})
 		})
 	}
 }
