@@ -22,6 +22,8 @@ All notable changes to this project are documented in this file.
 
 ### Fixes
 
+- Load locked native DLLs beside Windows test executables, close FLAC test files explicitly, and use portable storage-failure fixtures. Preserve microphone archive retries when its directory is blocked.
+- Retry temporary Apple notarization ticket lookup failures without resubmitting the signed image, and require successful stapling validation.
 - Generate identical shared defaults on every build platform while preserving native platform capabilities.
 - Define Windows Core Audio GUIDs when compiling microphone activity detection, and allow the system font fallback when optional static PingFang faces are absent.
 - Reject releases with mismatched tag/update versions or missing installers.

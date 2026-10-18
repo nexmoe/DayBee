@@ -50,7 +50,11 @@ Bun workspace 放桌面端、营销站和前后端共用的默认值。桌面端
 
 Windows 将原生库目录添加到已有的 `Path` 或 `PATH` 前面，保留原来的键名和搜索目录，并移除大小写冲突的重复键；不能因为 DLL 路径覆盖 Go、Bun 和 C 编译器的搜索路径。
 
+Windows 的 Go 测试通过 `apps/desktop/scripts/native-test-exec.mjs` 启动：先将锁定的 DLL 复制到每个临时测试可执行文件旁，再执行测试，避免 Windows 优先加载 System32 里的旧 ONNX Runtime。打包应用本来就把 DLL 放在可执行文件旁。原生版本校验仍要求 1.28.2，不接受系统旧版本。
+
 mygo 再执行 `buildCommand`（`bun run build:web`）并把前端产物从 `out/renderer` 打进 `dist`。macOS 最低系统版本、签名身份、entitlements 和可选公证都在 `mygo.config.ts`。Windows 证书和签名命令只在对应环境变量存在时写入。
+
+macOS 配置了公证 profile 时，`desktop.mjs` 先用 mygo 的 `--skip-notarize` 完成签名构建，再由 `apps/desktop/scripts/notarize.mjs` 提交最终架构命名的 DMG。Apple 必须返回 `Accepted`；票据装订错误 65 或 68 最多重试三次，分别等待 5、10、20 秒，不重新提交或重新签名。最后必须通过 `stapler validate`。拒绝、公证失败、其他装订错误或重试耗尽均终止构建，不上传产物。
 
 更新公钥默认读 `apps/desktop/build/mygo-update.pub`，可用 `DAYBEE_UPDATER_PUBLIC_KEY` 覆盖。配置指向 GitHub `nexmoe/DayBee`，标签前缀 `v`。
 
@@ -88,6 +92,6 @@ node apps/desktop/scripts/desktop.mjs vet
 node apps/desktop/scripts/release-gates.mjs
 ```
 
-`test:release` 跑 `apps/desktop/scripts/release-artifacts.test.mjs` 和 `apps/desktop/scripts/prepare-native.test.mjs`，覆盖版本与标签匹配、安装包完整性、更新签名、文件冲突、Windows 路径保留及 strip 失败后的原始库恢复。`release-gates.mjs` 默认在人工门未通过时以非零退出；`--report` 保留这些事实并正常退出。
+`test:release` 跑 `apps/desktop/scripts/release-artifacts.test.mjs`、`apps/desktop/scripts/prepare-native.test.mjs` 和 `apps/desktop/scripts/notarize.test.mjs`，覆盖版本与标签匹配、安装包完整性、更新签名、文件冲突、Windows 路径保留、strip 失败后的原始库恢复及公证票据装订的有限重试。`release-gates.mjs` 默认在人工门未通过时以非零退出；`--report` 保留这些事实并正常退出。
 
 链接：`bun run check:docs`

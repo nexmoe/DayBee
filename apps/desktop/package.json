@@ -16,7 +16,7 @@
     "build:win": "node scripts/desktop.mjs build",
     "lint": "tsc --noEmit -p tsconfig.node.json --composite false && tsc --noEmit -p tsconfig.web.json --composite false",
     "test": "vitest run",
-    "test:release": "node --test scripts/release-artifacts.test.mjs scripts/prepare-native.test.mjs",
+    "test:release": "node --test scripts/release-artifacts.test.mjs scripts/prepare-native.test.mjs scripts/notarize.test.mjs",
     "test:go": "node scripts/desktop.mjs test",
     "test:race": "node scripts/desktop.mjs test -race",
     "test:e2e": "playwright test --config playwright.config.ts",

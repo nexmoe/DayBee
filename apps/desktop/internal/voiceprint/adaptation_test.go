@@ -2,7 +2,6 @@ package voiceprint
 
 import (
 	"math"
-	"os"
 	"path/filepath"
 	"sync"
 	"testing"
@@ -280,11 +279,7 @@ func TestAdaptationSaveFailureKeepsTheProfile(t *testing.T) {
 	vector := make([]float32, embeddingDimension)
 	vector[1] = 1
 	m.storeAdaptation(permit, snap, ctx, [][]float32{vector})
-	dir := filepath.Dir(m.path)
-	if err := os.Chmod(dir, 0500); err != nil {
-		t.Fatal(err)
-	}
-	defer os.Chmod(dir, 0700)
+	blockProfileStorage(t, m)
 	if err := m.ClearAdaptation(); err == nil {
 		t.Fatal("unwritable profile was cleared")
 	}

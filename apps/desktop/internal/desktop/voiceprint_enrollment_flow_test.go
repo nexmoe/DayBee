@@ -169,6 +169,9 @@ func TestEnrollmentRejectsDeviceChangeOnEveryStep(t *testing.T) {
 }
 
 func TestEnrollmentRejectsEchoChangeBeforeCapture(t *testing.T) {
+	if !protocol.SupportsEchoCancellation {
+		t.Skip("Echo cancellation cannot change on this platform")
+	}
 	for _, changeAt := range []int{1, 2, 3} {
 		t.Run(string(rune('0'+changeAt)), func(t *testing.T) {
 			v, profiles, closed, active := enrollmentHarness(t, true, true)

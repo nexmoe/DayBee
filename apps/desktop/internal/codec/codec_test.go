@@ -62,11 +62,15 @@ func TestFLACPreservesEverySampleAndShortTail(t *testing.T) {
 				if err := EncodeFLAC(context.Background(), wav, path); err != nil {
 					t.Fatal(err)
 				}
-				stream, err := flac.Open(path)
+				file, err := os.Open(path)
 				if err != nil {
 					t.Fatal(err)
 				}
-				defer stream.Close()
+				defer file.Close()
+				stream, err := flac.New(file)
+				if err != nil {
+					t.Fatal(err)
+				}
 				if stream.Info.NSamples != uint64(count) || stream.Info.NChannels != 2 || stream.Info.BitsPerSample != uint8(bits) {
 					t.Fatal("incorrect STREAMINFO", stream.Info)
 				}
