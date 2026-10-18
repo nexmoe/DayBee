@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixes
+
+- Keep timeline reading-position acceptance anchored to the same visible paragraph, including rows partly clipped at the viewport edge.
+
 ## 1.0.0 - 2026-10-18
 
 ### Maintenance
