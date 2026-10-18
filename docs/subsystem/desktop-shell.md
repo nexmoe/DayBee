@@ -6,7 +6,7 @@
 
 - `apps/desktop/main.go` 的 `main` 在 `DAYBEE_VERIFY_AUDIO`（1）时走 `codec.Diagnostic`，在 `DAYBEE_VERIFY_NATIVE`（1）时走 `asr.CheckVersion`。否则调用 `desktop.Run(desktop.New())`。
 - `apps/desktop/internal/desktop/app.go` 的 `Run` 注册生命周期。`initialize` 打开数据目录、设置、引擎和窗口。
-- 窗口、托盘、拖拽和字体在 `window.go`、`main_window.go`、`window_drag_darwin.go`、`fonts_darwin.go`。Windows 对应文件是空实现。
+- 窗口、托盘、拖拽和字体在 `window.go`、`main_window.go`、`window_drag_darwin.go`、`fonts_darwin.go`。Windows 的 `window_windows.go` 补偿无边框窗口的内容区尺寸，字体兼容是空实现。
 - 页面进程退出后的一次自动重载在 `page_recovery.go`。
 - 更新检查和安装在 `updater.go`。
 - 原生验收用的回环服务在 `test_server.go`。普通开发和发布不启动它。
@@ -45,6 +45,8 @@
 `windowForRole` 按 `compact` 或 `main` 找窗口。`CloseWindow` 与 `MinimizeWindow` 只动对应角色。`SetWindowPinned` 只把紧凑窗设为置顶。
 
 macOS 上 `installWindowCompatibility` 在内容视图顶部加一层 `DayBeeLegacyDragView`。紧凑窗传入高度 16，主窗口传入 38。主窗口与 `styles.css` 里 `.drag-region` 的 38px 一致。紧凑窗的 CSS 拖拽区高度是 `--panel-gutter`（1rem），原生层仍是 16。双击按系统的 `AppleActionOnDoubleClick` 最小化或缩放。Windows 不装这层。
+
+Windows 的同名函数比较 `Size` 与 `ContentSize` 的实际 DIP 差值，再扩大外框，补偿 mygo 0.3.4 保留的隐形缩放边框。紧凑窗页面仍为 420×620，主窗口页面仍为 1000×760，不把固定像素边框写死到尺寸中。
 
 ### 托盘与电源
 

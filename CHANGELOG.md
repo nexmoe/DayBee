@@ -22,6 +22,7 @@ All notable changes to this project are documented in this file.
 
 ### Fixes
 
+- Preserve the intended Windows content viewport by compensating for invisible frameless resize borders.
 - Load locked native DLLs beside Windows test executables, close FLAC test files explicitly, and use portable storage-failure fixtures. Preserve microphone archive retries when its directory is blocked.
 - Retry temporary Apple notarization ticket lookup failures without resubmitting the signed image, and require successful stapling validation.
 - Generate identical shared defaults on every build platform while preserving native platform capabilities.
