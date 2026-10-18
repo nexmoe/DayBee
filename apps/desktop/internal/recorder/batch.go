@@ -37,7 +37,8 @@ func (e *Engine) Transcribe(directory string) error {
 	done := make(chan struct{})
 	e.batchDone = done
 	e.mu.Unlock()
-	model := e.Settings().Recording.ASRModel
+	settings := e.Settings().Recording
+	model := settings.ASRModel
 	e.op.Unlock()
 	defer func() {
 		e.mu.Lock()
@@ -47,10 +48,10 @@ func (e *Engine) Transcribe(directory string) error {
 		e.mu.Unlock()
 		e.notify()
 	}()
-	if err := e.assets.EnsureASRModel(ctx, model); err != nil {
+	if err := e.assets.EnsureASRModel(ctx, model, settings.ASRLanguage); err != nil {
 		return err
 	}
-	modelPath := e.assets.ASRModelPath(model)
+	modelPath := e.assets.ASRModelPath(model, settings.ASRLanguage)
 	files, err := AudioFiles([]string{directory})
 	if err != nil {
 		return err

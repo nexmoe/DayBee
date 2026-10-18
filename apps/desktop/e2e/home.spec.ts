@@ -5,9 +5,9 @@ import type { AppLanguage, DesktopSnapshot } from "@daybee/shared";
 import { expect, test } from "./fixtures";
 
 async function openHome(page: Page) {
-  await page.goto("/?window=main");
+  await page.goto("/");
   await page.setViewportSize({ width: 1000, height: 760 });
-  await expect(page.getByRole("heading", { name: /Home|首页/, exact: true })).toBeVisible();
+  await expect(page.getByRole("tabpanel", { name: /Home|首页/, exact: true })).toBeVisible();
   return page.getByRole("region", { name: /Home|首页/, exact: true });
 }
 
@@ -28,10 +28,10 @@ function saveTranscript(directory: string, name: string, at: string, text: strin
 test("opens on Home and explains the empty timeline", async ({ launchApp }) => {
   const { app, page } = await launchApp();
   const home = await openHome(page);
-  await expect(page.getByRole("navigation").getByRole("button", { name: /Home|首页/, exact: true }))
-    .toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("tablist").getByRole("tab", { name: /Home|首页/, exact: true }))
+    .toHaveAttribute("aria-selected", "true");
   await expect(home.getByRole("heading", { name: /No activity yet|还没有活动记录/ })).toBeVisible();
-  await expect(home.getByRole("button", { name: /Recording controls|录音控制/ })).toBeVisible();
+  await expect(page.locator(".compact-navigation").getByRole("button", { name: /Start recording|开始录音/ })).toBeVisible();
   await expect(home.getByRole("article")).toHaveCount(0);
   await app.close();
 });
@@ -82,10 +82,10 @@ test("merges segments, reflows complete paragraphs and orders them by actual tim
     element.clientHeight >= element.scrollHeight && getComputedStyle(element).whiteSpace === "normal"
   ))).toBe(true);
   await entries.last().scrollIntoViewIfNeeded();
-  await page.getByRole("navigation").getByRole("button", { name: /General|通用/, exact: true }).click();
-  await expect(page.getByRole("heading", { name: /General|通用/, exact: true })).toBeInViewport();
-  await page.getByRole("navigation").getByRole("button", { name: /Home|首页/, exact: true }).click();
-  await expect(page.getByRole("heading", { name: /Home|首页/, exact: true })).toBeInViewport();
+  await page.getByRole("tablist").getByRole("tab", { name: /General|通用/, exact: true }).click();
+  await expect(page.getByRole("tabpanel", { name: /General|通用/, exact: true })).toBeInViewport();
+  await page.getByRole("tablist").getByRole("tab", { name: /Home|首页/, exact: true }).click();
+  await expect(page.getByRole("tabpanel", { name: /Home|首页/, exact: true })).toBeInViewport();
   await page.setViewportSize({ width: 720, height: 540 });
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await expect(home.locator(".transcript-event").first()).toHaveAttribute("aria-setsize", String(rows.length));
@@ -93,7 +93,7 @@ test("merges segments, reflows complete paragraphs and orders them by actual tim
   await app.close();
 });
 
-test("adds completed transcripts without reloading and keeps daily history separate", async ({ launchApp }) => {
+test("adds completed transcripts without reloading and retains them across navigation", async ({ launchApp }) => {
   const { app, page } = await launchApp();
   const directory = await outputDirectory(page);
   saveTranscript(directory, "first", "2026-10-09T10:00:00Z", "今天讨论录音");
@@ -107,10 +107,8 @@ test("adds completed transcripts without reloading and keeps daily history separ
     .toHaveText(["质量和转写结果。", "今天讨论录音"]);
   expect(await home.locator("time").evaluateAll(elements => elements.map(element => element.getAttribute("datetime"))))
     .toEqual(["2026-10-09T10:00:30.000Z", "2026-10-09T10:00:00.000Z"]);
-  await page.getByRole("navigation").getByRole("button", { name: /History|历史/, exact: true }).click();
-  const history = page.getByRole("region", { name: /History|历史/, exact: true });
-  await expect(history.getByText(/2 recordings · 2 transcribed|2 段录音 · 2 段已转写/)).toBeVisible();
-  await page.getByRole("navigation").getByRole("button", { name: /Home|首页/, exact: true }).click();
+  await page.getByRole("tablist").getByRole("tab", { name: /General|通用/, exact: true }).click();
+  await page.getByRole("tablist").getByRole("tab", { name: /Home|首页/, exact: true }).click();
   await expect(home.getByRole("article").locator(".transcript-text"))
     .toHaveText(["质量和转写结果。", "今天讨论录音"]);
   await app.close();
@@ -133,32 +131,27 @@ for (const language of ["zh-CN", "en-US"] as const) for (const theme of ["light"
     const home = await openHome(page);
     await expect(home.getByRole("article")).toHaveCount(3);
     await expect(page.locator("html")).toHaveClass(theme === "dark" ? /dark/ : /^$/);
-    await expect(page.getByRole("heading", { name: language === "zh-CN" ? "首页" : "Home", exact: true })).toBeVisible();
-    await expect(page.locator(".workspace-toolbar h1")).toHaveText(language === "zh-CN" ? "首页" : "Home");
-    await expect(page.getByRole("searchbox", { name: language === "zh-CN" ? "搜索转写或应用" : "Search transcripts or apps" })).toBeVisible();
-    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
-    await expect(page.locator(".workspace-brand")).toHaveText("DayBee");
-    expect(await page.locator(".workspace-logo").evaluate(element =>
-      element instanceof HTMLImageElement && element.complete && element.naturalWidth > 0
-    )).toBe(true);
+    await expect(page.getByRole("tabpanel", { name: language === "zh-CN" ? "首页" : "Home", exact: true })).toBeVisible();
+    await expect(page.getByRole("searchbox")).toHaveCount(0);
+    await expect(page.getByRole("combobox")).toHaveCount(0);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
     // The native window supplies this backdrop beneath the transparent renderer.
     await page.addStyleTag({ content: `html { background: ${theme === "dark" ? "#1c1c1e" : "#f5f5f7"}; }` });
     expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--foreground").trim()))
       .toBe(theme === "dark" ? "rgba(255, 255, 255, 0.9)" : "rgba(0, 0, 0, 0.85)");
-    for (const [size, width, height] of [["desktop", 1000, 760], ["narrow", 720, 540]] as const) {
+    for (const [size, width, height] of [["regular", 420, 620], ["minimum", 380, 480]] as const) {
       await page.setViewportSize({ width, height });
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await expect.poll(() => home.locator(".transcript-event").evaluateAll(elements => elements.every((element, index) => {
         const next = elements[index + 1];
         return !next || Math.abs(next.getBoundingClientRect().top - element.getBoundingClientRect().bottom) <= 1;
       }))).toBe(true);
-      const heading = await page.getByRole("heading", { level: 1 }).boundingBox();
-      const trigger = await page.getByRole("button", { name: /Toggle sidebar|切换侧栏/ }).boundingBox();
-      expect(Math.abs(heading!.y + heading!.height / 2 - trigger!.y - trigger!.height / 2)).toBeLessThan(1);
+      const tabs = await page.getByRole("tablist").boundingBox();
       const guide = await page.getByTestId("voiceprint-guide").boundingBox();
       const activity = await page.getByTestId("speech-activity").boundingBox();
       const timestamp = await home.locator("time").first().boundingBox();
       expect(guide).not.toBeNull();
+      expect(guide!.y).toBeGreaterThanOrEqual(tabs!.y + tabs!.height);
       expect(activity!.y).toBeGreaterThanOrEqual(guide!.y + guide!.height);
       expect(timestamp!.y).toBeGreaterThanOrEqual(activity!.y + activity!.height);
       expect(timestamp!.y - activity!.y - activity!.height).toBeLessThan(48);

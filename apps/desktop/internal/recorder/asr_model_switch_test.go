@@ -109,9 +109,8 @@ func TestLiveModelSwitchKeepsCaptureAndQueuedSpeech(t *testing.T) {
 				if metadata.Model != asrmodel.Name(model) || metadata.Text != want || metadata.Session != started.Format(time.RFC3339Nano) {
 					t.Fatalf("speech used the wrong model or session: %s", raw)
 				}
-				stat, err := os.Stat(path)
-				if err != nil || stat.Size() != int64(44+windows*audio.WindowSize*2) {
-					t.Fatal("switch lost archived samples", path, err)
+				if samples := archivedSamples(t, path); len(samples) != windows*audio.WindowSize {
+					t.Fatal("switch lost archived samples", path, len(samples))
 				}
 				counts[metadata.Model]++
 			}

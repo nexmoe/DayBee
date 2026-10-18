@@ -2,21 +2,21 @@
 
 中文 | [English](README.md)
 
-DayBee 是使用 Go 和 mygo 构建、以托盘常驻为核心的桌面录音应用。它可以长时间录制麦克风、自动分段存档，并使用可选择的 `sherpa-onnx` ASR 模型与 Silero VAD 做实时转写和离线补转写。
+DayBee 是使用 Go 和 mygo 构建、以托盘常驻为核心的桌面录音应用。它可以长时间录制麦克风、自动分段存档，并使用 Apple SpeechAnalyzer 或可选择的 `sherpa-onnx` ASR 模型与 Silero VAD 做实时转写和离线补转写。
 
 ## 功能特性
 
 - 长时间麦克风录音与自动分段
-- 支持轻量 Whisper Tiny/Base/Small、SenseVoice Small、Qwen3 ASR 0.6B 和 FireRedASR2 AED/CTC 的实时转写（可关闭）
+- 支持 Apple SpeechAnalyzer、轻量 Whisper Tiny/Base/Small、SenseVoice Small、Qwen3 ASR 0.6B 和 FireRedASR2 AED/CTC 的实时转写（可关闭）
 - 仅语音录制模式 — 仅保存 VAD 检测到的语音片段
 - 实时音频波形可视化
 - 手动选择麦克风，并可自动切到更活跃的输入设备
 - macOS 原生回声消除，减少电脑外放声音进入录音和转写
 - 可选录制 macOS 系统声音，与麦克风分别存储、转写并展示来源
-- 同时支持 WAV 与 FLAC 输出
+- 启动后自动录音，统一归档为无损 FLAC
 - 支持对已有 WAV/FLAC 录音做批量转写
-- 按天分组的录音历史浏览
-- 在转写文稿旁标注同时间段的应用名称和图标，支持按应用场景筛选转写与录音
+- 完整文稿时间线
+- 在转写文稿旁标注同时间段的应用名称和图标
 - 系统托盘应用，支持开机自启、启动即录、自动更新
 - 中英双语界面
 - 亮色 / 暗色 / 跟随系统主题
@@ -35,7 +35,7 @@ DayBee 是使用 Go 和 mygo 构建、以托盘常驻为核心的桌面录音应
 
 ## 运行说明
 
-- 首次启动默认使用轻量 Whisper Tiny（INT8），也可在「转写」设置中选择 Whisper Base/Small、SenseVoice Small（2025）、Qwen3 ASR 0.6B 或 FireRedASR2 AED/CTC。已有模型选择保持不变。页面展示下载量、进度和安装状态；录音期间可切换，待处理语音继续使用原模型转写。
+- 兼容的 macOS 26 或更新版本默认使用 Apple SpeechAnalyzer 在本机转写；旧版 macOS 和其他平台默认使用 Whisper Tiny（INT8）。已有模型选择保持不变，其他模型仍可在「转写」设置中选择。SpeechAnalyzer 的语音资源由 macOS 管理，“系统语言”跟随 Mac 的首选语言，转写其他语言时请手动选择。录音期间可切换模型，待处理语音保留原模型和语言。详见[语音识别](docs/subsystem/asr.md)。
 - 开始录音时准备 Silero VAD；选定模型时或首次实时、批量转写时下载对应 ASR 模型。已有模型缓存继续复用，下载失败时保留原选择。
 - 原生采集、sherpa-onnx 1.13.8 和 ONNX Runtime 1.28.2 随应用打包，安装后无需 Node.js、Bun 或 Go。
 - WAV/FLAC 编解码、声道混合和重采样直接由 Go 完成，兼容旧版 FLAC 录音，无需 FFmpeg 可执行文件或系统安装。

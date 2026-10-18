@@ -8,6 +8,7 @@ import (
 
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
 	"github.com/nexmoe/eve/apps/desktop/internal/audio"
+	"github.com/nexmoe/eve/apps/desktop/internal/speechanalyzer"
 )
 
 const Version = "1.13.8"
@@ -56,6 +57,9 @@ func CheckVersion() error {
 }
 
 func (Sherpa) NewRecognizer(directory string) (Recognizer, error) {
+	if speechanalyzer.IsModelKey(directory) {
+		return newSpeechRecognizer(directory)
+	}
 	if err := CheckVersion(); err != nil {
 		return nil, err
 	}

@@ -13,6 +13,7 @@ declare global { interface Window { modelHarness: ModelHarness } }
 async function launchModels(page: Page, language: "zh-CN" | "en-US") {
   const snapshot: DesktopSnapshot = {
     asrModels: { busy: false, downloadingModel: null, items: [
+      { id: "speech-analyzer", name: "SpeechAnalyzer", estimatedBytes: 0, ready: false },
       { id: "whisper-tiny", name: "Whisper Tiny", estimatedBytes: 116_204_861, ready: true },
       { id: "whisper-base", name: "Whisper Base", estimatedBytes: 207_557_382, ready: false },
       { id: "whisper-small", name: "Whisper Small", estimatedBytes: 639_387_718, ready: false },
@@ -88,8 +89,8 @@ async function launchModels(page: Page, language: "zh-CN" | "en-US") {
     } as unknown as NonNullable<Window["mygo"]>;
   }, snapshot);
   await page.setViewportSize({ width: 1000, height: 900 });
-  await page.goto("/?window=main");
-  await page.getByRole("navigation").getByRole("button", { name: /Transcribe|转写/, exact: true }).click();
+  await page.goto("/");
+  await page.getByRole("tablist").getByRole("tab", { name: /Transcribe|转写/, exact: true }).click();
 }
 
 test("downloads and switches models without stopping recording", async ({ page }) => {
@@ -110,6 +111,22 @@ test("downloads and switches models without stopping recording", async ({ page }
   await previous.getByRole("button").click();
   await expect(previous.getByRole("button")).toHaveAccessibleName("当前模型");
   expect(await page.evaluate(() => window.modelHarness.snapshot.status.recording)).toBe(true);
+});
+
+test("prepares the macOS system model without displaying download size or INT8 inference", async ({ page }) => {
+  await launchModels(page, "en-US");
+  const row = page.getByTestId("asr-model-speech-analyzer");
+  await expect(row).toContainText("Managed by macOS");
+  await expect(row).not.toContainText("0 MB");
+  await expect(row).not.toContainText("INT8");
+  await expect(row.getByRole("button")).toHaveAccessibleName("Prepare and use SpeechAnalyzer");
+  await row.getByRole("button").click();
+  await expect(row).toContainText("Preparing…");
+  await page.evaluate(() => window.modelHarness.finishDownload());
+  await expect(row.getByRole("button")).toHaveAccessibleName("Current model");
+  await expect(row).toContainText("Ready");
+  expect(await page.evaluate(() => window.modelHarness.snapshot.settings.recording.asrModel)).toBe("speech-analyzer");
+  await expect(page.getByText("SpeechAnalyzer uses one language at a time.", { exact: false })).toBeVisible();
 });
 
 test("recording started during a download can activate the downloaded model", async ({ page }) => {

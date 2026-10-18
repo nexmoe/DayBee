@@ -5,14 +5,14 @@
 ## 职责与边界
 
 - 入口是 `apps/desktop/src/renderer/src/main.tsx`。它挂上 `AppErrorBoundary` 和 `MotionConfig`，把 `document.body.dataset.platform` 设为 `win32` 或其他。
-- 紧凑页和主窗口在 `app.tsx` 的 `App` 里按 `windowRole` 分支。
+- `app.tsx` 的 `App` 加载 `components/compact-window.tsx` 的 `CompactWindow`，所有页面共用一套布局。
 - 进程内快照在 `lib/desktop-store.ts`。调用封装在 `lib/desktop-api.ts` 的 `desktopApi`。
 - 类型和客户端由 mygo 生成到 `src/renderer/src/generated/mygo.ts`。默认值从 `@daybee/shared` 来，见 [workspace.md](workspace.md)。
 - 页面不打开麦克风，不写录音文件，不决定更新何时安装。那些在 Go 壳里，见 [desktop-shell.md](desktop-shell.md)。
 
 ## 权威来源
 
-- 窗口角色由地址查询参数决定。`lib/window-role.ts` 的 `windowRole` 只在 `window=main` 时为 `main`，否则为 `compact`。这与壳里主窗口 URL `/?window=main` 对应。
+- 原生窗口角色固定为 `compact`。地址查询参数不再选择窗口布局，旧 `?window=main` 地址也显示同一紧凑页面。
 - 当前快照是模块级变量 `snapshot`。React 通过 `useDesktopSnapshot` 或 `useDesktopSelector` 订阅。
 - 没有桥时不伪造一台可用的桌面。`desktopApi` 在 `isMyGo()` 为假时是 `undefined`，快照权限被标成拒绝。
 
@@ -30,11 +30,13 @@
 
 波形不进快照。`components/ui/live-waveform.tsx` 直接订阅 `desktop:waveform`，把 `spectrum` 放进画布。
 
-### 主窗口与紧凑窗
+### 窗口内页面切换
 
-`App` 在主窗口用 `React.lazy` 加载 `components/main-window.tsx` 的 `MainWindow`。加载中显示 `interfaceLoading`。紧凑窗同步渲染状态、波形和同一条转写时间线。
+`App` 用 `React.lazy` 加载 `CompactWindow`，加载中显示 `interfaceLoading`。顶部固定显示 `components/recorder-header.tsx` 的录音控制和音波，音波下方的 tab 提供 home、general、input、transcribe 四个页面；使用 `components/ui/tabs.tsx` 的 Radix tab 处理选中状态、焦点、左右方向键、Home 和 End。选中的 tab 为面板提供可访问名称，内容区不再重复显示页面标题。录音头部和导航位于滚动区外，切换页面不卸载音波；380×480 最小尺寸下仍可切换所有页面，不再使用侧栏或抽屉。
 
-主窗口侧栏五项是 home、history、general、input、transcribe。窄屏抽屉的断点在 `sidebar-provider.tsx` 的 `mobileBreakpoint`（768）。
+当前页面保存在 `CompactWindow` 的 React 状态，默认 home；切换页面会卸载旧面板并重置滚动位置。首页直接显示活动图和完整转写时间线，活动图仍支持选择日期。首页不再提供搜索、应用筛选或搜索高亮；应用名称与图标仅作静态场景标注，正在使用麦克风的应用也不触发筛选。独立历史页、按天文件列表和文件列表筛选代码已移除；已保存的文稿仍用于首页时间线、声纹导出与 MCP。声纹引导在未保存声纹时显示，完成后自动隐藏；重新录制期间仍显示进度和错误，完成或取消后收起。三个设置页复用 `SettingsPage`。声纹初始化未完成或注册进行中时，引导也显示在其他页面；转写设置的声纹操作返回首页并直接开始录制。
+
+通用页的 `components/mcp-settings.tsx` 调用 `GetMCPConfig` 展示连接配置，用户点击复制时才调用 `CopyMCPConfig` 写入系统剪贴板。MCP 服务不依赖页面保持打开，见 [mcp.md](mcp.md)。
 
 主题由 `useWindowTheme` 把 `dark` 类写到 `documentElement`。`system` 跟随 `prefers-color-scheme`。语言文案来自 `lib/i18n.ts`。`system` 时看 `navigator.language` 是否以 `zh` 开头。
 
@@ -46,9 +48,9 @@
 
 `desktopActions` 是页面用的动作。失败走 `toast-store`。`saveSettings` 用 `saveSequence` 丢掉过期响应。等待期间先把待保存值写进本地快照。失败且仍是最新一次请求时，再调 `bootstrap` 恢复盘上的值。
 
-`startRecording` 在声纹设置是 `pending` 时直接把调用交给 Go，由壳打开主窗口。模型还在下载且 VAD 或所选 ASR 模型未就绪时，页面自己弹 toast，不发开始请求。权限是 `not-determined` 时先 `requestMicrophonePermission`。开始调用返回后若 `recording` 仍为假，把状态错误或状态文案再提示一次。
+`startRecording` 在声纹设置是 `pending` 时直接把调用交给 Go，由壳显示已有紧凑窗及声纹引导。模型还在下载且 VAD 或所选 ASR 模型未就绪时，页面自己弹 toast，不发开始请求。权限是 `not-determined` 时先 `requestMicrophonePermission`。开始调用返回后若 `recording` 仍为假，把状态错误或状态文案再提示一次。
 
-状态错误和声纹错误只在文本变化时提示。主窗口上、阶段已是 `error` 的声纹错误不再弹 toast，因为注册引导里已有说明。
+状态错误和声纹错误只在文本变化时提示。阶段已是 `error` 的声纹错误不再弹 toast，因为注册引导里已有说明。
 
 生成客户端里的方法与 `DesktopService` 导出方法一一对应，包括录音、设置、目录选择、更新安装、窗口角色、ASR 模型准备和声纹注册。事件名是 `desktop:snapshot`、`desktop:status`、`desktop:waveform`。
 

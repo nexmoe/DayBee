@@ -8,143 +8,60 @@
   --color-accent-foreground: var(--accent-foreground);
 }
 
-.workspace-window {
+.compact-window {
   height: 100svh;
   overflow: hidden;
+  color: var(--foreground);
 }
 
-.workspace-navigation,
-[data-sidebar="sidebar"][data-mobile="true"] {
-  /* Match the native traffic lights' X position in main_window.go. */
-  --workspace-leading-inset: 1rem;
-  font-family: "Inter Variable", "DayBee Legacy System", -apple-system, sans-serif;
-  background: var(--panel);
-}
-
-.workspace-brand {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.5rem;
-  /* Clear the 38px traffic-light band, then sit tight above the nav. */
-  padding: 3rem var(--workspace-leading-inset) 0.75rem;
-}
-
-.workspace-logo {
-  display: block;
-  flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
-  object-fit: contain;
-  /* The 1024px asset has an 82px transparent inset before the solid tile. */
-  transform: translateX(calc(-2rem * 82 / 1024));
-}
-
-.workspace-navigation-groups {
+.compact-pages {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  padding: 0.25rem calc(var(--workspace-leading-inset) - 0.5rem) 1rem;
-  --active: color-mix(in srgb, var(--accent) 10%, transparent);
-  --muted: color-mix(in srgb, var(--foreground) 65%, transparent);
-  --navigation-accent: color-mix(in srgb, var(--accent) 60%, var(--foreground));
+  height: 100%;
+  min-width: 0;
 }
 
-.workspace-navigation-groups [data-sidebar="menu"] {
-  --muted: color-mix(in srgb, var(--foreground) 70%, transparent);
-}
-
-.workspace-navigation-groups [data-sidebar="menu-button"][data-active="true"] {
-  --foreground: var(--navigation-accent);
-}
-
-.workspace-footer {
-  padding: 1rem var(--workspace-leading-inset);
-  gap: 0.8rem;
-  border-top: 1px solid var(--border);
-}
-
-.workspace-status {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--muted);
-}
-
-.workspace-inset {
-  background: transparent;
-  overflow: hidden;
-}
-
-.workspace-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  height: 3rem;
+.compact-navigation {
   flex-shrink: 0;
-  /* Below the native 38px drag band so the trigger stays clickable. */
-  margin-top: 2.375rem;
-  padding: 0 1rem;
-  color: var(--muted);
+  padding: var(--panel-gutter) var(--panel-gutter) 0.75rem;
 }
 
-.workspace-toolbar h1 {
-  margin: 0;
-  color: var(--foreground);
+.compact-window:has(.windows-window-controls) .compact-navigation {
+  padding-top: 3.5rem;
 }
 
-.transcript-search {
+.compact-recorder {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.5rem;
-  width: min(18rem, 100%);
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.compact-tabs {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-radius: 0.75rem;
+}
+
+.compact-tabs [role="tab"] {
   min-width: 0;
-  height: 2rem;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  background: var(--surface);
+  padding-inline: 0.25rem;
+  border-radius: 0.6rem;
 }
 
-.transcript-search:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--ring);
+.compact-tabs [role="tab"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
-.transcript-search input {
+
+.compact-content {
   flex: 1;
+  min-height: 0;
   min-width: 0;
-  width: 100%;
-  border: 0;
-  outline: none;
-  background: transparent;
-  color: var(--foreground);
-  font: inherit;
-  font-size: 0.75rem;
 }
 
-.transcript-search input::placeholder { color: var(--muted); }
-.transcript-search input::-webkit-search-cancel-button { display: none; }
-.transcript-search > svg { flex-shrink: 0; }
-
-.workspace-page {
-  width: 100%;
-  max-width: 52rem;
-  margin: 0 auto;
-  padding: 1.5rem;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tray-panel { animation: none; }
-}
-
-.workspace-filters { display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; min-width: 0; flex: 1; margin-left: auto; }
-.recording-context-filter { display: flex; align-items: center; gap: 0.4rem; min-width: 0; max-width: 10rem; flex-shrink: 0; height: 2rem; padding: 0 0.4rem; border: 1px solid var(--border); border-radius: 0.5rem; background: var(--surface); }
-.recording-context-filter select { min-width: 0; max-width: 100%; height: 100%; border: 0; background: transparent; color: var(--foreground); font-size: 0.75rem; text-overflow: ellipsis; }
-.recording-context-filter option { background: var(--surface); color: var(--foreground); }
-.recording-context-filter:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
-@media (max-width: 520px) {
-  .workspace-filters { flex-wrap: wrap; }
-  .workspace-filters .transcript-search { flex: 1; }
-  .recording-context-filter { max-width: 7rem; flex-shrink: 1; }
+.compact-page {
+  min-width: 0;
+  max-width: 100%;
+  padding: 0 var(--panel-gutter) 1rem;
+  overflow-wrap: anywhere;
 }

@@ -1,8 +1,8 @@
 package recorder
 
 import (
-	"encoding/binary"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -56,25 +56,21 @@ func TestSystemAudioArchivesAndTranscribesEachSourceIndependently(t *testing.T) 
 		if !strings.Contains(item.AudioPath, "_"+string(item.AudioSource)) || len(item.TranscriptChunks) != 1 || item.TextPreview != "固定测试文本" {
 			t.Fatalf("source transcript missing: %+v", item)
 		}
-		rawPCM, err := os.ReadFile(item.AudioPath)
-		if err != nil {
-			t.Fatal(err)
-		}
+		samples := archivedSamples(t, item.AudioPath)
 		want := float32(.1)
 		if item.AudioSource == protocol.SourceSystem {
 			want = .2
 		}
-		if len(rawPCM) != 44+512*2 {
-			t.Fatalf("mixed source windows: %d samples", (len(rawPCM)-44)/2)
+		if len(samples) != 512 {
+			t.Fatalf("mixed source windows: %d samples", len(samples))
 		}
-		for offset := 44; offset < len(rawPCM); offset += 2 {
-			sample := int16(binary.LittleEndian.Uint16(rawPCM[offset:]))
-			if sample != int16(float64(want)*32767) {
+		for _, sample := range samples {
+			if sample != float32(int16(float64(want)*32767))/32768 {
 				t.Fatalf("source PCM mixed: %s got %v", item.AudioSource, sample)
 			}
 		}
 		for _, suffix := range []string{".json", ".recording.json"} {
-			raw, err := os.ReadFile(strings.TrimSuffix(item.AudioPath, ".wav") + suffix)
+			raw, err := os.ReadFile(strings.TrimSuffix(item.AudioPath, filepath.Ext(item.AudioPath)) + suffix)
 			if err != nil || !strings.Contains(string(raw), `"audio_source": "`+string(item.AudioSource)+`"`) {
 				t.Fatalf("source absent from durable %s: %s %v", suffix, raw, err)
 			}

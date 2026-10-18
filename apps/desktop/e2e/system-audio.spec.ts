@@ -7,9 +7,9 @@ test("system audio capture is opt-in and persists through relaunch", async ({ la
   test.skip(process.platform !== "darwin", "System audio capture currently supports macOS");
   let { app, page } = await launchApp();
   const openInput = async () => {
-    await page.goto("/?window=main");
+    await page.goto("/");
     await page.setViewportSize({ width: 1000, height: 760 });
-    await page.getByRole("navigation").getByRole("button", { name: /Input|输入/, exact: true }).click();
+    await page.getByRole("tablist").getByRole("tab", { name: /Input|输入/, exact: true }).click();
   };
   await openInput();
   let toggle = page.getByTestId("system-audio-field").getByRole("switch");
@@ -29,7 +29,7 @@ test("system audio capture is opt-in and persists through relaunch", async ({ la
   await app.close();
 });
 
-test("saved microphone and system speech have distinct timeline labels and history counts", async ({ launchApp }, testInfo) => {
+test("saved microphone and system speech have distinct timeline labels", async ({ launchApp }, testInfo) => {
   const { app, page } = await launchApp();
   const snapshot = await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"));
   const directory = snapshot.settings.recording.outputDir;
@@ -42,9 +42,9 @@ test("saved microphone and system speech have distinct timeline labels and histo
     }));
   }
   await app.refreshHistory();
-  for (const role of ["compact", "main"] as const) {
-    await page.goto(role === "main" ? "/?window=main" : "/");
-    await page.setViewportSize({ width: role === "main" ? 1000 : 380, height: 760 });
+  for (const role of ["compact"] as const) {
+    await page.goto(role === "compact" ? "/" : "/");
+    await page.setViewportSize({ width: role === "compact" ? 1000 : 380, height: 760 });
     const mic = page.locator('.transcript-event[data-audio-source="microphone"]');
     const system = page.locator('.transcript-event[data-audio-source="system"]');
     await expect(mic.locator(".transcript-text")).toHaveText("麦克风里的一句话。");
@@ -52,12 +52,10 @@ test("saved microphone and system speech have distinct timeline labels and histo
     await expect(mic.getByTestId("audio-source-label")).toHaveText(/Microphone|麦克风/);
     await expect(system.getByTestId("audio-source-label")).toHaveText(/System audio|系统声音/);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    if (role === "main") {
+    if (role === "compact") {
       await page.screenshot({ path: testInfo.outputPath("audio-source-timeline.png"), animations: "disabled" });
     }
   }
-  await page.getByRole("navigation").getByRole("button", { name: /History|历史/, exact: true }).click();
-  await expect(page.getByTestId("history-source-summary")).toHaveText(/(?:Microphone|麦克风) 1 · (?:System audio|系统声音) 1/);
   await expect.poll(async () => (await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"))).history.map(item => item.audioSource).sort()).toEqual(["microphone", "system"]);
   await app.close();
 });

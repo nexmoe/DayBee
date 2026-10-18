@@ -6,12 +6,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
     "hideWindowOnClose": true,
     "language": "system",
     "launchAtLogin": true,
-    "startRecordingOnLaunch": true,
     "theme": "system",
     "voiceprintSetup": "pending"
   },
   "recording": {
-    "audioFormat": "flac",
     "asrLanguage": "auto",
     "asrModel": "whisper-tiny",
     "autoSwitchConfirmations": 2,

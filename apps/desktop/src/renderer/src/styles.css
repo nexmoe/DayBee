@@ -123,30 +123,6 @@ input {
     0 0 16px rgba(245, 158, 11, 0.4);
 }
 
-/* Tray panel entrance animation */
-.tray-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: var(--panel-gutter) 0 1rem;
-  animation: tray-panel-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.panel-section {
-  padding-inline: var(--panel-gutter);
-}
-
-@keyframes tray-panel-in {
-  from {
-    opacity: 0;
-    transform: translateY(-6px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
 /* Draggable region for frameless window */
 .drag-region {
   position: fixed;
@@ -164,10 +140,6 @@ input {
 }
 
 /* Windows keeps room for its custom minimize and close controls. */
-[data-window="compact"]:has(.windows-window-controls) .tray-panel {
-  padding-top: 4.75rem;
-}
-
 [data-window="compact"]:has(.windows-window-controls) .drag-region {
   height: 38px;
 }

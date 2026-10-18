@@ -14,7 +14,6 @@ vi.mock("./desktop-api", () => ({
     onStatus: (handler: typeof handlers.status) => { handlers.status = handler; }
   }
 }));
-vi.mock("./window-role", () => ({ windowRole: "main" }));
 vi.mock("./toast-store", () => ({ toastActions: { show: vi.fn() } }));
 
 import { getDesktopSnapshot } from "./desktop-store";

@@ -31,10 +31,10 @@ func TestNativeSelectableModels(t *testing.T) {
 	defer cancel()
 	for _, model := range asrmodel.All() {
 		t.Run(string(model.ID), func(t *testing.T) {
-			if err := manager.EnsureASRModel(ctx, model.ID); err != nil {
+			if err := manager.EnsureASRModel(ctx, model.ID, "zh"); err != nil {
 				t.Fatal(err)
 			}
-			manager.SelectASRModel(model.ID)
+			manager.SelectASRModel(model.ID, "zh")
 			recognizer, err := (Sherpa{}).NewRecognizer(manager.ASRPath())
 			if err != nil {
 				t.Fatal(err)

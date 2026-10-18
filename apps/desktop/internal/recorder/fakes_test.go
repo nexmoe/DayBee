@@ -3,11 +3,13 @@ package recorder
 import (
 	"context"
 	"errors"
+	"path/filepath"
 	"sync"
 	"testing"
 
 	"github.com/nexmoe/eve/apps/desktop/internal/asr"
 	"github.com/nexmoe/eve/apps/desktop/internal/audio"
+	"github.com/nexmoe/eve/apps/desktop/internal/codec"
 	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
 )
 
@@ -64,7 +66,7 @@ func (a *fakeAssets) Ensure(_ context.Context, _ bool, asr bool) error {
 	return nil
 }
 func (a *fakeAssets) VADPath() string { return "vad" }
-func (a *fakeAssets) SelectASRModel(id protocol.ASRModel) {
+func (a *fakeAssets) SelectASRModel(id protocol.ASRModel, _ ...string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	a.selected = id
@@ -74,13 +76,16 @@ func (a *fakeAssets) ASRPath() string {
 	defer a.mu.Unlock()
 	return a.ASRModelPath(a.selected)
 }
-func (a *fakeAssets) ASRModelPath(id protocol.ASRModel) string { return string(id) }
-func (a *fakeAssets) EnsureASRModel(ctx context.Context, _ protocol.ASRModel) error {
+func (a *fakeAssets) ASRModelPath(id protocol.ASRModel, _ ...string) string { return string(id) }
+func (a *fakeAssets) EnsureASRModel(ctx context.Context, _ protocol.ASRModel, _ ...string) error {
 	return a.Ensure(ctx, false, true)
 }
 func (a *fakeAssets) Ready() (bool, bool) { return true, true }
-func (a *fakeAssets) Transcode(context.Context, string, string) error {
-	return errors.New("conversion failed")
+func (a *fakeAssets) Transcode(ctx context.Context, source, destination string) error {
+	if a.failFLAC {
+		return errors.New("conversion failed")
+	}
+	return codec.EncodeFLAC(ctx, source, destination)
 }
 func (a *fakeAssets) ReadAudio(ctx context.Context, path string) ([]float32, int, error) {
 	if a.read != nil {
@@ -160,7 +165,6 @@ func testEngine(t *testing.T, disabled bool, runtime *fakeRuntime) (*Engine, *fa
 	directory := t.TempDir()
 	settings := protocol.DefaultSettings(directory)
 	settings.Recording.DisableASR = disabled
-	settings.Recording.AudioFormat = protocol.WAV
 	settings.Recording.AutoSwitchDevice = false
 	capture, assets := &fakeCapture{}, &fakeAssets{}
 	e := New(settings, capture, assets, runtime, nil, nil)
@@ -170,4 +174,16 @@ func testEngine(t *testing.T, disabled bool, runtime *fakeRuntime) (*Engine, *fa
 		}
 	})
 	return e, capture, assets, directory
+}
+
+func archivedSamples(t *testing.T, path string) []float32 {
+	t.Helper()
+	if filepath.Ext(path) != ".flac" {
+		t.Fatalf("recording was not archived as FLAC: %s", path)
+	}
+	samples, rate, err := codec.ReadMono(context.Background(), path)
+	if err != nil || rate != audio.SampleRate {
+		t.Fatalf("cannot decode archived audio %s: rate=%d error=%v", path, rate, err)
+	}
+	return samples
 }

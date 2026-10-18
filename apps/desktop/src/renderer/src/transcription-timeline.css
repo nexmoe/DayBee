@@ -113,13 +113,6 @@
 
 .transcript-paragraph { margin: 0; }
 
-.transcript-prose mark {
-  border-radius: 0.15rem;
-  background: color-mix(in srgb, var(--accent) 20%, transparent);
-  color: inherit;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-}
 
 .transcript-empty {
   display: grid;
@@ -146,11 +139,7 @@
   text-align: left;
   font: inherit;
 }
-button.recording-context { cursor: pointer; }
-button.recording-context:hover { background: var(--surface); border-color: var(--muted); }
-button.recording-context:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.recording-context > img, .recording-context > svg, .recording-context-filter > img,
-.recording-context-filter > svg { flex: 0 0 18px; width: 18px; height: 18px; object-fit: contain; }
+.recording-context > img, .recording-context > svg { flex: 0 0 18px; width: 18px; height: 18px; object-fit: contain; }
 .recording-context > span { min-width: 0; overflow-wrap: anywhere; }
 .recording-context-fallback { color: var(--muted); }
 
@@ -164,7 +153,6 @@ button.recording-context:focus-visible { outline: 2px solid var(--accent); outli
   line-height: 1.25rem;
 }
 
-.transcript-entry button.recording-context:hover { border-color: transparent; color: var(--foreground); }
 
 .transcript-entry .recording-context > :is(img, svg) { flex-basis: 14px; width: 14px; height: 14px; }
 
@@ -189,7 +177,3 @@ button.recording-context:focus-visible { outline: 2px solid var(--accent); outli
   .transcript-time-range { font-size: 0.75rem; }
   .transcript-prose { font-size: 0.9375rem; line-height: 1.8; }
 }
-
-.recording-context-files { list-style: none; margin: 1rem 0 0; padding: 0; }
-.recording-context-file { display: flex; align-items: start; gap: 0.75rem; padding: 0.75rem 0; border-top: 1px solid var(--border); }
-.recording-context-file .recording-contexts { margin-top: 0.5rem; }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sentenceHighlights, transcriptSentences } from "./transcript-sentences";
+import { transcriptSentences } from "./transcript-sentences";
 
 describe("transcript sentence labels", () => {
   it("repeats the matching identity for each Chinese sentence", () => {
@@ -29,14 +29,4 @@ describe("transcript sentence labels", () => {
     expect(segments.flatMap(transcriptSentences).map(sentence => sentence.voiceIdentity)).toEqual(["me", "me", undefined]);
   });
 
-  it("highlights a search match across sentence boundaries using the original text", () => {
-    const text = "\n  Hello.\nWorld!  ";
-    const sentences = transcriptSentences({ text });
-    expect(sentences.map(sentence => sentenceHighlights(text, sentence.from, sentence.to, /lo\.\nWor/iu))).toEqual([
-      [{ text: "Hel", highlighted: false }, { text: "lo.", highlighted: true }],
-      [{ text: "Wor", highlighted: true }, { text: "ld!", highlighted: false }]
-    ]);
-    expect(sentenceHighlights(text, sentences[0].from, sentences[0].to, null))
-      .toEqual([{ text: "Hello.", highlighted: false }]);
-  });
 });

@@ -20,7 +20,7 @@ const record = (text: string): RecordingHistoryItem => ({
   transcriptChunks: [{ text, startedAt: at(0), endedAt: at(4) }]
 });
 
-test("main window keeps React dev measures bounded while updates render", async ({ launchApp }) => {
+test("compact window keeps React dev measures bounded while updates render", async ({ launchApp }) => {
   test.setTimeout(90_000);
   const { app, page } = await launchApp();
   await page.addInitScript(({ customMark, customMeasure }) => {
@@ -50,9 +50,9 @@ test("main window keeps React dev measures bounded while updates render", async 
   snapshot.settings.desktop = { ...snapshot.settings.desktop, language: "zh-CN", voiceprintSetup: "skipped" };
   snapshot.status = { ...snapshot.status, recording: true, recovering: false, error: null };
   snapshot.history = [record("synthetic turn 0")];
-  await page.goto("/?window=main");
+  await page.goto("/");
   await page.setViewportSize({ width: 1000, height: 800 });
-  const main = page.locator("[data-window=main]");
+  const main = page.locator("[data-window=compact]");
   const timeline = page.getByRole("list", { name: "转写时间线" });
   await expect(main).toBeVisible();
 

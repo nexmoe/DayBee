@@ -11,6 +11,9 @@ import (
 
 func TestOfflineConfigurationsUseCorrectModelArchitecture(t *testing.T) {
 	for _, model := range asrmodel.All() {
+		if model.ID == protocol.ASRSpeechAnalyzer {
+			continue // Apple has no sherpa/ONNX configuration.
+		}
 		t.Run(string(model.ID), func(t *testing.T) {
 			directory := filepath.Join(t.TempDir(), model.Directory)
 			config, err := offlineConfig(directory)

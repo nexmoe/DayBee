@@ -11,7 +11,7 @@ import (
 )
 
 func (s *DesktopService) createWindow() error {
-	options := mygo.WindowOptions{Title: AppName, URL: "/", Width: 420, Height: 620, MinWidth: 380, MinHeight: 480, MaxWidth: 520, Hidden: true}
+	options := mygo.WindowOptions{Title: AppName, URL: "/", Width: 420, Height: 760, MinWidth: 380, MinHeight: 480, MaxWidth: 520, Hidden: true}
 	if s.test && os.Getenv("DAYBEE_TEST_VISUAL") == "1" {
 		options.Page.PreloadScript = visualPreload
 	}

@@ -22,7 +22,6 @@ const token = randomBytes(32).toString("hex");
 const port = process.env.DAYBEE_TEST_PORT || "39887";
 const original = JSON.parse(readFileSync(join(root, "e2e/baseline/snapshot.json"), "utf8"));
 original.app.name = productName;
-original.settings.desktop.startRecordingOnLaunch = false;
 original.settings.desktop.launchAtLogin = false;
 original.settings.desktop.voiceprintSetup = "skipped";
 original.settings.recording.outputDir = join(store, "recordings");
@@ -43,7 +42,7 @@ const request = async (path, body, role = "compact") => {
 const evaluate = (code, role = "compact") => request("/eval", { code }, role);
 const call = (method, args = [], role = "compact") => evaluate(`window.mygo.call(${JSON.stringify("DesktopService." + method)}, ...${JSON.stringify(args)})`, role);
 const click = (selector, role = "compact") => evaluate(`(() => {const e=document.querySelector(${JSON.stringify(selector)}); if(!e)throw Error('Missing control');e.click();return true})()`, role);
-const navigate = index => evaluate(`(() => {const e=document.querySelectorAll('nav [data-sidebar="menu-button"]')[${index}]; if(!e)throw Error('Missing destination');e.click();return true})()`, "main");
+const navigate = index => evaluate(`(() => {const e=document.querySelectorAll('[role=tab]')[${index}]; if(!e)throw Error('Missing destination');e.click();return true})()`);
 const ready = async (role = "compact", previous) => {
   const deadline = Date.now() + 30000;
   while (true) {
@@ -64,8 +63,8 @@ const reload = async (role = "compact") => {
 try {
   await ready();
   assert.equal((await call("Bootstrap")).engineReady, true);
-  assert.equal(await evaluate("document.querySelectorAll('[role=tab]').length"), 0);
-  assert.deepEqual(await evaluate("({width:innerWidth,height:innerHeight})"), { width: 420, height: 620 });
+  assert.equal(await evaluate("document.querySelectorAll('[role=tab]').length"), 4);
+  assert.deepEqual(await evaluate("({width:innerWidth,height:innerHeight})"), { width: 420, height: 760 });
   if (process.platform === "darwin") {
     assert.equal((await request("/window")).native.visibleWindowButtons, 0);
   }
@@ -81,43 +80,45 @@ try {
     assert.equal((await request("/window")).appHidden, !interactive);
     assert.equal((await request("/window")).native.visibleWindowButtons, 0);
   }
-  // Exercise the compact shortcut, rather than opening only via a test endpoint.
-  await click(".open-workspace"); await ready("main");
-  const first = await request("/window", undefined, "main");
-  assert.equal(first.count, 2); assert.equal(first.visible, interactive);
-  if (!interactive) assert.equal(first.focused, false);
-  if (process.platform === "darwin" && interactive) assert.equal(first.native.visibleWindowButtons, 3);
-  assert.deepEqual(await evaluate("({width:innerWidth,height:innerHeight})", "main"), { width: 1000, height: 760 });
-  assert.equal(await evaluate("document.querySelectorAll('nav [data-sidebar=menu-button]').length", "main"), 5);
+  const first = await request("/window");
+  assert.equal(first.count, 1);
+  for (let index = 0; index < 4; index++) {
+    await navigate(index);
+    assert.equal(await evaluate("document.querySelector('[role=tab][aria-selected=true]').getAttribute('aria-controls') === document.querySelector('[role=tabpanel]').id"), true);
+    assert.equal(await evaluate("document.querySelectorAll('[role=tabpanel]').length"), 1);
+    assert.equal(await evaluate("document.querySelectorAll('h1').length"), 0);
+    assert.equal(await evaluate("document.querySelector('.compact-navigation [role=img]').getBoundingClientRect().bottom <= document.querySelector('[role=tablist]').getBoundingClientRect().top"), true);
+    assert.equal((await request("/window")).id, first.id);
+    assert.equal((await request("/window")).count, 1);
+    assert.equal((await call("Bootstrap")).status.recording, true);
+  }
+  assert.equal(await evaluate("document.querySelectorAll('[data-sidebar]').length"), 0);
+  await navigate(0);
   await request("/speech", { text: "Native completed speech appears while recording." });
-  const streamingDeadline = Date.now() + 1000;
-  for (const role of ["compact", "main"]) {
-    while (!await evaluate("Array.from(document.querySelectorAll('.transcript-text')).some(e => e.textContent.includes('Native completed speech appears while recording.'))", role)) {
-      assert(Date.now() < streamingDeadline, `Completed speech did not stream to ${role}`);
-      await delay(20);
-    }
+  const streamingDeadline = Date.now() + 2000;
+  while (!await evaluate("Array.from(document.querySelectorAll('.transcript-text')).some(e => e.textContent.includes('Native completed speech appears while recording.'))")) {
+    assert(Date.now() < streamingDeadline, "Completed speech did not stream to the compact window");
+    await delay(20);
   }
   assert.equal((await call("Bootstrap")).status.recording, true);
-  assert.equal(await evaluate("document.body.innerText.includes('Live transcript') || document.body.innerText.includes('实时转写')"), false);
-  await navigate(2);
-  assert.equal(await evaluate("document.querySelector('nav [aria-current=page]').getAttribute('aria-label') === document.querySelector('h1').textContent.trim()", "main"), true);
-  await call("CloseWindow", ["main"], "main");
-  assert.equal((await request("/window", undefined, "main")).visible, false);
+  await navigate(1);
+  await call("CloseWindow", ["compact"]);
+  assert.equal((await request("/window")).visible, false);
   assert.equal((await call("Bootstrap")).status.recording, true);
-  await call("OpenMainWindow");
-  assert.equal((await request("/window", undefined, "main")).id, first.id);
-  await call("OpenMainWindow");
-  assert.equal((await request("/window", undefined, "main")).count, 2);
-  await reload("main");
-  assert.equal((await call("Bootstrap", [], "main")).status.recording, true);
-  await call("StopRecording", [], "main");
+  await call("OpenRecorderWindow");
+  assert.equal((await request("/window")).id, first.id);
+  await call("OpenRecorderWindow");
+  assert.equal((await request("/window")).count, 1);
+  await reload();
+  assert.equal((await call("Bootstrap")).status.recording, true);
+  await call("StopRecording");
   assert.equal((await call("Bootstrap")).status.recording, false);
   const settings = structuredClone(original.settings); settings.recording.disableAsr = true;
-  await call("SaveSettings", [settings], "main"); await call("StartRecording");
-  const pure = await call("Bootstrap", [], "main");
+  await call("SaveSettings", [settings]); await call("StartRecording");
+  const pure = await call("Bootstrap");
   assert.equal(pure.status.asrEnabled, false); assert.equal(pure.status.inSpeech, true);
   await call("StopRecording");
-  console.log(`Native ${target}: compact shortcut, singleton main window, sidebar navigation, immediate transcripts in both windows, shared settings/recording, close/reopen/reload lifetime passed.`);
+  console.log(`Native ${target}: single compact window, four tabs, immediate transcripts, settings/recording, close/reopen/reload lifetime passed.`);
   if (capture) {
     const output = join(root, "e2e/results", target, "workspace"); mkdirSync(output, { recursive: true });
     const evidence = [];
@@ -125,12 +126,12 @@ try {
       const snapshot = structuredClone(original);
       snapshot.settings.desktop.language = language; snapshot.settings.desktop.theme = theme;
       await request("/fixture", snapshot); await delay(150);
-      for (const role of ["compact", "main"]) {
+      for (const role of ["compact"]) {
         await request("/show", undefined, role);
-        for (const page of role === "main" ? [0, 1, 2, 3, 4] : [0]) {
-          if (role === "main") await navigate(page);
+        for (const page of [0, 1, 2, 3]) {
+          await navigate(page);
           await evaluate("document.fonts.ready.then(() => true)", role); await delay(400);
-          const state = await evaluate("({hidden:document.hidden,scrollWidth:document.documentElement.scrollWidth,width:innerWidth,dark:matchMedia('(prefers-color-scheme: dark)').matches,heading:document.querySelector('h1')?.textContent,ffmpeg:document.body.innerText.toLowerCase().includes('ffmpeg')})", role);
+          const state = await evaluate("({hidden:document.hidden,scrollWidth:document.documentElement.scrollWidth,width:innerWidth,dark:matchMedia('(prefers-color-scheme: dark)').matches,page:document.querySelector('[role=tab][aria-selected=true]')?.textContent,ffmpeg:document.body.innerText.toLowerCase().includes('ffmpeg')})", role);
           assert.equal(state.hidden, false, `Native page is hidden or occluded; keep the test window visible for capture: ${JSON.stringify(await request('/window', undefined, role))}`);
           assert.equal(state.scrollWidth, state.width); assert.equal(state.dark, theme === "dark"); assert.equal(state.ffmpeg, false);
           const name = `${language}-${theme}-${role}-${page}`;

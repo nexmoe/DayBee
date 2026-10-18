@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { MicrophoneUsage, RecordingHistoryItem, TranscriptChunk } from "@daybee/shared";
+import type { RecordingHistoryItem, TranscriptChunk } from "@daybee/shared";
 import { buildSpeechActivity, countSpeechCharacters, filterHistoryByDate, localDateKey, shiftDate, recentDateKeys } from "./speech-activity";
 
 const chunk = (text: string, startedAt = "2026-10-13T10:00:00+08:00", voiceIdentity?: string, voiceMatch?: string): TranscriptChunk => ({
@@ -60,25 +60,6 @@ describe("spoken character statistics", () => {
     expect(buildSpeechActivity([next]).get("2026-10-13")).toMatchObject({ me: 8, other: 0 });
   });
 
-  it("uses the same app time boundaries as transcript filtering", () => {
-    const item = recording([chunk("会前", "2026-10-13T09:59:55+08:00", "me"),
-      chunk("会议内容", undefined, "me"), chunk("会后", "2026-10-13T10:01:00+08:00")]);
-    const usages: MicrophoneUsage[] = [{ id: "zoom-session", appId: "zoom", appName: "Zoom", appIcon: "",
-      startedAt: "2026-10-13T10:00:00+08:00", endedAt: "2026-10-13T10:01:00+08:00" }];
-    expect(buildSpeechActivity([item], usages, "zoom").get("2026-10-13")).toMatchObject({ me: 4, other: 0 });
-    expect(buildSpeechActivity([item], usages, "missing").size).toBe(0);
-  });
-
-  it("does not count a legacy recording for an app that only ran during a silent capture gap", () => {
-    const item = recording([], { textPreview: "旧的会议记录", capturedRanges: [
-      { startedAt: "2026-10-13T10:00:00+08:00", endedAt: "2026-10-13T10:00:10+08:00" },
-      { startedAt: "2026-10-13T10:01:00+08:00", endedAt: "2026-10-13T10:01:10+08:00" }
-    ] });
-    const usages: MicrophoneUsage[] = [{ id: "silent-app", appId: "zoom", appName: "Zoom", appIcon: "",
-      startedAt: "2026-10-13T10:00:20+08:00", endedAt: "2026-10-13T10:00:30+08:00" }];
-    expect(buildSpeechActivity([item], usages, "zoom").size).toBe(0);
-    expect(filterHistoryByDate([item], "2026-10-13")[0]).toBe(item);
-  });
 });
 
 describe("date selection", () => {

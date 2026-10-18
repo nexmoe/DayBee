@@ -82,7 +82,6 @@ func (r *cancelRecognizer) Close() {}
 func TestBatchCancelAfterLastDecodeWritesNoTranscript(t *testing.T) {
 	dir := t.TempDir()
 	settings := protocol.DefaultSettings(dir)
-	settings.Recording.AudioFormat = protocol.WAV
 	settings.Recording.AutoSwitchDevice = false
 	assets := &fakeAssets{}
 	rt := &cancelRuntime{}

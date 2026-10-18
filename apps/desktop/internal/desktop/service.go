@@ -40,7 +40,8 @@ func (s *DesktopService) StartRecording() (protocol.DesktopSnapshot, error) {
 	}
 	if s.store.Settings().Desktop.VoiceprintSetup == protocol.VoiceprintPending {
 		s.voiceStartRequested.Store(true)
-		return s.snapshot(), s.OpenMainWindow()
+		s.OpenRecorderWindow()
+		return s.snapshot(), nil
 	}
 	permission := s.RequestMicrophonePermission()
 	if permission.State != protocol.PermissionAuthorized && permission.Supported {
@@ -94,7 +95,9 @@ func (s *DesktopService) SaveSettings(settings protocol.AppSettings) (protocol.A
 		return settings, err
 	}
 	previous := s.store.Settings()
-	if previous.Recording.ASRModel != settings.Recording.ASRModel && s.voiceSetup != nil && s.voiceSetup.Active() {
+	modelChanged := previous.Recording.ASRModel != settings.Recording.ASRModel ||
+		(settings.Recording.ASRModel == protocol.ASRSpeechAnalyzer && previous.Recording.ASRLanguage != settings.Recording.ASRLanguage)
+	if modelChanged && s.voiceSetup != nil && s.voiceSetup.Active() {
 		return previous, errors.New("Finish or cancel voiceprint enrollment before switching ASR models.")
 	}
 	if s.voiceSetup != nil && s.voiceSetup.Active() && captureSettingsChanged(previous, settings) {

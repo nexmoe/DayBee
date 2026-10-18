@@ -6,7 +6,7 @@ const chunk = (index: number, start = index * 8) => ({
   text: `第${index + 1}句，今天需要确认录音质量。`, voiceIdentity: "me", startedAt: at(start), endedAt: at(start + 4)
 });
 
-for (const role of ["compact", "main"] as const) for (const theme of ["light", "dark"] as const) {
+for (const role of ["compact"] as const) for (const theme of ["light", "dark"] as const) {
   test(`automatically segments long speech and reading paragraphs in ${role} ${theme}`, async ({ launchApp }, testInfo) => {
     const { app, page } = await launchApp();
     const snapshot = await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"));
@@ -21,8 +21,8 @@ for (const role of ["compact", "main"] as const) for (const theme of ["light", "
       id: "meeting", appId: "zoom", appName: "Zoom", appIcon: "", startedAt: at(-1), endedAt: at(300)
     }] };
     await app.setFixture(snapshot);
-    if (role === "main") await page.goto("/?window=main");
-    await page.setViewportSize({ width: role === "main" ? 1000 : 380, height: 1000 });
+    if (role === "compact") await page.goto("/");
+    await page.setViewportSize({ width: role === "compact" ? 1000 : 380, height: 1000 });
     await page.emulateMedia({ colorScheme: theme });
     const timeline = page.getByRole("list", { name: "转写时间线" });
     const nodes = timeline.getByRole("article");
@@ -57,12 +57,6 @@ for (const role of ["compact", "main"] as const) for (const theme of ["light", "
     await expect(nodes).toHaveCount(4);
     await expect(nodes.nth(1)).toHaveText(completed!);
     await expect(nodes.first()).toContainText("第20句");
-    if (role === "main") {
-      await page.getByRole("searchbox").fill("第9句");
-      await expect(nodes).toHaveCount(1);
-      await expect(nodes.locator("mark")).toHaveText("第9句");
-      await expect(nodes.locator(".transcript-paragraph")).toHaveCount(2);
-    }
     await app.close();
   });
 }

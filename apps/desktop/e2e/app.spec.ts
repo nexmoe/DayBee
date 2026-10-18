@@ -4,39 +4,43 @@ import type { Locator, Page } from "@playwright/test";
 import { DEFAULT_SETTINGS, type AppSettings, type DesktopSnapshot } from "@daybee/shared";
 import { expect, test } from "./fixtures";
 
-test("keeps recording controls compact and moves settings to sidebar", async ({ launchApp }) => {
+test("keeps every page in one compact window with tabs", async ({ launchApp }) => {
   const { app, page } = await launchApp();
-
   await expect(page.getByRole("button", { name: /Start recording|开始录音|Stop|停止/ })).toBeVisible();
-  await expect(page.getByRole("tab")).toHaveCount(0);
+  await expect(page.getByRole("tab")).toHaveCount(4);
+  await expect(page.getByRole("tab", { name: /History|历史/, exact: true })).toHaveCount(0);
+  await expect(page.locator("[data-sidebar]")).toHaveCount(0);
   await expect(page.getByText(/Live transcript|实时转写/, { exact: true })).toHaveCount(0);
-  await page.locator(".tray-panel").evaluate(async panel => {
-    await Promise.all(panel.getAnimations().map(animation => animation.finished));
-  });
-  const margins = await page.locator(".panel-section").first().evaluate(section => {
-    const content = section.firstElementChild!.getBoundingClientRect();
-    const drag = document.querySelector(".drag-region")!.getBoundingClientRect();
-    return { top: content.top, left: content.left, right: innerWidth - content.right, dragBottom: drag.bottom };
-  });
-  expect(margins.top).toBe(margins.left);
-  expect(margins.top).toBe(margins.right);
-  expect(margins.dragBottom).toBeLessThanOrEqual(margins.top);
-  await page.getByRole("button", { name: /Open main window|打开主窗口/ }).click();
-  await page.goto("/?window=main");
-  await page.setViewportSize({ width: 1000, height: 760 });
-  const navigation = page.getByRole("navigation", { name: /Workspace navigation|主窗口导航/ });
-  for (const label of [/Home|首页/, /History|历史/, /General|通用/, /Input|输入/, /Transcribe|转写/]) {
-    await expect(navigation.getByRole("button", { name: label })).toBeVisible();
+  const tabs = page.getByRole("tablist", { name: /Pages|页面/ });
+  for (const [width, height] of [[420, 620], [380, 480]]) {
+    await page.setViewportSize({ width, height });
+    for (const label of [/Home|首页/, /General|通用/, /Input|输入/, /Transcribe|转写/]) {
+      await tabs.getByRole("tab", { name: label }).click();
+      await expect(tabs.getByRole("tab", { name: label })).toHaveAttribute("aria-selected", "true");
+      await expect(page.getByRole("tabpanel")).toHaveCount(1);
+      await expect(page.getByRole("tabpanel", { name: label, exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
+      await expect(page.getByRole("button", { name: /Start recording|开始录音|Stop|停止/ })).toBeVisible();
+      await expect.poll(() => page.evaluate(() => {
+        const waveform = document.querySelector('.compact-navigation [role="img"]');
+        const tabs = document.querySelector('[role="tablist"]');
+        return Boolean(waveform && tabs && waveform.getBoundingClientRect().bottom <= tabs.getBoundingClientRect().top);
+      })).toBe(true);
+      if (label.test("Home")) {
+        await expect(page.getByRole("searchbox")).toHaveCount(0);
+        await expect(page.getByRole("combobox")).toHaveCount(0);
+      }
+      if (label.test("General")) {
+        await expect(page.getByText(/Start recording on launch|启动即录|Audio format|音频格式/, { exact: true })).toHaveCount(0);
+      }
+      for (const tab of await tabs.getByRole("tab").all()) await expect(tab).toBeInViewport();
+      expect(await page.locator(".compact-page").evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    }
   }
-  await expect(navigation.getByRole("group", { name: /Workspace|工作空间/, exact: true }).getByRole("button")).toHaveCount(2);
-  await expect(navigation.getByRole("group", { name: /Settings|设置/, exact: true }).getByRole("button")).toHaveCount(3);
-  // Voiceprint enrollment has its own recording action in the Home content.
-  await expect(page.locator(".workspace-toolbar").getByRole("button", { name: /Start recording|开始录音/ })).toHaveCount(0);
-
   const snapshot = await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"));
   expect(snapshot.engineReady).toBe(true);
   expect(snapshot.permission.state).toBe("authorized");
-
   await app.close();
 });
 
@@ -86,7 +90,7 @@ async function transcriptRows(region: Locator) {
   });
 }
 
-test("shares complete merged transcripts with Home and keeps file history in the workspace", async ({ launchApp }) => {
+test("streams complete merged transcripts on Home", async ({ launchApp }) => {
   const { app, page } = await launchApp();
   const timeline = page.getByRole("region", { name: /Transcription timeline|转写时间线/ });
   await expect(timeline.getByRole("heading", { name: /No activity yet|还没有活动记录/ })).toBeVisible();
@@ -140,10 +144,6 @@ test("shares complete merged transcripts with Home and keeps file history in the
   await openWorkspace(page);
   const home = page.getByRole("region", { name: /Home|首页/, exact: true });
   await expect.poll(() => transcriptRows(home)).toEqual(updatedRows);
-  await page.getByRole("navigation").getByRole("button", { name: /History|历史/, exact: true }).click();
-  const history = page.getByRole("region", { name: /History|历史/, exact: true });
-  await expect(history.getByRole("button", { name: /Open this day's recording folder|打开当天录音文件夹/ })).toHaveCount(4);
-  await expect(history.getByText(folders[0], { exact: true })).toBeVisible();
   await app.close();
 });
 
@@ -151,7 +151,7 @@ test("keeps speech activity on when realtime transcription is disabled", async (
   const { app, page } = await launchApp();
 
   await openWorkspace(page);
-  await page.getByRole("navigation").getByRole("button", { name: /Transcribe|转写/ }).click();
+  await page.getByRole("tablist").getByRole("tab", { name: /Transcribe|转写/ }).click();
   const realtimeAsrSwitch = page.getByTestId("realtime-asr-field").locator('[role="switch"]');
   await realtimeAsrSwitch.click();
 
@@ -203,53 +203,48 @@ test("persists every setting field across relaunch", async ({ launchApp, storeDi
 
 async function openLaunchAtLoginSwitch(page: Page) {
   await openWorkspace(page);
-  await page.getByRole("navigation").getByRole("button", { name: /General|通用/ }).click();
+  await page.getByRole("tablist").getByRole("tab", { name: /General|通用/ }).click();
   const switchLocator = page.getByTestId("launch-at-login-field").locator('[role="switch"]');
   await expect(switchLocator).toBeVisible();
   return switchLocator;
 }
 
-test("supports keyboard navigation and sidebar collapse", async ({ launchApp }) => {
+test("supports keyboard page switching with arrow, Home and End keys", async ({ launchApp }) => {
   const { app, page } = await launchApp();
-  await openWorkspace(page);
-  const nav = page.getByRole("navigation");
-  await nav.getByRole("button", { name: /History|历史/ }).focus();
-  await page.keyboard.press("ArrowDown");
-  await expect(nav.getByRole("button", { name: /General|通用/ })).toBeFocused();
-  await page.keyboard.press("Enter");
-  await expect(page.getByRole("heading", { name: /General|通用/, exact: true })).toBeVisible();
-  await page.keyboard.press("ArrowUp");
-  await expect(nav.getByRole("button", { name: /History|历史/ })).toBeFocused();
+  const tabs = page.getByRole("tablist");
+  await tabs.getByRole("tab", { name: /Home|首页/ }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(tabs.getByRole("tab", { name: /General|通用/ })).toBeFocused();
+  await expect(page.getByRole("tabpanel", { name: /General|通用/, exact: true })).toBeVisible();
+  await page.keyboard.press("ArrowLeft");
+  await expect(tabs.getByRole("tab", { name: /Home|首页/ })).toBeFocused();
   await page.keyboard.press("End");
-  await expect(nav.getByRole("button", { name: /Transcribe|转写/ })).toBeFocused();
-  await page.keyboard.press("ArrowDown");
-  await expect(nav.getByRole("button", { name: /Home|首页/ })).toBeFocused();
+  await expect(tabs.getByRole("tab", { name: /Transcribe|转写/ })).toBeFocused();
+  await page.keyboard.press("ArrowRight");
+  await expect(tabs.getByRole("tab", { name: /Home|首页/ })).toBeFocused();
   await page.keyboard.press("Home");
-  await expect(nav.getByRole("button", { name: /Home|首页/ })).toBeFocused();
-  await page.getByRole("button", { name: /Toggle sidebar|切换侧栏/ }).click();
-  await expect(nav).not.toBeVisible();
-  await page.getByRole("button", { name: /Toggle sidebar|切换侧栏/ }).click();
-  await expect(nav).toBeVisible();
+  await expect(tabs.getByRole("tab", { name: /Home|首页/ })).toBeFocused();
   await app.close();
 });
 
-test("uses a drawer for a narrow main window", async ({ launchApp }) => {
+test("keeps tabs visible at the minimum window size while settings scroll", async ({ launchApp }) => {
   const { app, page } = await launchApp();
-  await openWorkspace(page);
-  await page.setViewportSize({ width: 720, height: 540 });
-  await page.getByRole("button", { name: /Toggle sidebar|切换侧栏/ }).click();
-  const drawer = page.getByRole("dialog", { name: "Sidebar" });
-  await expect(drawer).toBeVisible();
-  await drawer.getByRole("button", { name: /Input|输入/, exact: true }).click();
-  await expect(drawer).not.toBeVisible();
-  await expect(page.getByRole("heading", { name: /Input|输入/, exact: true })).toBeVisible();
-  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.setViewportSize({ width: 380, height: 480 });
+  await page.getByRole("tab", { name: /General|通用/, exact: true }).click();
+  const viewport = page.locator("[data-radix-scroll-area-viewport]");
+  await viewport.evaluate(element => { element.scrollTop = element.scrollHeight; });
+  for (const tab of await page.getByRole("tab").all()) await expect(tab).toBeInViewport();
+  await page.getByRole("tab", { name: /Input|输入/, exact: true }).click();
+  await expect(page.getByRole("tabpanel", { name: /Input|输入/, exact: true })).toBeVisible();
+  await expect.poll(() => viewport.evaluate(element => element.scrollTop)).toBe(0);
+  await expect(page.getByRole("dialog", { name: "Sidebar" })).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await app.close();
 });
 
 async function openWorkspace(page: Page) {
-  await page.goto("/?window=main");
-  await page.setViewportSize({ width: 1000, height: 760 });
+  await page.goto("/");
+  await page.setViewportSize({ width: 420, height: 620 });
 }
 
 async function ensureIdle(page: Page) {
@@ -266,12 +261,10 @@ function buildCustomSettings(storeDir: string): AppSettings {
       ...DEFAULT_SETTINGS.desktop,
       language: "en-US",
       launchAtLogin: false,
-      startRecordingOnLaunch: false,
       theme: "light"
     },
     recording: {
       ...DEFAULT_SETTINGS.recording,
-      audioFormat: "wav",
       asrLanguage: "ja",
       autoSwitchConfirmations: 3,
       autoSwitchDevice: false,

@@ -13,7 +13,7 @@ type AppContext = { app: {
 }; page: Page };
 
 export const test = base.extend<{
-  launchApp: (options?: { voiceprintSetup?: "pending" | "skipped" | "ready" }) => Promise<AppContext>;
+  launchApp: (options?: { voiceprintSetup?: "pending" | "skipped" | "ready"; platformASRDefault?: boolean }) => Promise<AppContext>;
   storeDir: string;
 }>({
   storeDir: async ({}, use) => {
@@ -28,9 +28,11 @@ export const test = base.extend<{
         if (!existsSync(settingsPath)) {
           const settings = structuredClone(DEFAULT_SETTINGS);
           settings.desktop.voiceprintSetup = options?.voiceprintSetup ?? "skipped";
-          settings.desktop.startRecordingOnLaunch = false;
           settings.desktop.launchAtLogin = false;
           settings.recording.outputDir = join(storeDir, "recordings");
+          if (options?.platformASRDefault) {
+            delete (settings.recording as Partial<typeof settings.recording>).asrModel;
+          }
           writeFileSync(settingsPath, JSON.stringify({ settings, nativeDevices: true }));
         }
         const native = await launchNative(storeDir);

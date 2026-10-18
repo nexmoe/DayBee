@@ -136,7 +136,6 @@ func spanEngine(t *testing.T, rt asr.Runtime) (*Engine, string) {
 	t.Helper()
 	dir := t.TempDir()
 	settings := protocol.DefaultSettings(dir)
-	settings.Recording.AudioFormat = protocol.WAV
 	settings.Recording.AutoSwitchDevice = false
 	settings.Recording.EchoCancellation = false
 	engine := New(settings, &spanCapture{}, &fakeAssets{}, rt, nil, nil)
@@ -217,11 +216,10 @@ func TestSpanFailureStillArchivesAudio(t *testing.T) {
 	if err != nil || len(files) != 1 {
 		t.Fatal("audio was not archived", files, err)
 	}
-	stat, err := os.Stat(files[0])
-	if err != nil || stat.Size() != 44+48000*2 {
-		t.Fatalf("original audio was truncated: %v", stat)
+	if samples := archivedSamples(t, files[0]); len(samples) != 48000 {
+		t.Fatalf("original audio was truncated: %d samples", len(samples))
 	}
-	raw, err := os.ReadFile(strings.TrimSuffix(files[0], ".wav") + ".json")
+	raw, err := os.ReadFile(strings.TrimSuffix(files[0], filepath.Ext(files[0])) + ".json")
 	if err != nil {
 		t.Fatal(err)
 	}

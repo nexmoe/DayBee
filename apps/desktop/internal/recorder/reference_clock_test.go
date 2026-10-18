@@ -1,8 +1,6 @@
 package recorder
 
 import (
-	"encoding/binary"
-	"os"
 	"testing"
 	"time"
 
@@ -87,21 +85,18 @@ func TestStopDrainsStampedQueueBeforeRetiringReference(t *testing.T) {
 		t.Fatalf("tail archives = %+v", items)
 	}
 	for _, item := range items {
-		raw, err := os.ReadFile(item.AudioPath)
-		if err != nil {
-			t.Fatal(err)
+		samples := archivedSamples(t, item.AudioPath)
+		if len(samples) != audio.WindowSize {
+			t.Fatalf("%s pcm samples %d", item.AudioSource, len(samples))
 		}
-		if len(raw) != 44+audio.WindowSize*2 {
-			t.Fatalf("%s pcm bytes %d", item.AudioSource, len(raw))
-		}
-		sample := int16(binary.LittleEndian.Uint16(raw[44:46]))
+		sample := samples[0]
 		level := float32(0.4)
-		want := int16(0)
+		want := float32(0)
 		if item.AudioSource == protocol.SourceMicrophone {
-			want = int16(float64(level) * 32767)
+			want = float32(int16(float64(level)*32767)) / 32768
 		}
 		if sample != want {
-			t.Fatalf("%s first sample %d", item.AudioSource, sample)
+			t.Fatalf("%s first sample %v", item.AudioSource, sample)
 		}
 	}
 }

@@ -44,24 +44,19 @@ async function expectMeasuredRows(timeline: Locator) {
 }
 
 async function openTimeline(page: Page, role: "compact" | "main") {
-  if (role === "main") {
-    await page.goto("/?window=main");
+  if (role === "compact") {
+    await page.goto("/");
     await page.setViewportSize({ width: 1000, height: 760 });
   }
   return page.getByRole("list", { name: /Transcription timeline|转写时间线/ });
 }
 
-for (const role of ["compact", "main"] as const) {
+for (const role of ["compact"] as const) {
   test(`virtualizes all history and preserves the reading position in the ${role} window`, async ({ launchApp }, testInfo) => {
     const { app, page } = await launchApp();
     const snapshot = await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"));
     snapshot.history = Array.from({ length: count }, (_, index) => record(index));
     snapshot.microphoneActivity = { supported: true, error: null, items: [] };
-    const oldestTime = Date.parse(record(count - 1).startedAt);
-    snapshot.microphoneActivity.items.push({
-      id: "virtual-app-session", appId: "virtual-app", appName: "Timeline test app", appIcon: "",
-      startedAt: new Date(oldestTime - 1000).toISOString(), endedAt: new Date(oldestTime + 1000).toISOString()
-    });
     await app.setFixture(snapshot);
     const timeline = await openTimeline(page, role);
     const viewport = page.locator("[data-radix-scroll-area-viewport]").last();
@@ -109,28 +104,14 @@ for (const role of ["compact", "main"] as const) {
     expect(await viewport.evaluate(element => element.scrollTop)).toBe(0);
     await expectMeasuredRows(timeline);
     await page.screenshot({ path: testInfo.outputPath(`virtual-timeline-${role}.png`), animations: "disabled" });
-    if (role === "main") {
+    if (role === "compact") {
       await viewport.evaluate(element => { element.scrollTop = element.scrollHeight / 2; });
-      const search = page.getByRole("searchbox", { name: /Search transcripts|搜索转写/ });
-      await search.fill(label(count - 1));
-      await expect(timeline.locator(".transcript-event")).toHaveCount(1);
-      await expect(timeline.locator("mark")).toHaveText(label(count - 1));
-      await expect.poll(() => viewport.evaluate(element => element.scrollTop)).toBe(0);
-      await search.press("Escape");
-      await expect(timeline.locator(".transcript-text").first()).toContainText(label(-2));
-      await viewport.evaluate(element => { element.scrollTop = element.scrollHeight / 2; });
-      const filter = page.getByRole("combobox", { name: /Filter by app|按应用筛选/ });
-      await filter.selectOption("virtual-app");
-      await expect(timeline.locator(".transcript-event")).toHaveCount(1);
-      await expect(timeline.locator(".transcript-event")).toContainText(label(count - 1));
-      await expect.poll(() => viewport.evaluate(element => element.scrollTop)).toBe(0);
-      await filter.selectOption("");
-      await expect(timeline.locator(".transcript-text").first()).toContainText(label(-2));
       await page.setViewportSize({ width: 1000, height: 760 });
-      await page.getByRole("navigation").getByRole("button", { name: /General|通用/, exact: true }).click();
+      await page.getByRole("tablist").getByRole("tab", { name: /General|通用/, exact: true }).click();
       await expect(timeline.locator("li")).toHaveCount(0);
-      await page.getByRole("navigation").getByRole("button", { name: /Home|首页/, exact: true }).click();
+      await page.getByRole("tablist").getByRole("tab", { name: /Home|首页/, exact: true }).click();
       await expect(timeline.locator(".transcript-text").first()).toContainText(label(-2));
+      await expect.poll(() => viewport.evaluate(element => element.scrollTop)).toBe(0);
     }
     await app.close();
   });

@@ -1,5 +1,5 @@
-import type { MicrophoneUsage, RecordingHistoryItem } from "@daybee/shared";
-import { buildTranscriptParagraphs, transcriptTime } from "./transcript-paragraphs";
+import type { MicrophoneUsage } from "@daybee/shared";
+import { transcriptTime } from "./transcript-paragraphs";
 
 export type RecordingContext = Pick<MicrophoneUsage, "appId" | "appName" | "appIcon">;
 export type TimeRange = { startedAt: string; endedAt: string };
@@ -35,34 +35,18 @@ export function createRecordingContextIndex(usages: MicrophoneUsage[], now = Dat
     // Keep the current capture session as the timeline anchor while it overlaps
     // speech. Other apps joining it add annotations without splitting the scene.
     // With no current anchor, use the earliest observed overlapping session.
-    key: (range: TimeRange, ranges: TimeRange[] = [range], previous = "", appId = "") => {
+    key: (range: TimeRange, ranges: TimeRange[] = [range], previous = "") => {
       const matches = [...new Map(ranges.flatMap(source => matching(source))
-        .filter(item => !appId || item.usage.appId === appId).map(item => [item.usage.id, item])).values()];
+        .map(item => [item.usage.id, item])).values()];
       if (matches.some(item => item.usage.id === previous)) return previous;
       matches.sort((a, b) => a.start - b.start || b.end - a.end || a.usage.id.localeCompare(b.usage.id));
       return matches[0]?.usage.id ?? "";
-    },
-    recording: (item: RecordingHistoryItem) => item.audioSource === "system" ? [] : contexts(recordingRanges(item))
+    }
   };
 }
 
-export function recordingRanges(item: RecordingHistoryItem): TimeRange[] {
-  if (item.capturedRanges?.length) return item.capturedRanges;
-  if (item.transcriptChunks?.length) return item.transcriptChunks;
-  return [{ startedAt: item.startedAt, endedAt: item.startedAt }];
-}
-
-export function availableRecordingContexts(usages: MicrophoneUsage[], items?: RecordingHistoryItem[], scope: "transcripts" | "recordings" = "recordings", now = Date.now()): RecordingContext[] {
-  // Filter options must use the same saved time ranges as the destination.
-  // Raw activity (including live activity) alone cannot produce a result.
-  let contexts: RecordingContext[] = usages.filter(identifiedApp);
-  if (items) {
-    const index = createRecordingContextIndex(usages, now);
-    contexts = scope === "transcripts" ?
-      buildTranscriptParagraphs(items).filter(paragraph => paragraph.audioSource !== "system")
-        .flatMap(paragraph => index.contexts(paragraph.sourceRanges)) : items.flatMap(index.recording);
-  }
+export function availableRecordingContexts(usages: MicrophoneUsage[]): RecordingContext[] {
   const apps = new Map<string, RecordingContext>();
-  for (const app of contexts) if (!apps.has(app.appId)) apps.set(app.appId, app);
+  for (const app of usages.filter(identifiedApp)) if (!apps.has(app.appId)) apps.set(app.appId, app);
   return [...apps.values()].sort((a, b) => a.appName.localeCompare(b.appName));
 }

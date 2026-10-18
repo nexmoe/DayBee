@@ -11,7 +11,11 @@ import (
 )
 
 func main() {
-	settings, err := json.MarshalIndent(protocol.DefaultSettings("recordings"), "", "  ")
+	defaults := protocol.DefaultSettings("recordings")
+	// Bootstrap supplies the native platform default. Keep the renderer's
+	// pre-bootstrap fallback independent of the build machine's system model.
+	defaults.Recording.ASRModel = protocol.ASRWhisperTiny
+	settings, err := json.MarshalIndent(defaults, "", "  ")
 	if err != nil {
 		panic(err)
 	}

@@ -20,13 +20,6 @@ func NormalizeAudioSource(source AudioSource) AudioSource {
 	return SourceMicrophone
 }
 
-type AudioFormat string
-
-const (
-	FLAC AudioFormat = "flac"
-	WAV  AudioFormat = "wav"
-)
-
 type AppLanguage string
 
 const (
@@ -44,28 +37,26 @@ const (
 )
 
 type DesktopSettings struct {
-	HideWindowOnClose      bool                 `json:"hideWindowOnClose"`
-	Language               AppLanguage          `json:"language"`
-	LaunchAtLogin          bool                 `json:"launchAtLogin"`
-	StartRecordingOnLaunch bool                 `json:"startRecordingOnLaunch"`
-	Theme                  ThemeMode            `json:"theme"`
-	VoiceprintSetup        VoiceprintSetupState `json:"voiceprintSetup"`
+	HideWindowOnClose bool                 `json:"hideWindowOnClose"`
+	Language          AppLanguage          `json:"language"`
+	LaunchAtLogin     bool                 `json:"launchAtLogin"`
+	Theme             ThemeMode            `json:"theme"`
+	VoiceprintSetup   VoiceprintSetupState `json:"voiceprintSetup"`
 }
 
 type RecordingSettings struct {
-	AudioFormat             AudioFormat `json:"audioFormat"`
-	ASRLanguage             string      `json:"asrLanguage"`
-	ASRModel                ASRModel    `json:"asrModel"`
-	AutoSwitchConfirmations int         `json:"autoSwitchConfirmations"`
-	AutoSwitchDevice        bool        `json:"autoSwitchDevice"`
-	Device                  string      `json:"device"`
-	EchoCancellation        bool        `json:"echoCancellation"`
-	RecordSystemAudio       bool        `json:"recordSystemAudio"`
-	DisableASR              bool        `json:"disableAsr"`
-	ExcludeDeviceKeywords   string      `json:"excludeDeviceKeywords"`
-	OutputDir               string      `json:"outputDir"`
-	SegmentMinutes          float64     `json:"segmentMinutes"`
-	VoiceprintAdaptation    bool        `json:"voiceprintAdaptation"`
+	ASRLanguage             string   `json:"asrLanguage"`
+	ASRModel                ASRModel `json:"asrModel"`
+	AutoSwitchConfirmations int      `json:"autoSwitchConfirmations"`
+	AutoSwitchDevice        bool     `json:"autoSwitchDevice"`
+	Device                  string   `json:"device"`
+	EchoCancellation        bool     `json:"echoCancellation"`
+	RecordSystemAudio       bool     `json:"recordSystemAudio"`
+	DisableASR              bool     `json:"disableAsr"`
+	ExcludeDeviceKeywords   string   `json:"excludeDeviceKeywords"`
+	OutputDir               string   `json:"outputDir"`
+	SegmentMinutes          float64  `json:"segmentMinutes"`
+	VoiceprintAdaptation    bool     `json:"voiceprintAdaptation"`
 }
 
 type AppSettings struct {
@@ -75,9 +66,9 @@ type AppSettings struct {
 
 func DefaultSettings(outputDir string) AppSettings {
 	return AppSettings{
-		Desktop: DesktopSettings{HideWindowOnClose: true, Language: LanguageSystem, LaunchAtLogin: true, StartRecordingOnLaunch: true, Theme: ThemeSystem, VoiceprintSetup: VoiceprintPending},
+		Desktop: DesktopSettings{HideWindowOnClose: true, Language: LanguageSystem, LaunchAtLogin: true, Theme: ThemeSystem, VoiceprintSetup: VoiceprintPending},
 		Recording: RecordingSettings{
-			AudioFormat: FLAC, ASRLanguage: "auto", ASRModel: DefaultASRModel, AutoSwitchConfirmations: 2,
+			ASRLanguage: "auto", ASRModel: DefaultASRModel, AutoSwitchConfirmations: 2,
 			AutoSwitchDevice: true, Device: "default", ExcludeDeviceKeywords: "iphone,continuity",
 			EchoCancellation: SupportsEchoCancellation,
 			OutputDir:        outputDir, SegmentMinutes: 60, VoiceprintAdaptation: false,

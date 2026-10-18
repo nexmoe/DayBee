@@ -6,13 +6,13 @@ import (
 	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
 )
 
-func TestModelSelectionPersistsAndMissingSettingsUseLightweightDefault(t *testing.T) {
+func TestModelSelectionPersistsAndMissingSettingsUsePlatformDefault(t *testing.T) {
 	defaults := protocol.DefaultSettings(t.TempDir())
-	if defaults.Recording.ASRModel != protocol.ASRWhisperTiny {
-		t.Fatal("new installations must start with Whisper Tiny")
+	if defaults.Recording.ASRModel != protocol.DefaultASRModel {
+		t.Fatal("new installations must use the platform default")
 	}
 	for _, raw := range []string{`{}`, `{"recording":{}}`, `{"recording":{"asrModel":"unknown"}}`, `{"recording":{"asrModel":""}}`, `{"recording":{"asrModel":null}}`} {
-		if got := normalize([]byte(raw), defaults).Recording.ASRModel; got != protocol.ASRWhisperTiny {
+		if got := normalize([]byte(raw), defaults).Recording.ASRModel; got != protocol.DefaultASRModel {
 			t.Fatal("old/invalid setting lost default", got)
 		}
 	}
@@ -21,10 +21,10 @@ func TestModelSelectionPersistsAndMissingSettingsUseLightweightDefault(t *testin
 	if err != nil {
 		t.Fatal(err)
 	}
-	if store.Settings().Recording.ASRModel != protocol.ASRWhisperTiny {
-		t.Fatal("initial store selected a large model")
+	if store.Settings().Recording.ASRModel != protocol.DefaultASRModel {
+		t.Fatal("initial store did not select the platform default")
 	}
-	for _, model := range []protocol.ASRModel{protocol.ASRWhisperTiny, protocol.ASRWhisperBase, protocol.ASRWhisperSmall, protocol.ASRFireRedAED, protocol.ASRFireRedCTC, protocol.ASRSenseVoice, protocol.ASRQwen3} {
+	for _, model := range []protocol.ASRModel{protocol.DefaultASRModel, protocol.ASRWhisperTiny, protocol.ASRWhisperBase, protocol.ASRWhisperSmall, protocol.ASRFireRedAED, protocol.ASRFireRedCTC, protocol.ASRSenseVoice, protocol.ASRQwen3} {
 		settings := store.Settings()
 		settings.Recording.ASRModel = model
 		if _, err := store.Save(settings); err != nil {

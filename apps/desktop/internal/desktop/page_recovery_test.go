@@ -29,7 +29,7 @@ func (p *fakeRecoveryPage) Reload() { p.reloads++ }
 
 func TestRenderGoneReloadsOnceUntilManualRefresh(t *testing.T) {
 	page := &fakeRecoveryPage{}
-	recovery := attachPageRecovery("main", page)
+	recovery := attachPageRecovery("compact", page)
 	page.gone("terminated")
 	page.gone("terminated")
 	if page.reloads != 1 {
@@ -57,52 +57,36 @@ func TestLoadFailureLogOmitsURL(t *testing.T) {
 	}
 }
 
-func TestBothWindowsReloadAndRearmSpentRecovery(t *testing.T) {
-	compact, main := &fakeRecoveryPage{}, &fakeRecoveryPage{}
-	service := &DesktopService{
-		compactRecovery: attachPageRecovery("compact", compact),
-		mainRecovery:    attachPageRecovery("main", main),
-	}
-	compact.gone("terminated")
-	main.gone("terminated")
-	compact.gone("terminated")
-	main.gone("terminated")
-	if compact.reloads != 1 || main.reloads != 1 {
-		t.Fatalf("spent quota compact=%d main=%d", compact.reloads, main.reloads)
+func TestRefreshReloadsAndRearmsCompactRecovery(t *testing.T) {
+	page := &fakeRecoveryPage{}
+	service := &DesktopService{compactRecovery: attachPageRecovery("compact", page)}
+	page.gone("terminated")
+	page.gone("terminated")
+	if page.reloads != 1 {
+		t.Fatalf("spent quota reloads=%d", page.reloads)
 	}
 	service.reloadRecoveries()
-	if compact.reloads != 2 || main.reloads != 2 {
-		t.Fatalf("manual reload compact=%d main=%d", compact.reloads, main.reloads)
+	if page.reloads != 2 {
+		t.Fatalf("manual reloads=%d", page.reloads)
 	}
-	compact.gone("terminated")
-	main.gone("terminated")
-	compact.gone("terminated")
-	main.gone("terminated")
-	if compact.reloads != 3 || main.reloads != 3 {
-		t.Fatalf("rearmed quota compact=%d main=%d", compact.reloads, main.reloads)
+	page.gone("terminated")
+	page.gone("terminated")
+	if page.reloads != 3 {
+		t.Fatalf("rearmed quota reloads=%d", page.reloads)
 	}
 }
 
-func TestReleaseDropsListenersAndClearsBothFields(t *testing.T) {
-	compact, main := &fakeRecoveryPage{}, &fakeRecoveryPage{}
-	service := &DesktopService{
-		compactRecovery: attachPageRecovery("compact", compact),
-		mainRecovery:    attachPageRecovery("main", main),
-	}
-	compact.gone("terminated")
-	main.gone("terminated")
-	keepCompact, keepMain := compact.gone, main.gone
+func TestReleaseDropsListenersAndClearsRecovery(t *testing.T) {
+	page := &fakeRecoveryPage{}
+	service := &DesktopService{compactRecovery: attachPageRecovery("compact", page)}
+	page.gone("terminated")
+	keepGone := page.gone
 	service.releasePageRecovery(service.compactRecovery)
-	service.releasePageRecovery(service.mainRecovery)
-	if service.compactRecovery != nil || service.mainRecovery != nil {
-		t.Fatal("recovery fields still set")
+	if service.compactRecovery != nil || page.gone != nil || page.fail != nil {
+		t.Fatal("recovery or listeners still registered")
 	}
-	if compact.gone != nil || main.gone != nil || compact.fail != nil || main.fail != nil {
-		t.Fatal("listeners still registered")
-	}
-	keepCompact("terminated")
-	keepMain("terminated")
-	if compact.reloads != 1 || main.reloads != 1 {
-		t.Fatalf("reload after release compact=%d main=%d", compact.reloads, main.reloads)
+	keepGone("terminated")
+	if page.reloads != 1 {
+		t.Fatalf("reloads after release=%d", page.reloads)
 	}
 }

@@ -28,7 +28,8 @@ export function VoiceprintSettings({ snapshot, t, onAdaptation, onInitialize }: 
           <p className={`mt-1 max-w-prose ${typeClass("caption")} text-[color:var(--muted)]`}>{t(enrolled ? "voiceprintEnrolledDescription" : "voiceprintMissingDescription")}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button size="compact" variant={enrolled ? "tertiary" : "primary"} onClick={onInitialize}>
+          <Button size="compact" className={enrolled ? undefined : "text-surface-1 [--background:var(--surface-1)]"}
+            variant={enrolled ? "tertiary" : "primary"} onClick={onInitialize}>
             {t(enrolled ? "voiceprintRerecord" : "voiceprintInitialize")}
           </Button>
           {enrolled && (

@@ -34,7 +34,6 @@ func TestStopCancelsPreparationBeforeOrDuringDownload(t *testing.T) {
 	for _, before := range []bool{false, true} {
 		t.Run(map[bool]string{false: "during", true: "before"}[before], func(t *testing.T) {
 			settings := protocol.DefaultSettings(t.TempDir())
-			settings.Recording.AudioFormat = protocol.FLAC
 			settings.Recording.AutoSwitchDevice = false
 			assets := &blockingPreparation{fakeAssets: &fakeAssets{}, entered: make(chan struct{}), release: make(chan struct{})}
 			capture := &fakeCapture{}

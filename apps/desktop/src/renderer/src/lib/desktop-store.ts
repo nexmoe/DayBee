@@ -1,5 +1,4 @@
 import { desktopApi, desktopEvents } from "@/lib/desktop-api";
-import { windowRole } from "@/lib/window-role";
 import {
   DEFAULT_SETTINGS,
   DEFAULT_STATUS,
@@ -104,8 +103,8 @@ const updateSnapshot = (nextSnapshot: DesktopSnapshot): void => {
     lastStatusError = null;
   }
   const voiceError = nextSnapshot.voiceprint.error?.trim() || null;
-  // Enrollment errors already have an actionable message in the main guide.
-  if (voiceError && windowRole === "main" && nextSnapshot.voiceprint.phase === "error") lastVoiceprintError = voiceError;
+  // Enrollment errors already have an actionable message in the inline guide.
+  if (voiceError && nextSnapshot.voiceprint.phase === "error") lastVoiceprintError = voiceError;
   else if (voiceError) toastVoiceprint(voiceError);
   else lastVoiceprintError = null;
   publish();
@@ -194,6 +193,16 @@ const withToast = async <T>(title: string, task: () => Promise<T>): Promise<T> =
 };
 
 export const desktopActions = {
+  async getMCPConfig(): Promise<string> {
+    return withToast(createT(snapshot.settings.desktop.language)("mcpConfigFailed"), () =>
+      bridge?.getMCPConfig() ?? rejectBridgeCall()
+    );
+  },
+  async copyMCPConfig(): Promise<string> {
+    return withToast(createT(snapshot.settings.desktop.language)("mcpConfigFailed"), () =>
+      bridge?.copyMCPConfig() ?? rejectBridgeCall()
+    );
+  },
   async selectASRModel(id: ASRModel, activate = true): Promise<void> {
     updateSnapshot(await withToast(createT(snapshot.settings.desktop.language)("errorASRModelFailed"), () =>
       bridge?.prepareASRModel(id) ?? rejectBridgeCall()
@@ -213,22 +222,12 @@ export const desktopActions = {
   },
   async closeWindow(): Promise<void> {
     await withToast(createT(snapshot.settings.desktop.language)("errorUpdateWindowStateFailed"), () =>
-      bridge?.closeWindow(windowRole) ?? rejectBridgeCall()
+      bridge?.closeWindow("compact") ?? rejectBridgeCall()
     );
   },
   async minimizeWindow(): Promise<void> {
     await withToast(createT(snapshot.settings.desktop.language)("errorUpdateWindowStateFailed"), () =>
-      bridge?.minimizeWindow(windowRole) ?? rejectBridgeCall()
-    );
-  },
-  async openMainWindow(): Promise<void> {
-    await withToast(createT(snapshot.settings.desktop.language)("errorUpdateWindowStateFailed"), () =>
-      bridge?.openMainWindow() ?? rejectBridgeCall()
-    );
-  },
-  async openRecorderWindow(): Promise<void> {
-    await withToast(createT(snapshot.settings.desktop.language)("errorUpdateWindowStateFailed"), () =>
-      bridge?.openRecorderWindow() ?? rejectBridgeCall()
+      bridge?.minimizeWindow("compact") ?? rejectBridgeCall()
     );
   },
   async openExternal(target: string): Promise<void> {
@@ -257,13 +256,6 @@ export const desktopActions = {
       });
       throw error;
     }
-  },
-  async runTranscribe(inputDir: string): Promise<void> {
-    updateSnapshot(
-      await withToast(createT(snapshot.settings.desktop.language)("errorRunTranscribeFailed"), () =>
-        bridge?.runTranscribe(inputDir) ?? rejectBridgeCall()
-      )
-    );
   },
   async requestPermission(): Promise<MicrophonePermissionStatus> {
     const permission = await withToast(

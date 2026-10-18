@@ -70,9 +70,8 @@ func TestPCMOverflowStopsAndDrainsAcceptedSamples(t *testing.T) {
 	if len(files) != 1 {
 		t.Fatal(files)
 	}
-	stat, _ := os.Stat(files[0])
-	if stat.Size() != 44+64*512*2 {
-		t.Fatal("accepted PCM was lost", stat.Size())
+	if samples := archivedSamples(t, files[0]); len(samples) != 64*512 {
+		t.Fatal("accepted PCM was lost", len(samples))
 	}
 }
 

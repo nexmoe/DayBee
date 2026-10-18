@@ -8,10 +8,11 @@ async function bootstrap(page: import("@playwright/test").Page) {
 test("selects models in transcription settings and retains the choice after relaunch", async ({ launchApp }) => {
   let { app, page } = await launchApp();
   await page.setViewportSize({ width: 1000, height: 760 });
-  await page.goto("/?window=main");
-  await page.getByRole("navigation").getByRole("button", { name: /Transcribe|转写/, exact: true }).click();
+  await page.goto("/");
+  await page.getByRole("tablist").getByRole("tab", { name: /Transcribe|转写/, exact: true }).click();
   const models = page.getByTestId("asr-model-settings");
-  await expect.poll(async () => (await bootstrap(page)).settings.recording.asrModel).toBe("whisper-tiny");
+  // The fixture writes an explicit Tiny selection, which must survive on Macs.
+  expect((await bootstrap(page)).settings.recording.asrModel).toBe("whisper-tiny");
   await expect(models).toContainText("Whisper Tiny");
   await expect(models).toContainText("Whisper Base");
   await expect(models).toContainText("Whisper Small");
@@ -27,8 +28,8 @@ test("selects models in transcription settings and retains the choice after rela
   ({ app, page } = await launchApp());
   await expect.poll(async () => (await bootstrap(page)).settings.recording.asrModel).toBe("firered-asr2-ctc");
   await page.setViewportSize({ width: 1000, height: 760 });
-  await page.goto("/?window=main");
-  await page.getByRole("navigation").getByRole("button", { name: /Transcribe|转写/, exact: true }).click();
+  await page.goto("/");
+  await page.getByRole("tablist").getByRole("tab", { name: /Transcribe|转写/, exact: true }).click();
   await page.screenshot({ path: "e2e/results/asr-models.png", animations: "disabled" });
   await page.evaluate(() => window.mygo!.call("DesktopService.StartRecording"));
   const qwen = page.getByTestId("asr-model-qwen3-0.6b").getByRole("button");
@@ -41,14 +42,21 @@ test("selects models in transcription settings and retains the choice after rela
   await app.close();
 });
 
-test("starts lightweight and can select each Whisper model", async ({ launchApp }) => {
-  const { app, page } = await launchApp();
+test("starts with the platform default and can select each Whisper model", async ({ launchApp }) => {
+  const { app, page } = await launchApp({ platformASRDefault: true });
   await page.setViewportSize({ width: 1000, height: 760 });
-  await page.goto("/?window=main");
-  await page.getByRole("navigation").getByRole("button", { name: /Transcribe|转写/, exact: true }).click();
+  await page.goto("/");
+  await page.getByRole("tablist").getByRole("tab", { name: /Transcribe|转写/, exact: true }).click();
   const snapshot = await bootstrap(page);
-  expect(snapshot.settings.recording.asrModel).toBe("whisper-tiny");
-  expect(snapshot.asrModels.items[0].id).toBe("whisper-tiny");
+  const defaultModel = snapshot.asrModels.items.some(model => model.id === "speech-analyzer") ? "speech-analyzer" : "whisper-tiny";
+  expect(snapshot.settings.recording.asrModel).toBe(defaultModel);
+  expect(snapshot.asrModels.items[0].id).toBe(defaultModel);
+  if (defaultModel === "speech-analyzer") {
+    const system = page.getByTestId("asr-model-speech-analyzer");
+    await expect(system).toContainText(/Managed by macOS|由 macOS 管理/);
+    await expect(system).not.toContainText("INT8");
+    await expect(system).not.toContainText("0 MB");
+  }
   for (const id of ["whisper-base", "whisper-small", "whisper-tiny"]) {
     const row = page.getByTestId(`asr-model-${id}`);
     await row.getByRole("button").click();

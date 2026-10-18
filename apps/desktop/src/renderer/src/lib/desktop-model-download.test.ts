@@ -13,7 +13,6 @@ vi.mock("./desktop-api", () => ({
     onStatus: () => {}
   }
 }));
-vi.mock("./window-role", () => ({ windowRole: "main" }));
 vi.mock("./toast-store", () => ({ toastActions: { show: vi.fn() } }));
 
 import { desktopActions, getDesktopSnapshot } from "./desktop-store";

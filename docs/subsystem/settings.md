@@ -14,13 +14,13 @@
 
 - 文件是数据根目录下的 `desktop-settings.json`。根目录规则见 [desktop-shell.md](desktop-shell.md)。
 - 文档含 `settings`、`windowState`、`nativeDevices`。当前默认把 `nativeDevices` 写成 true。
-- 默认值由 `protocol.DefaultSettings` 定义。`cmd/contracts` 把它生成到 `packages/shared/src/defaults.ts` 的 `DEFAULT_SETTINGS`。生成时传入的输出目录是 `"recordings"`。真正打开 Store 时，输出目录是文稿目录下的 `DayBee`。
+- 原生默认值由 `protocol.DefaultSettings` 定义。`cmd/contracts` 导出到 `packages/shared/src/defaults.ts` 的 `DEFAULT_SETTINGS` 是 bootstrap 前的占位值，其中 ASR 统一回退 Tiny；原生快照返回真正的平台模型默认。生成时传入的输出目录是 `"recordings"`。真正打开 Store 时，输出目录是文稿目录下的 `DayBee`。
 
 当前默认：
 
 - `HideWindowOnClose`（true）。规范化时总是写回 true。
-- `Language`（`LanguageSystem`）、`LaunchAtLogin`（true）、`StartRecordingOnLaunch`（true）、`Theme`（`ThemeSystem`）、`VoiceprintSetup`（`VoiceprintPending`）。
-- `AudioFormat`（`FLAC`）、`ASRLanguage`（`auto`）、`ASRModel`（`DefaultASRModel`，即 Whisper Tiny）、`AutoSwitchConfirmations`（2）、`AutoSwitchDevice`（true）、`Device`（`default`）。
+- `Language`（`LanguageSystem`）、`LaunchAtLogin`（true）、`Theme`（`ThemeSystem`）、`VoiceprintSetup`（`VoiceprintPending`）。
+- `ASRLanguage`（`auto`）、`ASRModel`（`DefaultASRModel`，兼容 macOS 26+ 用 SpeechAnalyzer，其他环境用 Whisper Tiny）、`AutoSwitchConfirmations`（2）、`AutoSwitchDevice`（true）、`Device`（`default`）。SpeechAnalyzer 的 `auto` 跟随系统首选语言，不检测音频语言，见 [语音识别](asr.md)。
 - `EchoCancellation` 等于 `SupportsEchoCancellation`。该常量只在 darwin 为真。
 - `RecordSystemAudio`（false）。`SupportsSystemAudio` 同样只在 darwin 为真。
 - `DisableASR`（false）、`ExcludeDeviceKeywords`（`iphone,continuity`）、`SegmentMinutes`（60）、`VoiceprintAdaptation`（false）。
@@ -40,8 +40,8 @@
 `normalize` 用默认值做底，只接受对象、非空字符串、布尔和数字。然后：
 
 - 语言必须是 `en-US`、`system`、`zh-CN`。主题必须是 `dark`、`light`、`system`。声纹设置必须是 `pending`、`skipped`、`ready`。否则回到默认。
-- 音频格式不是 `wav` 就是 `flac`。
-- 缺失或 `ValidASRModel` 不接受的模型回到 `DefaultASRModel`（Whisper Tiny）。已有合法选择不变，包括旧版保存的 Qwen3 和 FireRed。完整模型清单见 [语音识别](asr.md)。
+- 已废弃 `desktop.startRecordingOnLaunch` 和 `recording.audioFormat`。旧值读取时忽略，保存时移除。应用启动自动录音，首次声纹引导完成或跳过后开始，见 [desktop-shell.md](desktop-shell.md)；录音统一归档为 FLAC，见 [recording.md](recording.md)。
+- 缺失或 `ValidASRModel` 不接受的模型回到平台 `DefaultASRModel`。不支持 SpeechAnalyzer 的环境会把旧配置中的该选择回退到 Tiny。已有合法选择不变，包括 Whisper、Qwen3 和 FireRed。完整模型清单见 [语音识别](asr.md)。
 - 输出目录不是绝对路径就回到默认目录。
 - `AutoSwitchConfirmations` 小于 1 变成 2。`SegmentMinutes` 小于等于 0 变成 60。
 - 平台不支持回声消除或系统音频时，对应字段强制为 false。
@@ -50,7 +50,7 @@
 
 `Save` 把传入值规范化后写入。`WriteJSON` 先写同目录临时文件，`Sync` 后再 `Rename`。编码、写入或同步失败时，旧文件还在。`Save` 在写盘失败时把内存里的设置改回去。
 
-`SaveSettings` 用 `saves` 串行。声纹注册进行中时，更换 ASR 模型或采集相关字段会拒绝，采集字段包括设备、回声消除、系统音频、自动切换和排除关键字。
+`SaveSettings` 用 `saves` 串行。声纹注册进行中时，更换 ASR 模型、SpeechAnalyzer 的语言或采集相关字段会拒绝，采集字段包括设备、回声消除、系统音频、自动切换和排除关键字。
 
 写盘成功后调用 `engine.Apply`。`Apply` 失败就把上一份设置再 `Save` 一次并返回旧值。成功后 `applySettingsTheme` 把 `Desktop.Theme` 交给 `mygo.Theme.SetSource`。输出目录变了就 `refreshHistory`。非开发且非隔离时，`SetOpenAtLogin` 跟随 `LaunchAtLogin`。
 
@@ -71,9 +71,9 @@
 
 ```bash
 go test ./internal/config/ -count=1 -run 'TestImportPreservesDataAndIsIdempotent|TestCanonicalPrecedenceAndCorruptFallback|TestDefaultsIsolationAndValidation|TestNonObjectConfigurationFallsBackWithoutLosingSource|TestAtomicReplace'
-go test ./internal/config/ -count=1 -run 'TestEcho|TestSystemAudio|TestVoiceprint|TestASR'
+go test ./internal/config/ -count=1 -run 'TestEcho|TestSystemAudio|TestVoiceprint|TestASR|TestRetiredRecordingSettings'
 ```
 
-后面一条覆盖 `echo_cancellation_test.go`、`system_audio_test.go`、`voiceprint_test.go`、`asr_models_test.go` 里的平台和模型约束。
+后面一条覆盖平台、模型和声纹约束，以及旧录音配置的兼容与清理。
 
 链接：`bun run check:docs`

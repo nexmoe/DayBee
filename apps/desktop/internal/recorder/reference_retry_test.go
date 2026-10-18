@@ -28,7 +28,6 @@ func (c *recoverableReferenceCapture) Start(options audio.CaptureOptions, consum
 func TestRetryReferenceRecoversWithoutEndingTheRecording(t *testing.T) {
 	root := t.TempDir()
 	settings := protocol.DefaultSettings(root)
-	settings.Recording.AudioFormat = protocol.WAV
 	settings.Recording.Device = "default"
 	settings.Recording.AutoSwitchDevice = false
 	capture := &recoverableReferenceCapture{}

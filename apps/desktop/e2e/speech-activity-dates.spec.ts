@@ -2,7 +2,7 @@ import { expect, test } from "./fixtures";
 
 test.use({ timezoneId: "Asia/Shanghai" });
 
-for (const role of ["main", "compact"] as const) {
+for (const role of ["compact"] as const) {
   test(`fills seven elapsed dates across week boundaries in ${role}`, async ({ launchApp }) => {
     const { app, page } = await launchApp();
     for (const [today, dates] of [
@@ -11,8 +11,8 @@ for (const role of ["main", "compact"] as const) {
       ["2026-10-11", ["2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09", "2026-10-10", "2026-10-11"]]
     ] as const) {
       await page.clock.setFixedTime(new Date(`${today}T12:00:00+08:00`));
-      await page.goto(role === "main" ? "/?window=main" : "/");
-      await page.setViewportSize({ width: role === "main" ? 1000 : 420, height: role === "main" ? 760 : 620 });
+      await page.goto(role === "compact" ? "/" : "/");
+      await page.setViewportSize({ width: role === "compact" ? 1000 : 420, height: role === "compact" ? 760 : 620 });
       const chart = page.getByTestId("speech-activity");
       await expect(chart.getByRole("radio")).toHaveCount(dates.length);
       expect(await chart.getByRole("radio").evaluateAll(elements => elements.map(element => element.getAttribute("data-speech-date")))).toEqual(dates);

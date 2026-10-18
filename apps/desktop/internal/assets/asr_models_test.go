@@ -44,6 +44,9 @@ func TestEveryModelReusesItsOwnLegacyCache(t *testing.T) {
 	legacy := t.TempDir()
 	m := New(t.TempDir(), []string{legacy}, nil)
 	for _, spec := range asrmodel.All() {
+		if spec.ID == protocol.ASRSpeechAnalyzer {
+			continue
+		}
 		want := fixtureModel(t, legacy, spec)
 		m.SelectASRModel(spec.ID)
 		if err := m.Ensure(context.Background(), false, true); err != nil {
@@ -54,7 +57,7 @@ func TestEveryModelReusesItsOwnLegacyCache(t *testing.T) {
 		}
 	}
 	for _, model := range m.Models().Items {
-		if !model.Ready {
+		if model.ID != protocol.ASRSpeechAnalyzer && !model.Ready {
 			t.Fatal("downloaded model reported missing", model.ID)
 		}
 	}
@@ -99,8 +102,9 @@ func TestDownloadCoalescesAndDoesNotSelectBeforeSuccess(t *testing.T) {
 func TestIncompleteArchivePreservesSelectionAndPreviousFiles(t *testing.T) {
 	root := t.TempDir()
 	m := New(root, nil, nil)
-	selected, _ := asrmodel.Find(protocol.DefaultASRModel)
+	selected, _ := asrmodel.Find(protocol.ASRWhisperTiny)
 	fixtureModel(t, root, selected)
+	m.SelectASRModel(selected.ID)
 	ctc, _ := asrmodel.Find(protocol.ASRFireRedCTC)
 	old := fixtureModel(t, root, ctc)
 	if err := os.Remove(filepath.Join(old, "tokens.txt")); err != nil {
@@ -114,7 +118,7 @@ func TestIncompleteArchivePreservesSelectionAndPreviousFiles(t *testing.T) {
 		t.Fatal("accepted an incomplete model archive")
 	}
 	before, _ := os.ReadFile(filepath.Join(old, "model.int8.onnx"))
-	if string(before) != "cached" || m.selectedModel() != protocol.DefaultASRModel {
+	if string(before) != "cached" || m.selectedModel() != selected.ID {
 		t.Fatal("failed download damaged existing data")
 	}
 	_, ready := m.Ready()
@@ -126,11 +130,12 @@ func TestIncompleteArchivePreservesSelectionAndPreviousFiles(t *testing.T) {
 	}
 }
 
-func TestDefaultModelPreparationNeverFallsBackToLargeCachedModel(t *testing.T) {
+func TestWhisperPreparationNeverFallsBackToLargeCachedModel(t *testing.T) {
 	root := t.TempDir()
 	qwen, _ := asrmodel.Find(protocol.ASRQwen3)
 	fixtureModel(t, root, qwen)
 	m := New(root, nil, nil)
+	m.SelectASRModel(protocol.ASRWhisperTiny)
 	if m.selectedModel() != protocol.ASRWhisperTiny {
 		t.Fatal("manager did not choose the lightweight default")
 	}
@@ -165,8 +170,8 @@ func TestDefaultModelPreparationNeverFallsBackToLargeCachedModel(t *testing.T) {
 		t.Fatal("model documentation was removed while pruning weights", err)
 	}
 	m.SelectASRModel("unknown")
-	if m.selectedModel() != protocol.ASRWhisperTiny {
-		t.Fatal("invalid model did not use the lightweight fallback")
+	if m.selectedModel() != protocol.DefaultASRModel {
+		t.Fatal("invalid model did not use the platform fallback")
 	}
 	m.SelectASRModel(protocol.ASRQwen3)
 	if m.ASRPath() != filepath.Join(root, "models", qwen.Directory) {

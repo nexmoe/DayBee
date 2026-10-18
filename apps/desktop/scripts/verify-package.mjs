@@ -30,6 +30,7 @@ const inspect = path => {
   }
 }; inspect(root);
 if (mac) {
+  assert(existsSync(join(resources, "lib", "libdaybee-speech.dylib")), "Missing SpeechAnalyzer bridge");
   const run = (cmd, args) => execFileSync(cmd, args, { encoding: "utf8" });
   const paths = run("otool", ["-l", binary]);
   assert(paths.includes("@executable_path/../Resources/lib"), "Missing bundle rpath");

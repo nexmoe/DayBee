@@ -48,3 +48,21 @@ func TestLegacyBatchTimeDoesNotReplaceRecordingFilenameTime(t *testing.T) {
 		t.Fatalf("batch completion moved the original recording time: %+v", item)
 	}
 }
+
+func TestArchiveScansIgnoreStagedFLAC(t *testing.T) {
+	root := t.TempDir()
+	complete := filepath.Join(root, "daybee_20261018_120000.flac")
+	for _, path := range []string{complete, filepath.Join(root, ".daybee-123.flac")} {
+		if err := os.WriteFile(path, []byte("audio"), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	files, err := AudioFiles([]string{root})
+	if err != nil || len(files) != 1 || files[0] != complete {
+		t.Errorf("batch scan included an unpublished FLAC: %v, %v", files, err)
+	}
+	items := History([]string{root})
+	if len(items) != 1 || items[0].AudioPath != complete {
+		t.Errorf("history included an unpublished FLAC: %+v", items)
+	}
+}

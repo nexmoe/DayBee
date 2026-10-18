@@ -21,6 +21,7 @@
     "test:race": "node scripts/desktop.mjs test -race",
     "test:e2e": "playwright test --config playwright.config.ts",
     "test:native": "node e2e/native.mjs",
+    "test:mcp": "node e2e/mcp.mjs",
     "typecheck": "bun run lint"
   },
   "dependencies": {

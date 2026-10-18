@@ -175,7 +175,7 @@ func (v *voiceprintEnrollment) run(ctx context.Context, done chan struct{}, adva
 	if !closed && !v.s.quitting.Load() && v.s.ctx.Err() == nil {
 		if err == nil {
 			requested := v.s.voiceStartRequested.Swap(false)
-			resume = resume || requested || (first && !v.s.test && v.s.store.Settings().Desktop.StartRecordingOnLaunch)
+			resume = resume || requested || (first && !v.s.test)
 		}
 		if resume && !rollbackFailed {
 			_ = v.s.engine.Start()

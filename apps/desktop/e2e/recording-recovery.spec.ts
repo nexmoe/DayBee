@@ -52,7 +52,7 @@ for (const language of ["zh-CN", "en-US"] as const) {
     await expect(page.getByText(language === "zh-CN" ? "空闲" : "Idle", { exact: true })).toBeVisible();
     expect(await page.evaluate(() => window.mygo!.call("test.stops"))).toBe(1);
 
-    await page.goto("/?window=main");
+    await page.goto("/");
     await page.setViewportSize({ width: 1000, height: 760 });
     await expect(page.getByText(recovering, { exact: true })).toBeVisible();
   });

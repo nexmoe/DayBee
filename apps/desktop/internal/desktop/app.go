@@ -60,9 +60,7 @@ type DesktopService struct {
 	microphoneError     *string
 	microphoneActivity  protocol.MicrophoneActivitySnapshot
 	window              *mygo.Window
-	mainWindow          *mygo.Window
 	compactRecovery     *pageRecovery
-	mainRecovery        *pageRecovery
 	tray                *mygo.Tray
 	trayTip             string
 	windows             windowUpdates
@@ -223,8 +221,8 @@ func (s *DesktopService) initialize() {
 	if s.initError == nil && !s.quitting.Load() {
 		settings := s.store.Settings()
 		if settings.Desktop.VoiceprintSetup == protocol.VoiceprintPending {
-			_ = s.OpenMainWindow()
-		} else if settings.Desktop.StartRecordingOnLaunch && !s.test {
+			s.OpenRecorderWindow()
+		} else if !s.test {
 			_, _ = s.StartRecording()
 		}
 	}

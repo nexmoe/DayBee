@@ -32,7 +32,6 @@ func TestNativeDualSourceTranscription(t *testing.T) {
 	root := t.TempDir()
 	s := protocol.DefaultSettings(root)
 	s.Recording.RecordSystemAudio = true
-	s.Recording.AudioFormat = protocol.FLAC
 	s.Recording.AutoSwitchDevice = false
 	e := New(s, &fakeCapture{}, nativeTestAssets{&fakeAssets{}, model, vad}, asr.Sherpa{}, nil, nil)
 	defer e.Close()

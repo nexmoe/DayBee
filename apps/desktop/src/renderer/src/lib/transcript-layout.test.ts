@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sentenceHighlights, transcriptReadingParagraphs } from "./transcript-sentences";
+import { transcriptReadingParagraphs } from "./transcript-sentences";
 
 describe("automatic reading paragraphs", () => {
   it("groups short capture fragments instead of displaying one line per fragment", () => {
@@ -25,12 +25,11 @@ describe("automatic reading paragraphs", () => {
     expect(paragraphs.flat().every(sentence => text.slice(sentence.from, sentence.to) === sentence.text)).toBe(true);
   });
 
-  it("keeps search offsets intact across an automatic paragraph break", () => {
+  it("keeps sentence offsets intact across an automatic paragraph break", () => {
     const text = "One. Two. Three. Four. Five.";
     const paragraphs = transcriptReadingParagraphs({ text });
-    const parts = paragraphs.flat().flatMap(sentence => sentenceHighlights(text, sentence.from, sentence.to, /Four\. Five/iu));
     expect(paragraphs).toHaveLength(2);
-    expect(parts.filter(part => part.highlighted).map(part => part.text)).toEqual(["Four.", "Five"]);
+    expect(paragraphs.flat().map(sentence => text.slice(sentence.from, sentence.to))).toEqual(["One.", "Two.", "Three.", "Four.", "Five."]);
     expect(transcriptReadingParagraphs({ text: "  \n" })).toEqual([]);
   });
 });

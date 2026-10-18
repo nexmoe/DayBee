@@ -4,7 +4,7 @@ import { expect, test } from "./fixtures";
 for (const language of ["zh-CN", "en-US"] as const) {
   test(`explains room measurement, playback pause and unavailable reference in ${language}`, async ({ launchApp }) => {
     const { app, page } = await launchApp();
-    await page.goto("/?window=main");
+    await page.goto("/");
     const snapshot = await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"));
     snapshot.settings.desktop.language = language;
     snapshot.voiceprint = {

@@ -3,11 +3,11 @@ import { expect, test } from "./fixtures";
 
 const at = (second: number) => new Date(Date.UTC(2026, 9, 12) + second * 1000).toISOString();
 
-for (const [role, language] of [["main", "zh-CN"], ["compact", "en-US"]] as const) {
-  test(`retains complete utterances without promoting unconfirmed speech in ${role}`, async ({ launchApp }) => {
+for (const [role, language] of [["compact", "zh-CN"], ["compact", "en-US"]] as const) {
+  test(`retains complete utterances without promoting unconfirmed speech in ${language}`, async ({ launchApp }) => {
     const { app, page } = await launchApp({ voiceprintSetup: "ready" });
-    await page.goto(role === "main" ? "/?window=main" : "/");
-    await page.setViewportSize({ width: role === "main" ? 1000 : 420, height: 900 });
+    await page.goto("/");
+    await page.setViewportSize({ width: 420, height: 900 });
     const snapshot = await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"));
     snapshot.settings.desktop.language = language;
     const item: RecordingHistoryItem = {
@@ -41,13 +41,6 @@ for (const [role, language] of [["main", "zh-CN"], ["compact", "en-US"]] as cons
     await expect(page.locator('.transcript-turn[data-voice-identity="me"]')).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: `e2e/results/voiceprint/utterance-continuity-${role}.png`, animations: "disabled" });
-    // Search belongs to the main window; the compact recorder has no search UI.
-    if (role === "main") {
-      await page.getByRole("searchbox").fill("complete sentence");
-      await expect(rows).toHaveCount(1);
-      await expect(rows.locator("mark")).toHaveText("complete sentence");
-      await expect(rows).toContainText("retains its ending.");
-    }
     await app.close();
   });
 }

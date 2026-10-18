@@ -97,7 +97,7 @@ func (s *DesktopService) SkipVoiceprintSetup() (protocol.DesktopSnapshot, error)
 		settings.Desktop.VoiceprintSetup = protocol.VoiceprintConfigured
 	}
 	_, err := s.SaveSettings(settings)
-	shouldStart := s.voiceStartRequested.Swap(false) || (settings.Desktop.StartRecordingOnLaunch && !s.test)
+	shouldStart := s.voiceStartRequested.Swap(false) || !s.test
 	if err == nil && wasPending && shouldStart {
 		_, err = s.StartRecording()
 	}

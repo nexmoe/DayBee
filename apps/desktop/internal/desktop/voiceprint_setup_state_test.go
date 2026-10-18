@@ -45,7 +45,7 @@ func TestStartRecordingWithExistingProfileCompletesPendingSetup(t *testing.T) {
 	if !s.engine.Status().Recording || s.store.Settings().Desktop.VoiceprintSetup != protocol.VoiceprintConfigured {
 		t.Fatal("existing voiceprint did not allow the requested recording to start")
 	}
-	if s.voiceStartRequested.Load() || s.mainWindow != nil {
+	if s.voiceStartRequested.Load() {
 		t.Fatal("recording was redirected to first-run setup")
 	}
 }

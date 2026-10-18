@@ -7,11 +7,9 @@ import type { TimelineEntry } from "@/lib/activity-timeline";
 import { createT, resolveIntlLocale } from "@/lib/i18n";
 import { transcriptTime, transcriptVoiceSummary } from "@/lib/transcript-paragraphs";
 
-export function TranscriptEntry({ entry, language, search, onSelectApp }: {
+export function TranscriptEntry({ entry, language }: {
   entry: TimelineEntry;
   language: AppLanguage;
-  search: RegExp | null;
-  onSelectApp?: (appId: string) => void;
 }) {
   const t = createT(language);
   const { paragraph, contexts } = entry;
@@ -43,8 +41,8 @@ export function TranscriptEntry({ entry, language, search, onSelectApp }: {
           {paragraph.endedAt !== paragraph.startedAt && <><span aria-hidden="true">–</span>{renderTime(paragraph.endedAt)}</>}
         </span>
       </header>
-      {contexts.length > 0 && <RecordingContexts apps={contexts} language={language} onSelect={onSelectApp} />}
-      <TranscriptSentences segment={{ text: paragraph.text }} search={search} />
+      {contexts.length > 0 && <RecordingContexts apps={contexts} language={language} />}
+      <TranscriptSentences segment={{ text: paragraph.text }} />
     </article>
   );
 }

@@ -10,6 +10,7 @@
 | Desktop 外壳 | 应用启动、窗口、页面恢复、更新、测试服务、字体 | [desktop-shell.md](desktop-shell.md) |
 | 设置 | 配置持久化、设置协议与快照 | [settings.md](settings.md) |
 | 渲染进程 | 前端状态、生成的契约、调用 Go 服务的方式 | [renderer.md](renderer.md) |
+| MCP | 客户端连接、本地文稿搜索、全文和资源读取 | [mcp.md](mcp.md) |
 | Web 应用 | `apps/web` | [web.md](web.md) |
 | 录音 | 录音引擎、分段、批处理、历史、设备、录音恢复 | [recording.md](recording.md) |
 | 音频 | 麦克风与系统音频采集、回声消除参考、编解码 | [audio.md](audio.md) |

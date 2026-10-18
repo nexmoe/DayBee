@@ -82,6 +82,7 @@ func TestInterruptedDownloadDoesNotReplaceCache(t *testing.T) {
 func TestVADOnlyDoesNotDownloadASR(t *testing.T) {
 	root := t.TempDir()
 	m := New(root, nil, nil)
+	m.SelectASRModel(protocol.ASRWhisperTiny)
 	if err := os.MkdirAll(filepath.Join(root, "models"), 0700); err != nil {
 		t.Fatal(err)
 	}

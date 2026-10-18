@@ -27,7 +27,7 @@ Bun workspace 放桌面端、营销站和前后端共用的默认值。桌面端
 
 `bun run --cwd apps/desktop generate` 进入 `apps/desktop/scripts/desktop.mjs`。它先跑 `prepareNative`，再执行 `go run ./cmd/contracts`，然后调用 mygo CLI 的 `generate`。
 
-`cmd/contracts` 调用 `protocol.DefaultSettings` 和 `protocol.DefaultStatus`，把 JSON 写进 `packages/shared/src/defaults.ts`。mygo 根据 `mygo.config.ts` 的 `bindings` 生成 `src/renderer/src/generated/mygo.ts`。CI 在生成后对这两个文件做 `git diff --exit-code`。
+`cmd/contracts` 调用 `protocol.DefaultSettings` 和 `protocol.DefaultStatus`，把 JSON 写进 `packages/shared/src/defaults.ts`。渲染器尚未 bootstrap 时统一以 Tiny 为后备值；真正的平台模型默认来自 Go 的 bootstrap 快照，避免构建机的系统资源影响生成文件。mygo 根据 `mygo.config.ts` 的 `bindings` 生成 `src/renderer/src/generated/mygo.ts`。CI 在生成后对这两个文件做 `git diff --exit-code`。
 
 改契约要改 Go 声明，不要手改生成文件。
 
@@ -39,6 +39,8 @@ Bun workspace 放桌面端、营销站和前后端共用的默认值。桌面端
 
 `mygo.config.ts` 把 `devUrl` 设为 `PORTLESS_URL`，`devCommand` 是 `bunx --no-install vite`。Vite 配置在 `apps/desktop/vite.config.ts`：根目录 `src/renderer`，监听 `127.0.0.1` 上的 `PORT`，HMR 走 portless 的源。非 E2E 的 `serve` 同样要求这两个环境变量。
 
+macOS 在 `mygo dev` 使用 HTTP 开发地址时，`mygo.config.ts` 只为该地址的主机名写入 ATS 的 `NSExceptionAllowsInsecureHTTPLoads` 例外，让 WebView 能加载本地页面。HTTPS 开发地址、generate 和生产 build 不写入这项例外。
+
 `apps/desktop` 的 `dev:web` 只起 Vite，同样经过 portless。Playwright 是例外，见 [renderer.md](renderer.md)。
 
 ### 构建
@@ -48,6 +50,8 @@ Bun workspace 放桌面端、营销站和前后端共用的默认值。桌面端
 `prepare-native.mjs` 的 `prepareNative` 只接受本机目标：`darwin-arm64`、`darwin-amd64`、`windows-amd64`。它下载锁定的 sherpa 平台模块 1.13.8，把许可证和 `native-versions.json` 放到 `apps/desktop/resources/<target>`。macOS 在 `.generated` 里复制一份 sherpa 模块，把绝对 rpath 换成 `@executable_path/../Resources/lib`，并用 `-modfile` 指向这份副本。Go 模块缓存不被改写。dylib 先去掉上游签名，再 `strip -x`。
 
 mygo 再执行 `buildCommand`（`bun run build:web`）并把前端产物从 `out/renderer` 打进 `dist`。macOS 最低系统版本、签名身份、entitlements 和可选公证都在 `mygo.config.ts`。Windows 证书和签名命令只在对应环境变量存在时写入。
+
+macOS 同时由 `apps/desktop/scripts/prepare-speech.mjs` 编译 `apps/desktop/internal/speechanalyzer/native/SpeechBridge.swift`，需要包含 SpeechAnalyzer 的 macOS 26+ SDK。产物 `libdaybee-speech.dylib` 放进同一资源 `lib` 目录，开发和测试通过 `DAYBEE_SPEECH_LIBRARY` 定位，打包后从可执行文件旁的 Resources/lib 加载。桥接的最低目标仍为 13.3，运行时检查 26+ 的 API；Windows 不编译或加载它。`mygo.config.ts` 提供系统语音识别用途说明。
 
 更新公钥默认读 `apps/desktop/build/mygo-update.pub`，可用 `DAYBEE_UPDATER_PUBLIC_KEY` 覆盖。配置指向 GitHub `nexmoe/eve`，标签前缀 `v`。
 

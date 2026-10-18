@@ -8,6 +8,7 @@ import type { MessageKey } from "@/lib/i18n";
 
 type Translator = (key: MessageKey, params?: Record<string, number | string>) => string;
 const descriptions: Record<ASRModel, MessageKey> = {
+  "speech-analyzer": "asrModelSpeechAnalyzerDescription",
   "whisper-tiny": "asrModelWhisperTinyDescription",
   "whisper-base": "asrModelWhisperBaseDescription",
   "whisper-small": "asrModelWhisperSmallDescription",
@@ -43,9 +44,11 @@ export function ASRModelSettings({ snapshot, t }: { snapshot: DesktopSnapshot; t
       control={
         <div className="divide-y divide-[color:var(--border)]">
           {(models?.items ?? []).map((model) => {
+            const system = model.id === "speech-analyzer";
             const active = model.id === snapshot.settings.recording.asrModel;
             const working = downloading === model.id || pending === model.id;
             const action = active && model.ready ? "asrModelCurrent" : model.ready ? "asrModelUse"
+              : system ? (switchBlocked ? "asrModelPrepare" : "asrModelPrepareUse")
               : switchBlocked ? "asrModelDownload" : "asrModelDownloadUse";
             const size = model.estimatedBytes >= 1_000_000_000
               ? `${(model.estimatedBytes / 1_000_000_000).toFixed(2)} GB`
@@ -59,7 +62,9 @@ export function ASRModelSettings({ snapshot, t }: { snapshot: DesktopSnapshot; t
                   </div>
                   <p className="mt-1 text-xs leading-5 text-[color:var(--muted)]">{t(descriptions[model.id])}</p>
                   <p className="text-xs leading-5 text-[color:var(--muted)]">
-                    {t("asrModelSize", { size })} · {t(working ? "asrModelPreparing" : model.ready ? "asrModelInstalled" : "asrModelNotInstalled")}
+                    {system ? t("asrModelSystemSize") : t("asrModelSize", { size })} · {t(working ? "asrModelPreparing"
+                      : system ? (model.ready ? "asrModelSystemReady" : "asrModelSystemNotReady")
+                      : model.ready ? "asrModelInstalled" : "asrModelNotInstalled")}
                   </p>
                   {downloading === model.id && snapshot.status.downloading && (
                     <progress aria-label={t("modelDownloadTitle")} className="mt-2 h-1.5 w-full accent-[color:var(--foreground)]" max={100} value={snapshot.status.downloadProgress ?? undefined} />

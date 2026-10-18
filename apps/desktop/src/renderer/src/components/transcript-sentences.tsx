@@ -1,10 +1,8 @@
 import { Fragment } from "react";
 import type { TranscriptSegment } from "@/lib/transcript-paragraphs";
-import { sentenceHighlights, transcriptReadingParagraphs } from "@/lib/transcript-sentences";
+import { transcriptReadingParagraphs } from "@/lib/transcript-sentences";
 
-export function TranscriptSentences({ segment, search }: {
-  segment: TranscriptSegment; search: RegExp | null;
-}) {
+export function TranscriptSentences({ segment }: { segment: TranscriptSegment }) {
   const paragraphs = transcriptReadingParagraphs(segment);
   return (
     <div className="transcript-prose">
@@ -16,9 +14,7 @@ export function TranscriptSentences({ segment, search }: {
               <Fragment key={sentence.from}>
                 {index > 0 && segment.text.slice(sentences[index - 1].to, sentence.from)}
                 <span className="transcript-text">
-                  {sentenceHighlights(segment.text, sentence.from, sentence.to, search).map((part, index) =>
-                    part.highlighted ? <mark key={index}>{part.text}</mark> : part.text
-                  )}
+                  {sentence.text}
                 </span>
               </Fragment>
             ))}

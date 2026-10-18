@@ -44,6 +44,8 @@ export function VoiceprintGuide() {
     void desktopActions.skipVoiceprintSetup();
   };
 
+  if (voice.enrolled && intro) return null;
+
   return (
     <section className="mb-4 space-y-3 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-4" data-testid="voiceprint-guide" aria-labelledby="voiceprint-guide-title">
       <h2 id="voiceprint-guide-title" className={typeClass("subtitle")} style={{ fontVariationSettings: fontWeights.semibold }}>{t("voiceprintGuideTitle")}</h2>

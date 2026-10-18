@@ -1,6 +1,6 @@
 # 麦克风活动
 
-`micactivity.Monitor` 记录其他应用使用麦克风的时间。录音历史用这些区间给麦克风文稿和录音文件做场景标注。检测不打开音频流，也不启动录音。
+`micactivity.Monitor` 记录其他应用使用麦克风的时间。首页时间线用这些区间给麦克风文稿做场景标注。检测不打开音频流，也不启动录音。
 
 ## 职责与边界
 
@@ -70,7 +70,7 @@ go test -count=1 ./internal/micactivity/
 go test -count=1 ./internal/desktop/ -run 'TestMicrophone'
 ```
 
-界面标注和筛选：
+界面场景标注与当前占用展示：
 
 ```bash
 cd apps/desktop

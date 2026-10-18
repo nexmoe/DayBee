@@ -5,9 +5,9 @@ test("echo cancellation and auto-switch remain independently configurable and pe
   test.skip(process.platform !== "darwin", "Native echo cancellation currently supports macOS");
   let { app, page } = await launchApp();
   const openInput = async () => {
-    await page.goto("/?window=main");
+    await page.goto("/");
     await page.setViewportSize({ width: 1000, height: 760 });
-    await page.getByRole("navigation").getByRole("button", { name: /Input|输入/, exact: true }).click();
+    await page.getByRole("tablist").getByRole("tab", { name: /Input|输入/, exact: true }).click();
   };
   await openInput();
   let echo = page.getByTestId("echo-cancellation-field").getByRole("switch");

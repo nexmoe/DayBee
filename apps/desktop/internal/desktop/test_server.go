@@ -37,14 +37,6 @@ func (s *DesktopService) nativeTestServer() {
 			http.Error(w, "POST required", 405)
 			return
 		}
-		if r.URL.Path == "/open-main" {
-			if err := s.OpenMainWindow(); err != nil {
-				http.Error(w, err.Error(), 500)
-				return
-			}
-			_, _ = fmt.Fprint(w, "null")
-			return
-		}
 		role := r.URL.Query().Get("window")
 		if role == "" {
 			role = "compact"
@@ -138,11 +130,7 @@ func (s *DesktopService) nativeTestServer() {
 			window.Hide()
 			_, _ = fmt.Fprint(w, "null")
 		case "/show":
-			if role == "main" {
-				_ = s.OpenMainWindow()
-			} else {
-				s.reveal()
-			}
+			s.reveal()
 			_, _ = fmt.Fprint(w, "null")
 		case "/reload":
 			window.Page().Reload()

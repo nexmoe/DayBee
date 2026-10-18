@@ -196,9 +196,11 @@ func (e *Engine) consume(packet audio.Packet) error {
 		})
 		e.noteActiveDevice(packet.DeviceID)
 	}
+	stream.segment.mu.Lock()
 	if stream.segment.device == "" {
 		stream.segment.device = packet.DeviceLabel
 	}
+	stream.segment.mu.Unlock()
 	stream.remainder = append(stream.remainder, packet.Samples...)
 	for len(stream.remainder) >= audio.WindowSize {
 		// Silero's Start offset counts every sample since Reset, including

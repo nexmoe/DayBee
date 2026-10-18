@@ -26,9 +26,9 @@ function writeEnrolledProfile(storeDir: string) {
 }
 
 async function openTranscribe(page: import("@playwright/test").Page) {
-  await page.goto("/?window=main");
+  await page.goto("/");
   await page.setViewportSize({ width: 1000, height: 760 });
-  await page.getByRole("navigation").getByRole("button", { name: /Transcribe|转写/, exact: true }).click();
+  await page.getByRole("tablist").getByRole("tab", { name: /Transcribe|转写/, exact: true }).click();
 }
 
 async function bootstrap(page: import("@playwright/test").Page) {

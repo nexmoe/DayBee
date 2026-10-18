@@ -24,18 +24,10 @@ describe("recording scenes in the transcription timeline", () => {
     expect(buildActivityTimeline([], usage)).toEqual([]);
   });
 
-  it("finds the meeting transcript by app name even when its text never mentions Zoom", () => {
-    const items = [record("meeting", [[12, 15, "Budget discussion."]]), record("other", [[60, 65, "Other discussion."]])];
-    expect(buildActivityTimeline(items, [app("zoom", 10, 30)], " zOoM ").map(entry => entry.paragraph.text)).toEqual(["Budget discussion."]);
-    expect(buildActivityTimeline(items, [app("zoom", 10, 30)], "discussion", "zoom")).toHaveLength(1);
-    expect(buildActivityTimeline(items, [app("zoom", 10, 30)], "[.*")).toEqual([]);
-  });
-
   it("separates adjacent speech when the scene changes inside one audio file", () => {
     const items = [record("long-file", [[1, 4, "Before meeting."], [12, 15, "During meeting."], [31, 35, "After meeting."]])];
     const entries = buildActivityTimeline(items, [app("zoom", 10, 30)]);
     expect(entries.map(entry => entry.paragraph.text)).toEqual(["After meeting.", "During meeting.", "Before meeting."]);
-    expect(buildActivityTimeline(items, [app("zoom", 10, 30)], "", "zoom").map(entry => entry.paragraph.text)).toEqual(["During meeting."]);
   });
 
   it("merges the reported continuous speech when app capture starts inside the first utterance", () => {
@@ -55,7 +47,6 @@ describe("recording scenes in the transcription timeline", () => {
     const entries = buildActivityTimeline(items, [app("zoom", 1, 20), app("teams", 5, 7)]);
     expect(entries).toHaveLength(1);
     expect(entries[0].contexts.map(context => context.appId)).toEqual(["zoom"]);
-    expect(buildActivityTimeline(items, [app("zoom", 1, 20), app("teams", 5, 7)], "", "teams")).toEqual([]);
   });
 
   it("still separates distinct capture sessions belonging to the same app", () => {
@@ -83,15 +74,13 @@ describe("recording scenes in the transcription timeline", () => {
     const entries = buildActivityTimeline(items, usages);
     expect(entries.map(entry => entry.paragraph.text)).toEqual(["Continuing the meeting.", "Dictating a note.", "Opening."]);
     expect(entries.map(entry => entry.contexts.map(context => context.appId))).toEqual([["zoom"], ["teams", "zoom"], ["zoom"]]);
-    // Filtering by the shorter activity still returns only its overlapping speech.
-    expect(buildActivityTimeline(items, usages, "", "teams").map(entry => entry.paragraph.text)).toEqual(["Dictating a note."]);
   });
 
   it("retains completed nodes as later speech arrives during active app capture", () => {
     const first = record("live", [[12, 15, "Opening."]]);
     const usages = [app("live-meeting", 10, null, "zoom")];
-    const original = buildActivityTimeline([first], usages, "", "", Date.parse(at(20)))[0];
-    const updated = buildActivityTimeline([first, record("later", [[600, 610, "Later discussion."]])], usages, "", "", Date.parse(at(620)));
+    const original = buildActivityTimeline([first], usages, Date.parse(at(20)))[0];
+    const updated = buildActivityTimeline([first, record("later", [[600, 610, "Later discussion."]])], usages, Date.parse(at(620)));
     expect(updated).toHaveLength(2);
     expect(updated[1]).toEqual(original);
     expect(updated[0].paragraph).toMatchObject({ startedAt: at(600), endedAt: at(610) });
@@ -105,13 +94,11 @@ describe("recording scenes in the transcription timeline", () => {
     expect(entries[0]).toMatchObject({ paragraph: { audioSource: "microphone", startedAt: at(600), endedAt: at(610) }, contexts: [{ appId: "zoom" }] });
     expect(entries[1]).toMatchObject({ paragraph: { audioSource: "system", text: "Speaker playback." }, contexts: [] });
     expect(entries[2]).toMatchObject({ paragraph: { audioSource: "microphone", text: "Meeting opening." }, contexts: [{ appId: "zoom" }] });
-    expect(buildActivityTimeline(items, [app("zoom-meeting", 10, 700, "zoom")], "", "zoom")).toHaveLength(2);
   });
 
   it("never assigns a meeting that only happened in a gap between saved speech", () => {
     const items = [record("gap", [[1, 4, "Before."], [31, 35, "After."]])];
-    expect(buildActivityTimeline(items, [app("zoom", 10, 30)], "", "zoom")).toEqual([]);
-    expect(createRecordingContextIndex([app("zoom", 10, 30)]).recording(items[0])).toEqual([]);
+    expect(buildActivityTimeline(items, [app("zoom", 10, 30)]).every(entry => entry.contexts.length === 0)).toBe(true);
   });
 
   it("keeps simultaneous apps, but deduplicates the same application's sessions", () => {
@@ -131,18 +118,17 @@ describe("recording scenes in the transcription timeline", () => {
     expect(active.contexts([{ startedAt: at(60), endedAt: at(65) }])).toEqual([]);
   });
 
-  it("finds audio-only recordings through actual capture ranges rather than file start or silence", () => {
+  it("omits audio-only captures from the transcript timeline", () => {
     const item = { ...record("audio-only", [[1, 4, ""]]), textPreview: "", transcriptChunks: [],
       capturedRanges: [{ startedAt: at(1), endedAt: at(4) }, { startedAt: at(31), endedAt: at(35) }] };
-    expect(createRecordingContextIndex([app("zoom", 10, 30)]).recording(item)).toEqual([]);
-    expect(createRecordingContextIndex([app("zoom", 30, 40)]).recording(item)).toMatchObject([{ appName: "Zoom" }]);
+    expect(buildActivityTimeline([item], [app("zoom", 30, 40)])).toEqual([]);
   });
 
   it("retains scene context after batch transcription loses per-sentence timing", () => {
     const item = { ...record("batch", [[1, 4, "Full reprocessed transcript."]]), transcriptChunks: [],
       capturedRanges: [{ startedAt: at(1), endedAt: at(4) }, { startedAt: at(31), endedAt: at(35) }] };
-    expect(buildActivityTimeline([item], [app("zoom", 30, 40)], "", "zoom")).toHaveLength(1);
-    expect(buildActivityTimeline([item], [app("zoom", 10, 30)], "", "zoom")).toEqual([]);
+    expect(buildActivityTimeline([item], [app("zoom", 30, 40)])[0].contexts).toMatchObject([{ appId: "zoom" }]);
+    expect(buildActivityTimeline([item], [app("zoom", 10, 30)])[0].contexts).toEqual([]);
   });
 
   it("uses actual instants across time zones and never invents unknown intervals", () => {
@@ -159,5 +145,4 @@ it("does not misattribute system playback to an app using the microphone", () =>
   const entries = buildActivityTimeline([system, record("mic", [[12, 15, "My speech."]])], [app("zoom", 10, 30)]);
   expect(entries).toHaveLength(2);
   expect(entries.find(entry => entry.paragraph.audioSource === "system")?.contexts).toEqual([]);
-  expect(buildActivityTimeline([system], [app("zoom", 10, 30)], "", "zoom")).toEqual([]);
 });

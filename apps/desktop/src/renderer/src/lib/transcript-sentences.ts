@@ -2,8 +2,7 @@ import type { TranscriptSegment } from "./transcript-paragraphs";
 
 export interface TranscriptSentence extends TranscriptSegment { from: number; to: number }
 
-// Preserve the original offsets for search, including leading whitespace and
-// matches that cross a sentence boundary. Do not merge identity boundaries.
+// Preserve original offsets and spacing without merging identity boundaries.
 export function transcriptSentences(segment: TranscriptSegment): TranscriptSentence[] {
   const sentences: TranscriptSentence[] = [];
   const boundaries = /[。！？!?]+[”’"')）\]]*\s*|[.]+[”’"')）\]]*(?=\s|$)\s*|\r?\n+/gu;
@@ -21,7 +20,7 @@ export function transcriptSentences(segment: TranscriptSegment): TranscriptSente
 }
 
 // Capture chunks are not reading paragraphs. Group complete sentences while
-// retaining their original offsets for search and respecting explicit blanks.
+// retaining their original spacing and respecting explicit blanks.
 export function transcriptReadingParagraphs(segment: TranscriptSegment): TranscriptSentence[][] {
   const paragraphs: TranscriptSentence[][] = [];
   let current: TranscriptSentence[] = [];
@@ -39,19 +38,4 @@ export function transcriptReadingParagraphs(segment: TranscriptSegment): Transcr
   }
   if (current.length) paragraphs.push(current);
   return paragraphs;
-}
-
-export function sentenceHighlights(text: string, from: number, to: number, search: RegExp | null) {
-  const parts: { text: string; highlighted: boolean }[] = [];
-  let cursor = from;
-  if (search) for (const match of text.matchAll(new RegExp(search.source, "giu"))) {
-    const start = Math.max(from, match.index);
-    const end = Math.min(to, match.index + match[0].length);
-    if (start >= end) continue;
-    if (start > cursor) parts.push({ text: text.slice(cursor, start), highlighted: false });
-    parts.push({ text: text.slice(start, end), highlighted: true });
-    cursor = end;
-  }
-  if (cursor < to) parts.push({ text: text.slice(cursor, to), highlighted: false });
-  return parts;
 }

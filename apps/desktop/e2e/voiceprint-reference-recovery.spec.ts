@@ -4,7 +4,7 @@ import { expect, test } from "./fixtures";
 for (const language of ["zh-CN", "en-US"] as const) {
   test(`explains paused learning and offers playback-check recovery in ${language}`, async ({ launchApp }) => {
     const { app, page } = await launchApp({ voiceprintSetup: "ready" });
-    await page.goto("/?window=main");
+    await page.goto("/");
     await page.setViewportSize({ width: 1000, height: 900 });
     const snapshot = await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"));
     snapshot.settings.desktop.language = language;
@@ -19,7 +19,7 @@ for (const language of ["zh-CN", "en-US"] as const) {
     snapshot.status.voiceprintReferenceError = "System audio capture was stopped by the user.";
     snapshot.status.voiceprintContextMismatch = false;
     await app.setFixture(snapshot);
-    await page.getByRole("navigation").getByRole("button", { name: /Transcribe|转写/, exact: true }).click();
+    await page.getByRole("tablist").getByRole("tab", { name: /Transcribe|转写/, exact: true }).click();
     await expect(page.getByTestId("voiceprint-advanced-toggle")).toContainText(language === "zh-CN" ? "持续适应已暂停" : "Adaptation paused");
     await page.getByTestId("voiceprint-advanced-toggle").click();
     const field = page.getByTestId("voiceprint-adaptation-field");

@@ -12,7 +12,7 @@ const recording = (id: string, chunks: [number, number, string][]): RecordingHis
 });
 
 for (const language of ["zh-CN", "en-US"] as const) for (const theme of ["light", "dark"] as const) {
-  test(`annotates transcripts with recording context and filters related audio in ${language} ${theme}`, async ({ launchApp }, testInfo) => {
+  test(`annotates transcripts with static recording context in ${language} ${theme}`, async ({ launchApp }, testInfo) => {
     const { app, page } = await launchApp();
     await page.emulateMedia({ colorScheme: theme });
     const snapshot = await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"));
@@ -61,12 +61,11 @@ for (const language of ["zh-CN", "en-US"] as const) for (const theme of ["light"
     expect(await compact.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
     await page.screenshot({ path: testInfo.outputPath(`context-${language}-${theme}-compact.png`), animations: "disabled" });
 
-    await page.goto("/?window=main");
+    await page.goto("/");
     await page.setViewportSize({ width: 1000, height: 760 });
     const home = page.getByRole("region", { name: /Home|首页/, exact: true });
-    const filter = page.getByRole("combobox", { name: /Filter by app|按应用筛选/ });
-    await expect(filter.locator("option")).toHaveCount(3);
-    await expect(filter.locator('option[value="unused"], option[value^="pid:"], option[value="audio-only-app"]')).toHaveCount(0);
+    await expect(page.getByRole("combobox")).toHaveCount(0);
+    await expect(page.getByRole("searchbox")).toHaveCount(0);
     await expect(home).not.toContainText("pid:");
     await page.addStyleTag({ content: `html { background: ${theme === "dark" ? "#1c1c1e" : "#f5f5f7"}; }` });
     await expect(home.getByRole("article")).toHaveCount(4);
@@ -80,41 +79,18 @@ for (const language of ["zh-CN", "en-US"] as const) for (const theme of ["light"
     await app.setFixture({ ...snapshot, history: [] });
     await expect(home.getByRole("article")).toHaveCount(0);
     await expect(activeApps).toBeVisible();
-    await expect(filter).toHaveCount(0);
     await expect(activeApps.getByRole("button")).toHaveCount(0);
     await app.setFixture(snapshot);
     await expect(home.getByRole("article")).toHaveCount(4);
-    await page.getByRole("searchbox").fill("zoom");
-    await expect(home.locator(".transcript-text")).toHaveText("Budget discussion and action items.");
-    await page.getByRole("searchbox").fill("");
-    await homeMeeting.getByRole("button", { name: /Filter recordings from Zoom|筛选 Zoom/ }).click();
-    await expect(filter).toHaveValue("us.zoom.xos");
-    await expect(home.locator(".transcript-text")).toHaveText("Budget discussion and action items.");
-    await page.getByRole("searchbox").fill("action items");
-    await expect(home.locator("mark")).toHaveText("action items");
-    await page.getByRole("searchbox").fill("");
-    await page.getByRole("navigation").getByRole("button", { name: /History|历史/, exact: true }).click();
-    await expect(filter).toHaveValue("us.zoom.xos");
-    const files = page.locator(".recording-context-file");
-    await expect(files).toHaveCount(2);
-    expect(await files.evaluateAll(rows => rows.map(row => row.getAttribute("data-audio-path")).sort()))
-      .toEqual(["/recordings/audio-only.wav", "/recordings/meeting.wav"]);
-    await page.screenshot({ path: testInfo.outputPath(`context-${language}-${theme}-history.png`), animations: "disabled" });
-    await expect(filter.locator('option[value="unused"], option[value^="pid:"]')).toHaveCount(0);
-    await filter.selectOption("audio-only-app");
-    await expect(files).toHaveCount(1);
-    await expect(files).toHaveAttribute("data-audio-path", "/recordings/audio-only.wav");
-    await page.getByRole("navigation").getByRole("button", { name: /Home|首页/, exact: true }).click();
-    await expect(filter).toHaveValue("");
-    await expect(filter.locator('option[value="audio-only-app"]')).toHaveCount(0);
+    await expect(homeMeeting.getByRole("button")).toHaveCount(0);
+    await expect(activeApps.getByRole("button")).toHaveCount(0);
+    await page.getByRole("tablist").getByRole("tab", { name: /General|通用/, exact: true }).click();
+    await page.getByRole("tablist").getByRole("tab", { name: /Home|首页/, exact: true }).click();
     await expect(home.getByRole("article")).toHaveCount(4);
     await expect(activeApps).toBeVisible();
-    await filter.selectOption("us.zoom.xos");
     await app.setFixture({ ...snapshot, history: snapshot.history.filter(item => item.id === "other") });
-    await expect(filter).toHaveValue("");
-    await expect(home.locator(".transcript-text")).toHaveText("Earlier conversation.");
+    await expect(home.locator(".transcript-text")).toHaveText(["Earlier conversation."]);
     await app.setFixture(snapshot);
-    await expect(filter).toHaveValue("");
     await expect(home.getByRole("article")).toHaveCount(4);
     snapshot.microphoneActivity.items = snapshot.microphoneActivity.items.map(item => item.endedAt === null ?
       { ...item, endedAt: new Date().toISOString() } : item);
@@ -139,9 +115,9 @@ test("merges continuous speech across an app start inside the first utterance in
     startedAt: at(7.445), endedAt: at(22.445)
   }] };
   await app.setFixture(snapshot);
-  for (const window of ["compact", "main"]) {
-    if (window === "main") {
-      await page.goto("/?window=main");
+  for (const window of ["compact"]) {
+    if (window === "compact") {
+      await page.goto("/");
       await page.setViewportSize({ width: 1000, height: 760 });
     }
     const timeline = window === "compact" ? page.getByRole("region", { name: /Transcription timeline|转写时间线/ }) :

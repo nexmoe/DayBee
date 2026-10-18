@@ -10,9 +10,8 @@ export type TimelineEntry = {
 
 // Applications annotate saved speech rather than adding events. Voiceprint
 // confidence changes inside one capture do not establish a new speaker turn.
-export function buildActivityTimeline(items: RecordingHistoryItem[], usages: MicrophoneUsage[], query = "", appId = "", now = Date.now()): TimelineEntry[] {
+export function buildActivityTimeline(items: RecordingHistoryItem[], usages: MicrophoneUsage[], now = Date.now()): TimelineEntry[] {
   const index = createRecordingContextIndex(usages, now);
-  const term = query.trim().toLocaleLowerCase();
   return buildTranscriptParagraphs(items, {
     splitNodes: true,
     key: (range, ranges) => {
@@ -21,7 +20,5 @@ export function buildActivityTimeline(items: RecordingHistoryItem[], usages: Mic
     }
   }).map(paragraph => ({
     id: paragraph.id, paragraph, contexts: paragraph.audioSource === "system" ? [] : index.contexts(paragraph.sourceRanges)
-  })).filter(entry => (!appId || entry.contexts.some(app => app.appId === appId)) &&
-    (!term || entry.paragraph.text.toLocaleLowerCase().includes(term) ||
-      entry.contexts.some(app => app.appName.toLocaleLowerCase().includes(term))));
+  }));
 }

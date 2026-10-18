@@ -51,7 +51,6 @@ func TestRecognizedSpeechIsVisibleBeforeRecordingStops(t *testing.T) {
 func TestLiveTranscriptSurvivesFLACFinalization(t *testing.T) {
 	root := t.TempDir()
 	settings := protocol.DefaultSettings(root)
-	settings.Recording.AudioFormat = protocol.FLAC
 	settings.Recording.AutoSwitchDevice = false
 	e := New(settings, &fakeCapture{}, nativeTestAssets{&fakeAssets{}, "asr", "vad"}, &fakeRuntime{}, nil, nil)
 	defer e.Close()

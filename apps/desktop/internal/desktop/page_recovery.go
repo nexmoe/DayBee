@@ -33,11 +33,7 @@ func (s *DesktopService) installPageRecovery(role string, window *mygo.Window) {
 			return
 		}
 		recovery := attachPageRecovery(role, page)
-		if role == "main" {
-			s.mainRecovery = recovery
-		} else {
-			s.compactRecovery = recovery
-		}
+		s.compactRecovery = recovery
 		window.OnClosed(func() { s.releasePageRecovery(recovery) })
 	})
 }
@@ -49,9 +45,6 @@ func (s *DesktopService) releasePageRecovery(recovery *pageRecovery) {
 	recovery.release()
 	if s.compactRecovery == recovery {
 		s.compactRecovery = nil
-	}
-	if s.mainRecovery == recovery {
-		s.mainRecovery = nil
 	}
 }
 
@@ -121,8 +114,5 @@ func (s *DesktopService) reloadInterfaces() {
 func (s *DesktopService) reloadRecoveries() {
 	if s.compactRecovery != nil {
 		s.compactRecovery.manual()
-	}
-	if s.mainRecovery != nil {
-		s.mainRecovery.manual()
 	}
 }

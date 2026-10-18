@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 
 	"github.com/egoist/mygo"
 	"github.com/nexmoe/eve/apps/desktop/internal/asr"
@@ -28,6 +31,14 @@ func main() {
 	mygo.App.SetName(desktop.AppName)
 	if mygo.App.Version() == "" {
 		mygo.App.SetVersion("0.8.6")
+	}
+	if len(os.Args) > 1 && os.Args[1] == "--mcp" {
+		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+		defer stop()
+		if err := desktop.RunMCP(ctx); err != nil && !errors.Is(err, context.Canceled) {
+			log.Fatal(err)
+		}
+		return
 	}
 	if err := desktop.Run(desktop.New()); err != nil {
 		log.Fatal(err)

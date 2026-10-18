@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
+	"github.com/nexmoe/eve/apps/desktop/internal/speechanalyzer"
 )
 
 const QwenDirectory = "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25"
@@ -35,9 +36,20 @@ var catalog = []Model{
 		[]string{"encoder.int8.onnx", "decoder.int8.onnx", "tokens.txt"}},
 }
 
-func All() []Model { return append([]Model(nil), catalog...) }
+var systemModel = Model{ID: protocol.ASRSpeechAnalyzer, Name: "SpeechAnalyzer"}
+
+func All() []Model {
+	models := make([]Model, 0, len(catalog)+1)
+	if speechanalyzer.Available() {
+		models = append(models, systemModel)
+	}
+	return append(models, catalog...)
+}
 
 func Find(id protocol.ASRModel) (Model, bool) {
+	if id == protocol.ASRSpeechAnalyzer {
+		return systemModel, true
+	}
 	for _, model := range catalog {
 		if model.ID == id {
 			return model, true
@@ -54,6 +66,13 @@ func Name(id protocol.ASRModel) string {
 	return model.Name
 }
 
+func Backend(id protocol.ASRModel) string {
+	if id == protocol.ASRSpeechAnalyzer {
+		return "speech-analyzer"
+	}
+	return "sherpa-onnx"
+}
+
 func ForDirectory(directory string) (Model, bool) {
 	for _, model := range catalog {
 		if model.Directory == filepath.Base(filepath.Clean(directory)) {
@@ -64,6 +83,9 @@ func ForDirectory(directory string) (Model, bool) {
 }
 
 func (m Model) Ready(directory string) bool {
+	if m.ID == protocol.ASRSpeechAnalyzer || len(m.Files) == 0 {
+		return false // System readiness comes from AssetInventory, never a directory.
+	}
 	for _, name := range m.Files {
 		info, err := os.Stat(filepath.Join(directory, name))
 		if err != nil || !info.Mode().IsRegular() || info.Size() == 0 {

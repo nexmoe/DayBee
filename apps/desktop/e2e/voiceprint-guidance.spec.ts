@@ -5,7 +5,7 @@ for (const language of ["zh-CN", "en-US"] as const) {
   test(`makes the reading passage, completion and recovery clear in ${language}`, async ({ launchApp }) => {
     const { app, page } = await launchApp();
     await page.setViewportSize({ width: 1000, height: 800 });
-    await page.goto("/?window=main");
+    await page.goto("/");
     const snapshot = await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"));
     snapshot.settings.desktop.language = language;
     snapshot.settings.desktop.voiceprintSetup = "ready";

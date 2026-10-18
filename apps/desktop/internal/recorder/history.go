@@ -31,7 +31,7 @@ func AudioFiles(roots []string) ([]string, error) {
 				return err
 			}
 			ext := strings.ToLower(filepath.Ext(path))
-			if entry.Type().IsRegular() && (ext == ".wav" || ext == ".flac") && !seen[path] {
+			if entry.Type().IsRegular() && !strings.HasPrefix(entry.Name(), ".daybee-") && (ext == ".wav" || ext == ".flac") && !seen[path] {
 				seen[path] = true
 				files = append(files, path)
 			}
@@ -78,7 +78,7 @@ func History(roots []string) []protocol.RecordingHistoryItem {
 			if err != nil {
 				return nil
 			}
-			if !entry.Type().IsRegular() {
+			if !entry.Type().IsRegular() || strings.HasPrefix(entry.Name(), ".daybee-") {
 				return nil
 			}
 			switch strings.ToLower(filepath.Ext(path)) {

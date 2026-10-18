@@ -27,12 +27,12 @@ function speechFixture(snapshot: DesktopSnapshot) {
   return snapshot;
 }
 
-test("selects dates, keeps speaker totals live, and combines with search and app filters", async ({ launchApp }) => {
+test("selects dates and keeps speaker totals and transcripts live", async ({ launchApp }) => {
   const { app, page } = await launchApp();
   const snapshot = speechFixture(await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap")));
   await app.setFixture(snapshot);
   await page.clock.setFixedTime(new Date("2026-10-08T12:00:00+08:00"));
-  await page.goto("/?window=main");
+  await page.goto("/");
   await page.setViewportSize({ width: 1000, height: 900 });
   const chart = page.getByTestId("speech-activity");
   const home = page.getByRole("region", { name: "首页", exact: true });
@@ -57,22 +57,14 @@ test("selects dates, keeps speaker totals live, and combines with search and app
   await expect(home).not.toContainText("另一天的发言。");
   await expect(chart.locator(".speech-stacked-bar")).toHaveCount(7);
 
-  const search = page.getByRole("searchbox");
-  await search.fill("大家好");
-  await expect(home.getByRole("article")).toHaveCount(1);
-  await expect(home.locator("mark")).toHaveText("大家好");
-  await search.fill("");
   snapshot.history[0].transcriptChunks.push(speech("补充内容。", "2026-10-08T10:20:00+08:00", "me"));
   await app.setFixture(snapshot);
   await expect(chart.getByTestId("speech-count-me")).toHaveText("12");
   await expect(chart.getByTestId("speech-activity-total")).toHaveText("15 字");
   await expect(chart.locator('[data-speech-date="2026-10-08"]')).toBeChecked();
-  await page.getByRole("combobox", { name: "按应用筛选" }).selectOption("zoom");
-  await expect(chart.getByTestId("speech-count-me")).toHaveText("10");
-  await expect(chart.getByTestId("speech-count-other")).toHaveText("3");
-  await expect(home).not.toContainText("电脑播放的内容。");
-  await expect(home).not.toContainText("再见。");
-  await page.getByRole("combobox", { name: "按应用筛选" }).selectOption("");
+  await expect(home).toContainText("补充内容。");
+  await expect(home).toContainText("电脑播放的内容。");
+  await expect(home).toContainText("再见。");
 
   await chart.locator('[data-speech-date="2026-10-08"]').focus();
   await page.keyboard.press("ArrowLeft");
@@ -127,7 +119,7 @@ test("shows the same date chart and filters transcripts in the compact recorder"
   await app.close();
 });
 
-for (const role of ["main", "compact"] as const) for (const language of ["zh-CN", "en-US"] as const) for (const theme of ["light", "dark"] as const) {
+for (const role of ["compact"] as const) for (const language of ["zh-CN", "en-US"] as const) for (const theme of ["light", "dark"] as const) {
   test(`renders one two-color daily chart in ${role} ${language} ${theme}`, async ({ launchApp }, testInfo) => {
     const { app, page } = await launchApp();
     const snapshot = speechFixture(await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap")));
@@ -148,19 +140,16 @@ for (const role of ["main", "compact"] as const) for (const language of ["zh-CN"
     ]);
     await app.setFixture(snapshot);
     await page.clock.setFixedTime(new Date("2026-10-13T12:00:00+08:00"));
-    await page.goto(role === "main" ? "/?window=main" : "/");
+    await page.goto(role === "compact" ? "/" : "/");
     await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
     await page.addStyleTag({ content: `html { background: ${theme === "dark" ? "#1c1c1e" : "#f5f5f7"}; }` });
-    await page.locator(".tray-panel").evaluateAll(async panels => {
-      await Promise.all(panels.flatMap(panel => panel.getAnimations()).map(animation => animation.finished));
-    });
     const chart = page.getByTestId("speech-activity");
     await expect(chart.getByRole("button", { name: language === "zh-CN" ? "全部日期" : "All dates", exact: true })).toHaveCount(0);
     await expect(chart).not.toContainText(language === "zh-CN" ? "按麦克风转写统计，不含标点和空格" : "Microphone transcripts · excludes punctuation and spaces");
     await expect(chart.getByRole("radio")).toHaveCount(7);
     await expect(chart.locator(".speech-stacked-bar")).toHaveCount(7);
     await expect(chart.locator('[data-speech-date="2026-10-14"]')).toHaveCount(0);
-    const sizes = role === "main" ? [[1000, 900], [720, 900], [380, 900]] : [[420, 620], [380, 480]];
+    const sizes = role === "compact" ? [[1000, 900], [720, 900], [380, 900]] : [[420, 620], [380, 480]];
     for (const [width, height] of sizes) {
       await page.setViewportSize({ width, height });
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

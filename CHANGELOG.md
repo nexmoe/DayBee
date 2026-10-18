@@ -2,6 +2,27 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Add a built-in stdio MCP server for listing, searching and reading saved transcripts with timestamps and speaker labels, plus client configuration in General settings.
+
+### Changed
+
+- Remove Home search and app filtering, including interactive app annotations and search highlighting.
+
+- Retire the History page and its file-list component, styles, translations and filtering branch. Remove repeated page headings below the tabs.
+
+- Place page tabs below the waveform and keep recording controls and the waveform visible while switching pages.
+
+- Hide the Home voiceprint setup card once a voiceprint is saved; start re-enrollment from Transcribe settings and show setup again after clearing the profile.
+
+- Remove the startup-recording switch and audio-format setting. Always record on launch after voiceprint setup and archive new segments as FLAC, ignoring retired preferences.
+- Exclude FLAC conversion staging files from history and batch transcription scans to prevent temporary duplicate recordings.
+
+- Consolidate desktop pages into the compact window with four tabs: Home, General, Input and Transcribe. Keep recording, transcripts, voiceprint setup and settings in the same window.
+
 ## 1.0.0 - 2026-10-18
 
 ### Features

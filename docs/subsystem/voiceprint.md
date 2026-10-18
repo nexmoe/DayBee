@@ -32,6 +32,8 @@
 
 前端只见 `VoiceprintSnapshot`：阶段、步数、秒数、电平和可选的适应计数。设置里的 `desktop.voiceprintSetup` 为 `pending`、`skipped`、`ready`。已录入但设置仍为 `pending`，或未录入却为 `ready`，由 `reconcileVoiceprintSetup` 改齐。`recording.voiceprintAdaptation` 默认关闭。
 
+首页「标记我的声音」卡片仅在未保存声纹时常显，跳过初始化后仍可录入。已保存声纹且阶段为 `idle` 或 `ready` 时隐藏；从转写设置发起重录后显示进度与错误，成功或取消后再次隐藏。清除声纹后首页重新显示录入卡片。
+
 ## 运行路径
 
 ### 录入
@@ -50,7 +52,7 @@
 
 验证段对档案 `Score`。`DecideProfile` 不是 `me` 则不保存。`commit` 写档案并把设置标为 `ready`。中途取消或保存失败时 `rollbackEnrollment` 恢复旧档案和旧设置。恢复失败置 `rollbackFailed`，不再自动恢复录音。
 
-跳过把设置写成 `skipped`。若当时已录入则写成 `ready`。清除调用 `Clear`，设置改为 `skipped`。
+跳过把设置写成 `skipped`。若当时已录入则写成 `ready`。首次引导成功完成或跳过后，非测试模式自动开始录音；重录继续按进入引导前的录音状态恢复。清除调用 `Clear`，设置改为 `skipped`。
 
 ### 分数
 

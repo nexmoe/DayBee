@@ -9,7 +9,7 @@ const recording = (id: string, from: number, to: number, text: string): Recordin
   transcriptChunks: [{ startedAt: at(from), endedAt: at(to), text }]
 });
 
-for (const role of ["compact", "main"] as const) {
+for (const role of ["compact"] as const) {
   test(`splits app and source changes into connected ${role} timeline nodes`, async ({ launchApp }, testInfo) => {
     const { app, page } = await launchApp();
     const snapshot = await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"));
@@ -20,11 +20,11 @@ for (const role of ["compact", "main"] as const) {
       { id: "dictation", appId: "wetype", appName: "微信输入法", appIcon: "", startedAt: at(175), endedAt: at(200) }
     ] };
     await app.setFixture(snapshot);
-    if (role === "main") {
-      await page.goto("/?window=main");
+    if (role === "compact") {
+      await page.goto("/");
       await page.setViewportSize({ width: 1000, height: 760 });
     }
-    const timeline = page.getByRole("region", { name: role === "main" ? /Home|首页/ : /Transcription timeline|转写时间线/, exact: true });
+    const timeline = page.getByRole("region", { name: role === "compact" ? /Home|首页/ : /Transcription timeline|转写时间线/, exact: true });
     await expect(timeline.getByRole("article")).toHaveCount(2);
     await expect(timeline.locator(".transcript-turn")).toHaveCount(2);
     await expect(timeline.locator(".recording-context")).toHaveText(["微信输入法", "Zoom", "Zoom"]);
@@ -52,14 +52,6 @@ for (const role of ["compact", "main"] as const) {
     await app.setFixture(snapshot);
     await expect(timeline.getByRole("article")).toHaveCount(5);
     await expect(timeline.getByRole("article").first()).toContainText("第二次会议。");
-    if (role === "main") {
-      const filter = page.getByRole("combobox", { name: /Filter by app|按应用筛选/ });
-      await filter.selectOption("wetype");
-      await expect(timeline.getByRole("article")).toHaveCount(1);
-      await expect(timeline.locator(".transcript-text")).toHaveText("记录讨论方案。");
-      await filter.selectOption("zoom");
-      await expect(timeline.getByRole("article")).toHaveCount(4);
-    }
     await app.close();
   });
 }

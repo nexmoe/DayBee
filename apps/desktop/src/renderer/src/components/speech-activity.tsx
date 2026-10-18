@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
-import type { AppLanguage, MicrophoneUsage, RecordingHistoryItem } from "@daybee/shared";
+import type { AppLanguage, RecordingHistoryItem } from "@daybee/shared";
 import { FluidHoverHighlight } from "@/components/fluid-hover-highlight";
 import { StackedSpeechBar } from "@/components/speech-activity-chart";
 import { Button } from "@/components/ui/button";
@@ -17,9 +17,9 @@ import {
 import "@/speech-activity.css";
 import "@fontsource-variable/inter/opsz.css";
 
-export function SpeechActivity({ items, microphoneActivity, language, value, onChange, appId = "" }: {
-  items: RecordingHistoryItem[]; microphoneActivity: MicrophoneUsage[]; language: AppLanguage;
-  value: string | null; onChange: (date: string | null) => void; appId?: string;
+export function SpeechActivity({ items, language, value, onChange }: {
+  items: RecordingHistoryItem[]; language: AppLanguage;
+  value: string | null; onChange: (date: string | null) => void;
 }) {
   const t = createT(language);
   const locale = resolveIntlLocale(language);
@@ -27,7 +27,7 @@ export function SpeechActivity({ items, microphoneActivity, language, value, onC
   const [anchor, setAnchor] = useState<string | null>(value);
   const endingOn = anchor ?? today;
   const dates = useMemo(() => recentDateKeys(endingOn), [endingOn]);
-  const activity = useMemo(() => buildSpeechActivity(items, microphoneActivity, appId), [items, microphoneActivity, appId]);
+  const activity = useMemo(() => buildSpeechActivity(items), [items]);
   const countFormat = useMemo(() => new Intl.NumberFormat(locale), [locale]);
   const calendarStart = value ?? dates[0];
   const calendarEnd = value ?? endingOn;

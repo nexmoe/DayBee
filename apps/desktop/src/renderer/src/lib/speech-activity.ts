@@ -1,5 +1,4 @@
-import type { MicrophoneUsage, RecordingHistoryItem, TranscriptChunk } from "@daybee/shared";
-import { createRecordingContextIndex } from "./recording-context";
+import type { RecordingHistoryItem, TranscriptChunk } from "@daybee/shared";
 
 export type SpeechCount = { me: number; other: number };
 
@@ -44,9 +43,8 @@ function chunkTime(chunk: TranscriptChunk, item: RecordingHistoryItem): Date {
   return Number.isFinite(date.getTime()) ? date : new Date(item.startedAt);
 }
 
-export function buildSpeechActivity(items: RecordingHistoryItem[], usages: MicrophoneUsage[] = [], appId = ""): Map<string, SpeechCount> {
+export function buildSpeechActivity(items: RecordingHistoryItem[]): Map<string, SpeechCount> {
   const days = new Map<string, SpeechCount>();
-  const contexts = appId ? createRecordingContextIndex(usages) : null;
   for (const item of items) {
     // Playback can contain the user's voice too, but is not a new spoken utterance.
     if (item.audioSource === "system") continue;
@@ -55,8 +53,6 @@ export function buildSpeechActivity(items: RecordingHistoryItem[], usages: Micro
       const date = chunkTime(chunk, item);
       const key = localDateKey(date);
       if (!count || !key) continue;
-      const ranges = !item.transcriptChunks?.length && item.capturedRanges?.length ? item.capturedRanges : [chunk];
-      if (contexts && !contexts.contexts(ranges).some(app => app.appId === appId)) continue;
       const day = days.get(key) ?? emptySpeechCount();
       // Full and partial voiceprint matches both belong to the user's category.
       const speaker = chunk.voiceIdentity === "me" || chunk.voiceMatch === "partial" ? "me" : "other";

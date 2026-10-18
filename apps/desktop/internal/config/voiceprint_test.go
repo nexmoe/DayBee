@@ -25,7 +25,7 @@ func TestVoiceprintMigrationAndPersistence(t *testing.T) {
 	if settings.Desktop.VoiceprintSetup != protocol.VoiceprintPending {
 		t.Fatal("legacy settings must offer optional setup")
 	}
-	if settings.Desktop.Language != protocol.LanguageChinese || settings.Desktop.StartRecordingOnLaunch || settings.Recording.Device != "native:usb" {
+	if settings.Desktop.Language != protocol.LanguageChinese || settings.Recording.Device != "native:usb" {
 		t.Fatal("migration changed existing preferences")
 	}
 	for _, state := range []protocol.VoiceprintSetupState{protocol.VoiceprintSkipped, protocol.VoiceprintConfigured} {

@@ -56,7 +56,7 @@ func batchMetadata(path, jsonPath, text, language string, model protocol.ASRMode
 		}
 	}
 	metadata := map[string]any{
-		"audio_file": filepath.Base(path), "audio_path": path, "backend": "sherpa-onnx",
+		"audio_file": filepath.Base(path), "audio_path": path, "backend": asrmodel.Backend(model),
 		"created_at": time.Now().Format(time.RFC3339), "model": asrmodel.Name(model), "status": "ok",
 		"text": text, "language": language, "audio_source": protocol.SourceMicrophone, "segment_start_time": historyCandidate(path).StartedAt,
 	}

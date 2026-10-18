@@ -2,21 +2,22 @@
 
 English | [中文](README.zh.md)
 
-DayBee is a tray-first desktop recorder built with Go and mygo. It records microphone audio for long sessions, segments files automatically, and uses selectable `sherpa-onnx` ASR models plus Silero VAD for live transcription and offline reprocessing.
+DayBee is a tray-first desktop recorder built with Go and mygo. It records microphone audio for long sessions, segments files automatically, and uses Apple SpeechAnalyzer or selectable `sherpa-onnx` ASR models plus Silero VAD for live transcription and offline reprocessing.
 
 ## Features
 
 - Long-running microphone recording with automatic segmentation
-- Live transcription with lightweight Whisper Tiny/Base/Small, SenseVoice Small, Qwen3 ASR 0.6B or FireRedASR2 AED/CTC (can be disabled)
+- Live transcription with Apple SpeechAnalyzer, lightweight Whisper Tiny/Base/Small, SenseVoice Small, Qwen3 ASR 0.6B or FireRedASR2 AED/CTC (can be disabled)
 - VAD-only recording — only speech segments are saved to disk
 - Real-time waveform visualization
 - Manual microphone selection with automatic switch to the more active input
 - Native echo cancellation on macOS to reduce speaker playback in recordings and transcripts
 - Optional macOS system audio capture, saved and displayed separately from microphone speech
-- WAV and FLAC output
+- Automatic recording on launch and lossless FLAC archives
 - Batch transcription of existing WAV/FLAC recordings
-- Recording history viewer grouped by day
-- Annotate transcripts with app names and icons from the same recording period; filter transcripts and recordings by app
+- Timeline of complete saved transcripts
+- Built-in MCP server for listing, searching and reading saved transcripts from AI assistants; copy the client configuration from General settings. See [MCP setup and tools](docs/subsystem/mcp.md).
+- Annotate transcripts with app names and icons from the same recording period
 - System tray app with launch-at-login, start-on-launch, and auto-update
 - Bilingual UI (English / 中文)
 - Light / Dark / System theme
@@ -35,7 +36,7 @@ The packaged app checks for signed updates on startup and every six hours, then 
 
 ## Runtime Notes
 
-- New installations start with lightweight Whisper Tiny (INT8). Whisper Base/Small, SenseVoice Small (2025), Qwen3 ASR 0.6B and FireRedASR2 AED/CTC are also available in Transcribe settings. Existing model choices are preserved. The page shows download size, progress and installed status; models can be switched while recording, and queued speech finishes with its original model.
+- Compatible Macs running macOS 26 or later default to Apple SpeechAnalyzer for on-device transcription. Older Macs and other platforms default to Whisper Tiny (INT8). Existing model choices are preserved; all models remain selectable in Transcribe settings. SpeechAnalyzer resources are managed by macOS, and its System language option follows your Mac's preferred languages; select a language for other audio. Models can be switched while recording, and queued speech retains its original model and language. See [speech recognition](docs/subsystem/asr.md).
 - Silero VAD downloads when recording starts. The selected ASR model downloads when chosen or when live/batch transcription first needs it. Existing model caches are reused; failed downloads preserve the previous selection.
 - Native audio capture, sherpa-onnx 1.13.8 and ONNX Runtime 1.28.2 are bundled. Installed apps need no Node.js, Bun or Go runtime.
 - WAV/FLAC encoding, decoding, downmixing and resampling run directly in Go. Existing FLAC recordings remain readable; no FFmpeg executable or system installation is required.

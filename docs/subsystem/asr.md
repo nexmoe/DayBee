@@ -4,13 +4,14 @@
 
 ## 职责与边界
 
-- `asr.Sherpa` 在 `apps/desktop/internal/asr/runtime.go` 创建离线识别器和 Silero VAD。版本由 `CheckVersion` 钉住：sherpa `Version`（1.13.8），ONNX Runtime `OnnxRuntimeVersion`（1.28.2）。不一致则拒绝创建。
+- `asr.Sherpa` 在 `apps/desktop/internal/asr/runtime.go` 按模型 key 创建 SpeechAnalyzer 或 sherpa 离线识别器，并提供 Silero VAD。sherpa 版本由 `CheckVersion` 钉住：`Version`（1.13.8），ONNX Runtime `OnnxRuntimeVersion`（1.28.2）。不一致则拒绝创建 sherpa 识别器和 VAD。
+- SpeechAnalyzer 的 Go/Swift 桥接在 `apps/desktop/internal/speechanalyzer/`。macOS 系统能力由 `SpeechTranscriber.isAvailable` 决定；系统资源由 Apple `AssetInventory` 管理，不通过 sherpa 下载。
 - `asr.Worker` 在 `apps/desktop/internal/asr/worker.go` 只持有一个识别器。实时队列和批量队列分开。VAD 和写文件不等待推理。
 - 模型清单在 `apps/desktop/internal/asrmodel/catalog.go` 的 `catalog`。`offlineConfig` 按目录名选架构。未知目录不加载。
 - 下载、解压和缓存由 `assets.Manager` 负责，见 `apps/desktop/internal/assets/manager.go`。识别器不下载文件。
 - 录音何时切段、何时入队，见 [recording.md](recording.md)。声纹只标注身份，不决定 PCM 边界，见 [voiceprint.md](voiceprint.md)。
 
-当前七种模型；大小是官方压缩下载包大小，不是运行内存：
+兼容 Mac 另有 `speech-analyzer`（SpeechAnalyzer），由 macOS 管理系统资源。它没有 sherpa 目录、固定下载大小或 INT8 标签。其余七种模型的大小是官方压缩下载包大小，不是运行内存：
 
 | ID | 目录 | 下载大小 | 必需文件 |
 | --- | --- | --- | --- |
@@ -22,22 +23,24 @@
 | `qwen3-0.6b` | `sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25` | `EstimatedBytes`（878702423） | `conv_frontend.onnx`、`encoder.int8.onnx`、`decoder.int8.onnx`、tokenizer 三件 |
 | `firered-asr2-aed` | `sherpa-onnx-fire-red-asr2-zh_en-int8-2026-02-26` | `EstimatedBytes`（838589068） | `encoder.int8.onnx`、`decoder.int8.onnx`、`tokens.txt` |
 
-`protocol.DefaultASRModel` 是 `ASRWhisperTiny`。首次启动、旧配置缺少模型字段，以及无效选择都回到 Tiny，优先降低初始化和基本转写的资源开销。已有合法模型选择在迁移、保存和重启时保留，即使选中的是 Qwen3 或 FireRed。模型列表把 Tiny 放在首位。`ValidASRModel` 只接受表中的 ID。
+`protocol.DefaultASRModel` 在支持 SpeechTranscriber 的 macOS 26+ 上为 `ASRSpeechAnalyzer`，其他平台、旧 macOS 或桥接不可用时为 `ASRWhisperTiny`。首次启动、缺少模型字段和无效选择使用这个平台默认。已有合法选择在迁移、保存和重启时保留，包括 Whisper、Qwen3 和 FireRed。兼容 Mac 的模型列表把 SpeechAnalyzer 放在首位，其他平台以 Tiny 开始。`ValidASRModel` 只在系统支持时接受 `speech-analyzer`。
 
 ## 权威来源
 
 - 可选模型 ID 只在 `apps/desktop/internal/protocol/asr_models.go` 的 `ASRModel` 常量。
-- 磁盘布局和就绪条件只在 `asrmodel.Model`。`Ready` 要求清单里每个文件是非空普通文件。
-- 当前选中 ID 存在 `assets.Manager.selected`。`ASRPath` 按这个 ID 找已就绪目录，否则指向当前 `models/` 根下的目标目录。
-- 快照 `ASRModelsSnapshot` 列出每个模型的压缩下载大小和就绪状态。`EstimatedBytes` 不表示运行内存或解压后的磁盘占用。`DownloadingModel` 只在 `EnsureASRModel` 持锁下载期间非空。下载失败不改选中 ID。
+- sherpa 磁盘布局和就绪条件在 `asrmodel.Model`，`Ready` 要求每个必需文件是非空普通文件。系统模型的就绪条件是所选语言的 `AssetInventory.status` 为 installed；快照最多缓存一分钟，准备成功立即刷新。
+- 当前选中 ID 和语言存在 `assets.Manager.selected`。`ASRPath` 为 sherpa 查缓存目录，为 SpeechAnalyzer 返回 `speech-analyzer:<语言>` key；key 不指向磁盘文件。
+- 快照 `ASRModelsSnapshot` 列出每个模型的下载大小和就绪状态；系统模型的 `EstimatedBytes` 为 0，表示大小由 macOS 管理，界面不把它显示为固定下载量。其他模型的值是压缩下载大小，不表示运行内存或解压后的磁盘占用。`DownloadingModel` 只在 `EnsureASRModel` 持锁准备期间非空。准备失败不改选中 ID。
 
-`PrepareASRModel` 只下载。激活走设置保存和 `Engine.Apply`。录音中可以下载，不切换当前模型。
+`PrepareASRModel` 只准备模型；SpeechAnalyzer 保留并安装当前设置语言的系统资源。激活走设置保存和 `Engine.Apply`。录音中可以准备，不切换当前模型。
 
 ## 运行路径
 
 ### 模型就绪
 
-`Engine.prepare` 调用 `assets.Manager.Ensure`。VAD 和 ASR 各有容量为 1 的门。VAD 下载不等待 ASR 下载。取消也会打断等门。未显式选择时，ASR 只准备 Tiny，不因大模型已缓存而自动切换。
+`Engine.prepare` 调用 `assets.Manager.Ensure`。VAD 和 ASR 各有容量为 1 的门。VAD 下载不等待 ASR 下载。取消也会打断等门。未显式选择时，只准备平台默认模型，不因其他模型已缓存而自动切换。
+
+SpeechAnalyzer 调用 `AssetInventory.reserve`、`assetInstallationRequest` 和 `downloadAndInstall`，已安装资源直接复用。准备最多 30 分钟，取消会取消 Swift task；失败不切换模型。Silero VAD 仍独立准备。
 
 VAD 文件是 `silero_vad.onnx`。ASR 包是 `releaseRoot` 下的 `<目录>.tar.bz2`。`releaseRoot` 为 `https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/`。
 
@@ -52,6 +55,10 @@ VAD 文件是 `silero_vad.onnx`。ASR 包是 `releaseRoot` 下的 `<目录>.tar.
 查找顺序是当前 `models/`，再是构造时传入的旧 `models/`。命中即复用，不搬文件。
 
 ### 识别器
+
+`apps/desktop/internal/asr/speechanalyzer.go` 适配相同的 Recognizer 接口。Swift 每次解码创建 `SpeechTranscriber` 和 `SpeechAnalyzer`，用 `AVAudioConverter` 按需转换 PCM 为兼容格式，再收集最终结果。完成或异常时结束 analyzer，单次解码最多 10 分钟；识别器关闭后拒绝新任务。推理不触发资源下载。
+
+SpeechAnalyzer 一次使用一种语言：`ASRLanguage=auto` 按系统首选语言找到支持的 locale，不做音频语言检测；显式语言用 `supportedLocale(equivalentTo:)` 规范化。不支持的语言返回可操作错误，不静默改用其他语言。模型 key 同时固定语言，录音中修改语言会准备新资源并轮换分段，排队语音保留原语言。批量开始时也固定模型和语言。
 
 `NewModelWorker` 起一个推理 goroutine。只有它调用工厂并持有识别器。
 
@@ -87,7 +94,7 @@ VAD 文件是 `silero_vad.onnx`。ASR 包是 `releaseRoot` 下的 `<目录>.tar.
 
 ## 约束与失败行为
 
-- 版本、ONNX Runtime 或模型目录不匹配时不创建识别器。该任务以错误完成。
+- sherpa 版本、ONNX Runtime 或模型目录不匹配时不创建 sherpa 识别器。SpeechAnalyzer 不受 sherpa 模型版本约束，但录音的 VAD 仍使用锁定的 sherpa。
 - worker 内部 panic 变成 `ASR failed` 错误。`Complete` 自身 panic 只记日志。
 - 下载失败保留已有缓存和当前选中模型。不完整包不替换目录。
 - 一次下载的 HTTP 客户端超时是 1 小时。无进度则由 `idleTimeout`（15 秒）切断，再试下一个源。
@@ -108,7 +115,11 @@ go test ./internal/desktop/ -count=1 -timeout 60s -run 'TestPrepareASRModel'
 
 原生模型测试需要本机缓存，不作为默认门禁：`TestNativeVersions`、`TestNativeInference`、`TestNativeSelectableModels`。
 
-轻量初始化回归：`go test ./internal/config/ ./internal/assets/ -count=1 -run 'TestModelSelection|TestLegacyExplicitModelSelection|TestDefaultModelPreparation'`。覆盖新默认、缺字段和非法值、旧用户选择，以及只下载 Tiny 并清理不用的 FP32 权重。真实录音流水线可把 `DAYBEE_TEST_MODEL_DIR` 指向缓存的 Whisper Tiny，运行 `TestNativeRecordingPipeline`，验证真实 VAD、实时与批量转写、WAV/FLAC 归档与模型元数据；采集输入为固定公开语音，不打开麦克风。
+平台默认与准备回归：`go test ./internal/protocol/ ./internal/config/ ./internal/assets/ ./internal/speechanalyzer/ -count=1 -run 'TestASRDefault|TestModelSelection|TestLegacyExplicitModelSelection|TestWhisperPreparation|TestSystemModel|TestModelKeys|TestDecodeEmpty'`。覆盖默认选择、缺字段和非法值、旧选择、系统语言 key 与取消，以及 Whisper 清理不用的 FP32 权重。用 `bun run test:go` 包装器可自动构建和定位 macOS 桥接。
+
+系统模型实测：`DAYBEE_TEST_SPEECH_ANALYZER=1 bun run test:go -run TestNativeSystemPreparationAndSilence -v`，允许安装系统资源并验证静音。`DAYBEE_TEST_SPEECH_WAV=/absolute/english.wav bun run test:go -run TestNativeSpeechAnalyzerTranscription -v` 用固定英文音频验证真实转写、采样率转换和重建；可设 `DAYBEE_TEST_SPEECH_EXPECT` 检查预期文本。普通测试不下载资源、不访问麦克风。
+
+真实录音流水线可把 `DAYBEE_TEST_MODEL_DIR` 指向缓存的 Whisper Tiny，运行 `TestNativeRecordingPipeline`，验证真实 VAD、实时与批量转写、WAV/FLAC 归档与模型元数据；采集输入为固定公开语音，不打开麦克风。
 
 资源生命周期回归：`go test ./internal/asr/ -count=1 -run 'TestIdle'`，使用虚拟时间覆盖静音卸载、短暂停顿复用、重新加载和排队任务保护。
 

@@ -3,7 +3,7 @@ import { join } from "node:path";
 import type { DesktopSnapshot } from "@daybee/shared";
 import { expect, test } from "./fixtures";
 
-for (const role of ["compact", "main"] as const) {
+for (const role of ["compact"] as const) {
   test(`separates distant recordings and silence inside one file in the ${role} timeline`, async ({ launchApp }, testInfo) => {
     const { app, page } = await launchApp();
     const snapshot = await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"));
@@ -18,11 +18,11 @@ for (const role of ["compact", "main"] as const) {
       audio_path: join(directory, `${record.name}.flac`), segment_start_time: record.at, status: "ok", text: record.text
     }));
     await app.refreshHistory();
-    if (role === "main") {
-      await page.goto("/?window=main");
+    if (role === "compact") {
+      await page.goto("/");
       await page.setViewportSize({ width: 1000, height: 760 });
     }
-    const timeline = page.getByRole("region", { name: role === "main" ? /Home|首页/ : /Transcription timeline|转写时间线/, exact: true });
+    const timeline = page.getByRole("region", { name: role === "compact" ? /Home|首页/ : /Transcription timeline|转写时间线/, exact: true });
     const text = timeline.locator(".transcript-text");
     const sentences = ["测试测试。", "行行行。", "是是是。", "真的好。", "然后。", "谁？", "你是谁？"];
     await expect(text).toHaveText(sentences);
@@ -33,13 +33,6 @@ for (const role of ["compact", "main"] as const) {
     const screenshot = testInfo.outputPath(`timeline-separated-${role}.png`);
     await page.screenshot({ path: screenshot, animations: "disabled" });
     await testInfo.attach(`timeline-separated-${role}`, { path: screenshot, contentType: "image/png" });
-    if (role === "main") {
-      const search = page.getByRole("searchbox", { name: /Search transcripts|搜索转写/ });
-      await search.fill("真的好。测试测试");
-      await expect(text).toHaveCount(0);
-      await search.press("Escape");
-      await expect(text).toHaveCount(7);
-    }
     // One long archive can contain two short utterances separated by silence.
     writeFileSync(join(directory, "long.json"), JSON.stringify({
       audio_path: join(directory, "long.flac"), segment_start_time: "2026-10-09T13:00:00+08:00",

@@ -29,12 +29,9 @@ for (const language of ["zh-CN", "en-US"] as const) for (const theme of ["light"
     await expect(timeline.getByRole("article")).toHaveCount(2);
     await expect(timeline).toContainText("今天讨论录音质量和转写结果。");
     await expect(page.locator("html")).toHaveClass(theme === "dark" ? /dark/ : /^$/);
-    await expect(page.getByRole("button", { name: /Open main window|打开主窗口/ })).toBeVisible();
+    await expect(page.getByRole("tablist")).toBeVisible();
     await expect(page.getByRole("region", { name: /Recent recordings|最近录音/ })).toHaveCount(0);
     await page.addStyleTag({ content: `html { background: ${theme === "dark" ? "#1c1c1e" : "#f5f5f7"}; }` });
-    await page.locator(".tray-panel").evaluate(async panel => {
-      await Promise.all(panel.getAnimations().map(animation => animation.finished));
-    });
     for (const [size, width, height] of [["regular", 420, 620], ["minimum", 380, 480]] as const) {
       await page.setViewportSize({ width, height });
       const times = await timeline.locator("time").evaluateAll(elements => elements.map(element => element.getAttribute("datetime")));

@@ -32,7 +32,6 @@ describe("timeline nodes", () => {
     const entries = buildActivityTimeline(items, usages);
     expect(entries.map(entry => entry.paragraph.text)).toEqual(["Meeting again.", "Dictation.", "Meeting."]);
     expect(entries.map(entry => entry.contexts.map(context => context.appId))).toEqual([["zoom"], ["dictation", "zoom"], ["zoom"]]);
-    expect(buildActivityTimeline(items, usages, "", "dictation").map(entry => entry.paragraph.text)).toEqual(["Dictation."]);
   });
 
   it("keeps source changes as separate nodes even when the same speaker and app resume", () => {
@@ -44,13 +43,6 @@ describe("timeline nodes", () => {
     expect(entries.map(entry => entry.paragraph.audioSource)).toEqual(["microphone", "system", "microphone"]);
     expect(entries[1].paragraph.segments[0].voiceIdentity).toBeUndefined();
     expect(entries[1].contexts).toEqual([]);
-    // Filtering hides playback without merging the microphone turns around it.
-    expect(buildActivityTimeline(items, usages, "", "zoom").map(entry => entry.paragraph.text)).toEqual(["After playback.", "Before playback."]);
-  });
-
-  it("searches individual nodes without pulling other speakers into the result", () => {
-    const items = [record("speech", [[1, "My proposal.", "me"], [5, "Another response."]])];
-    expect(buildActivityTimeline(items, [app("zoom", 0, 30)], "proposal").map(entry => entry.paragraph.text)).toEqual(["My proposal."]);
   });
 
   for (const usages of [[], [app("zoom", 0, 300)]]) {

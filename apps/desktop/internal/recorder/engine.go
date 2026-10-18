@@ -16,12 +16,12 @@ import (
 )
 
 type Assets interface {
-	SelectASRModel(protocol.ASRModel)
+	SelectASRModel(protocol.ASRModel, ...string)
 	Ensure(context.Context, bool, bool) error
-	EnsureASRModel(context.Context, protocol.ASRModel) error
+	EnsureASRModel(context.Context, protocol.ASRModel, ...string) error
 	VADPath() string
 	ASRPath() string
-	ASRModelPath(protocol.ASRModel) string
+	ASRModelPath(protocol.ASRModel, ...string) string
 	Ready() (bool, bool)
 	Transcode(context.Context, string, string) error
 	ReadAudio(context.Context, string) ([]float32, int, error)
@@ -97,7 +97,7 @@ func New(settings protocol.AppSettings, capture audio.Capture, assets Assets, ru
 		done: make(chan struct{}), changed: changed, historyChanged: make(chan struct{}, 1), waveform: waveform, spectrum: audio.NewSpectrum()}
 	e.status.ASREnabled = !settings.Recording.DisableASR
 	e.waveformEnabled.Store(true)
-	assets.SelectASRModel(settings.Recording.ASRModel)
+	assets.SelectASRModel(settings.Recording.ASRModel, settings.Recording.ASRLanguage)
 	e.status.AutoSwitchEnabled = settings.Recording.AutoSwitchDevice
 	e.status.VADReady, e.status.SenseVoiceReady = assets.Ready()
 	e.worker = asr.NewModelWorker(ctx, assets.ASRPath, runtime.NewRecognizer)
@@ -261,9 +261,15 @@ func (e *Engine) Apply(settings protocol.AppSettings) error {
 		return context.Canceled
 	}
 	old := e.Settings()
-	modelChanged := old.Recording.ASRModel != settings.Recording.ASRModel
+	modelChanged := old.Recording.ASRModel != settings.Recording.ASRModel ||
+		(settings.Recording.ASRModel == protocol.ASRSpeechAnalyzer && old.Recording.ASRLanguage != settings.Recording.ASRLanguage)
 	if modelChanged && !e.Status().Recording && e.Busy() {
 		return errors.New("Wait for transcription to finish before switching ASR models.")
+	}
+	if modelChanged && settings.Recording.ASRModel == protocol.ASRSpeechAnalyzer && !settings.Recording.DisableASR {
+		if err := e.assets.EnsureASRModel(e.ctx, settings.Recording.ASRModel, settings.Recording.ASRLanguage); err != nil {
+			return err
+		}
 	}
 	if e.Status().Recording && !settings.Recording.DisableASR && old.Recording.DisableASR {
 		if err := e.prepare(true, true); err != nil {
@@ -277,7 +283,7 @@ func (e *Engine) Apply(settings protocol.AppSettings) error {
 		defer func() {
 			if !completed {
 				_ = e.stop()
-				e.assets.SelectASRModel(old.Recording.ASRModel)
+				e.assets.SelectASRModel(old.Recording.ASRModel, old.Recording.ASRLanguage)
 				e.mu.Lock()
 				e.settings = old
 				e.status.Recording = false
@@ -286,7 +292,7 @@ func (e *Engine) Apply(settings protocol.AppSettings) error {
 			}
 		}()
 		deviceChanged := old.Recording.Device != settings.Recording.Device || old.Recording.EchoCancellation != settings.Recording.EchoCancellation || old.Recording.RecordSystemAudio != settings.Recording.RecordSystemAudio
-		rotate := modelChanged || old.Recording.AudioFormat != settings.Recording.AudioFormat || old.Recording.OutputDir != settings.Recording.OutputDir || old.Recording.DisableASR != settings.Recording.DisableASR || deviceChanged
+		rotate := modelChanged || old.Recording.OutputDir != settings.Recording.OutputDir || old.Recording.DisableASR != settings.Recording.DisableASR || deviceChanged
 		if e.vad != nil && deviceChanged {
 			if err := e.capture.Stop(); err != nil {
 				return err
@@ -314,7 +320,7 @@ func (e *Engine) Apply(settings protocol.AppSettings) error {
 		e.mu.Unlock()
 		if modelChanged {
 			e.worker.ReleaseWhenIdle()
-			e.assets.SelectASRModel(settings.Recording.ASRModel)
+			e.assets.SelectASRModel(settings.Recording.ASRModel, settings.Recording.ASRLanguage)
 		}
 		if old.Recording.Device != settings.Recording.Device || old.Recording.EchoCancellation != settings.Recording.EchoCancellation {
 			e.forceVoiceRuntime()

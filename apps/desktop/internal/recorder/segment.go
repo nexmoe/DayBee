@@ -171,16 +171,14 @@ func (e *Engine) finishSegment(stream *audioStream) error {
 
 func (e *Engine) archive(seg *segment) error {
 	path := seg.path
-	if seg.settings.AudioFormat == protocol.FLAC {
-		flac := strings.TrimSuffix(path, ".wav") + ".flac"
-		if err := e.assets.Transcode(e.ctx, path, flac); err != nil {
-			slog.Error("FLAC conversion failed; preserving WAV", "audio", path, "error", err)
-			seg.diagnostics = append(seg.diagnostics, err.Error())
-		} else {
-			path = flac
-			if err := os.Remove(seg.path); err != nil {
-				slog.Warn("Unable to remove converted WAV", "error", err)
-			}
+	flac := strings.TrimSuffix(path, ".wav") + ".flac"
+	if err := e.assets.Transcode(e.ctx, path, flac); err != nil {
+		slog.Error("FLAC conversion failed; preserving WAV", "audio", path, "error", err)
+		seg.diagnostics = append(seg.diagnostics, err.Error())
+	} else {
+		path = flac
+		if err := os.Remove(seg.path); err != nil {
+			slog.Warn("Unable to remove converted WAV", "error", err)
 		}
 	}
 	if err := writeRecordingMetadata(seg, path); err != nil {
@@ -214,7 +212,7 @@ func writeSegmentMetadata(seg *segment, path string) error {
 	seg.mu.Lock()
 	defer seg.mu.Unlock()
 	metadata := map[string]any{
-		"audio_file": filepath.Base(path), "audio_path": path, "backend": "sherpa-onnx",
+		"audio_file": filepath.Base(path), "audio_path": path, "backend": asrmodel.Backend(seg.settings.ASRModel),
 		"created_at": time.Now().Format(time.RFC3339), "audio_source": seg.source, "input_device": seg.device, "model": asrmodel.Name(seg.settings.ASRModel),
 		"segment_start_time": seg.start.Format(time.RFC3339), "status": "ok", "text": strings.Join(seg.texts, "\n"),
 		"recording_session_id": seg.sessionID, "transcript_chunks": seg.chunks,

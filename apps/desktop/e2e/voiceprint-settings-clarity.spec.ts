@@ -6,7 +6,7 @@ for (const language of ["zh-CN", "en-US"] as const) {
     test(`keeps voiceprint setup clear and secondary tools folded in ${language} at ${width}px`, async ({ launchApp }) => {
       const { app, page } = await launchApp({ voiceprintSetup: "ready" });
       await page.emulateMedia({ colorScheme: "light" });
-      await page.goto("/?window=main");
+      await page.goto("/");
       await page.setViewportSize({ width, height: 900 });
       await page.addStyleTag({ content: "html { background: #f5f5f7; }" });
       const snapshot = await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"));
@@ -29,8 +29,8 @@ for (const language of ["zh-CN", "en-US"] as const) {
         transcriptChunks: []
       }];
       await app.setFixture(snapshot);
-      if (width < 768) await page.getByRole("button", { name: /切换侧栏|Toggle sidebar/i }).click();
-      await page.getByRole("navigation").getByRole("button", { name: /Transcribe|转写/, exact: true }).click();
+
+      await page.getByRole("tablist").getByRole("tab", { name: /Transcribe|转写/, exact: true }).click();
       const manage = page.getByTestId("voiceprint-manage-field");
       await expect(manage).toContainText(language === "zh-CN" ? "已录入" : "voiceprint is ready");
       await expect(manage).toContainText(language === "zh-CN" ? "标记为「我」" : "marked as Me");

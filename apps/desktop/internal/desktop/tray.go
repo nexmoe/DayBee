@@ -74,6 +74,6 @@ func (s *DesktopService) trayMenu() *mygo.Menu {
 	default:
 		items = append(items, action("检查更新", s.checkUpdate))
 	}
-	items = append(items, mygo.Separator(), action("打开主窗口", func() { _ = s.OpenMainWindow() }), action("刷新界面", s.reloadInterfaces), mygo.Separator(), action("退出 "+AppName, mygo.App.Quit))
+	items = append(items, mygo.Separator(), action("打开 DayBee", s.OpenRecorderWindow), action("刷新界面", s.reloadInterfaces), mygo.Separator(), action("退出 "+AppName, mygo.App.Quit))
 	return mygo.NewMenu(items)
 }

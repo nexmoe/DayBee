@@ -37,7 +37,7 @@ test("exports a completed WAV through the native service", async ({ launchApp, s
   writeFileSync(metadataPath, metadata);
 
   const { app, page } = await launchApp();
-  await page.goto("/?window=main");
+  await page.goto("/");
   await page.setViewportSize({ width: 1000, height: 900 });
   await expect.poll(async () => {
     const latest = await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"));
@@ -47,7 +47,7 @@ test("exports a completed WAV through the native service", async ({ launchApp, s
   expect(snapshot.history.some(item => item.id === audioPath)).toBe(true);
   snapshot.settings.desktop.language = "en-US";
   await app.setFixture(snapshot);
-  await page.getByRole("navigation").getByRole("button", { name: "Transcribe", exact: true }).click();
+  await page.getByRole("tablist").getByRole("tab", { name: "Transcribe", exact: true }).click();
   await page.getByTestId("voiceprint-diagnostics-toggle").click();
   await page.getByLabel("Finished recording").selectOption(audioPath);
   await page.evaluate((directory) => {

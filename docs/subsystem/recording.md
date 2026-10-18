@@ -4,6 +4,8 @@
 
 ## 职责与边界
 
+- 转写模型和平台默认见 [语音识别](asr.md)。兼容 Mac 可用 SpeechAnalyzer；录音中修改其语言按模型切换处理，准备成功后轮换分段，旧任务保留原模型和语言，采集继续。
+
 - 拥有采集循环、分段、历史扫描、设备轮询、自动切换和睡眠恢复。入口是 `recorder.Engine`，见 `apps/desktop/internal/recorder/engine.go`。
 - 麦克风和系统声音各有一条 `audioStream`：独立的 VAD、偏移和归档。两条流只共享一个有界 ASR worker。见 `apps/desktop/internal/recorder/streams.go` 的 `audioStream`。
 - 系统声音开关来自 `RecordingSettings.RecordSystemAudio`。macOS 才允许打开。见 `apps/desktop/internal/protocol/settings.go` 的 `SupportsSystemAudio`。采集实现见 [audio.md](audio.md)。
@@ -37,21 +39,23 @@ VAD 弹出的语音由 `appendSpeech` 写入 WAV。第一条语音才创建文�
 
 分段时长是 `SegmentMinutes`。配置小于等于 0 时回到 60。见 `apps/desktop/internal/config/store.go` 的 `normalize`。音频循环每 100ms 检查一次，到期调用 `rotate`，再 `newSegment`。
 
-设备变化、回声消除开关、系统声音开关、ASR 开关、模型、格式或输出目录变化，也会先结束当前分段再重开。见 `apps/desktop/internal/recorder/engine.go` 的 `Apply`。
+设备变化、回声消除开关、系统声音开关、ASR 开关、模型或输出目录变化，也会先结束当前分段再重开。见 `apps/desktop/internal/recorder/engine.go` 的 `Apply`。
 
-`finishSegment` 关闭 WAV 后，在后台等待该段的 ASR 任务，然后 `archive`。格式为 `flac` 时调用 `assets.Transcode`。转换失败保留 WAV。成功则删除 WAV，并把后续元数据指向 flac。
+`finishSegment` 关闭临时 WAV 后，在后台等待该段的 ASR 任务，然后 `archive`。所有分段都调用 `assets.Transcode` 归档为 FLAC，不再提供音频格式配置。转换失败保留 WAV。成功则删除 WAV，并把后续元数据指向 flac。历史 WAV 继续支持读取与补转写。
 
 `.recording.json` 在录音过程中由 `recordingSidecar` 异步刷新，停止时再写一次。字段包括 `audio_path`、`segment_start_time`、`recording_session_id`、`captured_ranges`、`input_device`、`audio_source`。麦克风还会写入 `capture_device_id` 和 `echo_cancellation`。
 
 转写完成时，`voice_job.go` 的 `saveTranscript` 先持久化采集元数据，再持久化文稿，最后通知历史刷新。快速模型不必等待异步 sidecar 恰好先完成，历史读者收到转写通知时即可读取对应采集时间区间。
 
-未关闭 ASR 时再写同名 `.json`：文本、`transcript_chunks`、模型名和 `backend`（`sherpa-onnx`）。实时队列满时，语音仍归档，并在诊断里记下队列已满。实时队列容量是 6。见 `apps/desktop/internal/asr/worker.go` 的 `NewModelWorker`。
+未关闭 ASR 时再写同名 `.json`：文本、`transcript_chunks`、模型名和 `backend`（SpeechAnalyzer 为 `speech-analyzer`，其他模型为 `sherpa-onnx`）。批量重转写也按所选模型写入同样的标识。实时队列满时，语音仍归档，并在诊断里记下队列已满。实时队列容量是 6。见 `apps/desktop/internal/asr/worker.go` 的 `NewModelWorker`。
 
 同一段的两路文件共用 `recording_session_id`，来源分别是 `microphone` 和 `system`。
 
 ### 历史与补转写
 
-`recorder.History` 遍历输出根目录，收集 `.wav` 和 `.flac`，再用同名 `.json` 或路径指向的 JSON 补状态、文本、来源和采集区间。没有 `audio_source` 的记录按麦克风处理。见 `apps/desktop/internal/protocol/settings.go` 的 `NormalizeAudioSource`。
+历史扫描为首页转写时间线、声纹样本导出与 [MCP](mcp.md) 提供数据；桌面端不再提供独立历史页面或按天文件列表。
+
+`recorder.History` 遍历输出根目录，收集 `.wav` 和 `.flac`，再用同名 `.json` 或路径指向的 JSON 补状态、文本、来源和采集区间。历史与批量文件扫描都忽略 `.daybee-` 开头的转换临时文件，只有完整归档发布后才列出。没有 `audio_source` 的记录按麦克风处理。见 `apps/desktop/internal/protocol/settings.go` 的 `NormalizeAudioSource`。
 
 `DesktopService.refreshHistory` 除当前输出目录外，还扫描文档目录下的 `DayBee`，以及未隔离运行时的 `RecBee` 和 `Eve Recorder`。见 `apps/desktop/internal/desktop/app.go`。
 
@@ -85,7 +89,7 @@ VAD 弹出的语音由 `appendSpeech` 写入 WAV。第一条语音才创建文�
 
 ```bash
 cd apps/desktop
-go test -count=1 ./internal/recorder/ -run 'TestUnlock|TestWake|TestDisconnected|TestManualStop|TestRecovery|TestTerminalCapture|TestRepeatedInterruptions|TestSystemInterruption|TestHistory|TestAutoSwitch|TestFailedDeviceChange|TestLiveTranscript'
+go test -count=1 ./internal/recorder/ -run 'TestUnlock|TestWake|TestDisconnected|TestManualStop|TestRecovery|TestTerminalCapture|TestRepeatedInterruptions|TestSystemInterruption|TestHistory|TestArchiveScans|TestAutoSwitch|TestFailedDeviceChange|TestLiveTranscript'
 ```
 
 界面恢复状态：

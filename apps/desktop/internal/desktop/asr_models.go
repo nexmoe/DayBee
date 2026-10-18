@@ -20,7 +20,7 @@ func (s *DesktopService) PrepareASRModel(id protocol.ASRModel) (protocol.Desktop
 	// Preparing only writes a separate model cache. Activation is guarded by
 	// SaveSettings/Engine.Apply, so recording can continue during a download.
 	if s.models != nil {
-		if err := s.models.EnsureASRModel(s.ctx, id); err != nil {
+		if err := s.models.EnsureASRModel(s.ctx, id, s.store.Settings().Recording.ASRLanguage); err != nil {
 			return s.snapshot(), err
 		}
 	}

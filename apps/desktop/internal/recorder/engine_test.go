@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/nexmoe/eve/apps/desktop/internal/asrmodel"
 	"github.com/nexmoe/eve/apps/desktop/internal/audio"
 	"github.com/nexmoe/eve/apps/desktop/internal/protocol"
 )
@@ -35,11 +36,10 @@ func TestPureRecordingFlushesVADWithoutASR(t *testing.T) {
 	if err != nil || len(files) != 1 {
 		t.Fatal("speech was not flushed", files, err)
 	}
-	stat, _ := os.Stat(files[0])
-	if stat.Size() != 44+1024*2 {
-		t.Fatal("tail not flushed", stat.Size())
+	if samples := archivedSamples(t, files[0]); len(samples) != 1024 {
+		t.Fatal("tail not flushed", len(samples))
 	}
-	if _, err = os.Stat(strings.TrimSuffix(files[0], ".wav") + ".json"); !os.IsNotExist(err) {
+	if _, err = os.Stat(strings.TrimSuffix(files[0], filepath.Ext(files[0])) + ".json"); !os.IsNotExist(err) {
 		t.Fatal("pure recording wrote transcript JSON")
 	}
 	if assets.asrRequested || runtime.recognizers != 0 {
@@ -80,11 +80,10 @@ func TestOverloadArchivesAllSpeechAndDefersStop(t *testing.T) {
 	if len(files) != 1 {
 		t.Fatal(files)
 	}
-	stat, _ := os.Stat(files[0])
-	if stat.Size() != 44+20*512*2 {
+	if samples := archivedSamples(t, files[0]); len(samples) != 20*512 {
 		t.Fatal("overload lost archived audio")
 	}
-	raw, _ := os.ReadFile(strings.TrimSuffix(files[0], ".wav") + ".json")
+	raw, _ := os.ReadFile(strings.TrimSuffix(files[0], filepath.Ext(files[0])) + ".json")
 	var metadata map[string]any
 	_ = json.Unmarshal(raw, &metadata)
 	if metadata["transcription_incomplete"] != true || metadata["status"] != "ok" {
@@ -100,7 +99,7 @@ func TestSettingsRotateUsingPreviousConfiguration(t *testing.T) {
 	if err := e.Start(); err != nil {
 		t.Fatal(err)
 	}
-	if e.Status().StatusMessage != "Recording with Whisper Tiny." {
+	if e.Status().StatusMessage != "Recording with "+asrmodel.Name(protocol.DefaultASRModel)+"." {
 		t.Fatal("live recording message changed")
 	}
 	e.patch(func(s *protocol.RecorderStatusSnapshot) {
@@ -133,7 +132,7 @@ func TestSettingsRotateUsingPreviousConfiguration(t *testing.T) {
 	}
 	jsonCount := 0
 	for _, path := range oldFiles {
-		_, err := os.Stat(strings.TrimSuffix(path, ".wav") + ".json")
+		_, err := os.Stat(strings.TrimSuffix(path, filepath.Ext(path)) + ".json")
 		if err == nil {
 			jsonCount++
 			if strings.Contains(path, filepath.Join(root, "new")) {
@@ -146,12 +145,8 @@ func TestSettingsRotateUsingPreviousConfiguration(t *testing.T) {
 	}
 }
 func TestFLACFailureRetainsPlayableWAV(t *testing.T) {
-	e, _, _, root := testEngine(t, false, &fakeRuntime{})
-	settings := e.Settings()
-	settings.Recording.AudioFormat = protocol.FLAC
-	if err := e.Apply(settings); err != nil {
-		t.Fatal(err)
-	}
+	e, _, assets, root := testEngine(t, false, &fakeRuntime{})
+	assets.failFLAC = true
 	if err := e.Start(); err != nil {
 		t.Fatal(err)
 	}

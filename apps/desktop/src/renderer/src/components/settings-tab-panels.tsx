@@ -3,7 +3,6 @@ import type {
   AppLanguage,
   AppSettings,
   AutoUpdateSnapshot,
-  AudioFormat,
   DesktopSnapshot,
   ThemeMode
 } from "@daybee/shared";
@@ -24,6 +23,7 @@ import { Switch } from "@/components/ui/switch";
 import { VoiceprintDiagnostics } from "@/components/voiceprint-diagnostics";
 import { VoiceprintSettings } from "@/components/voiceprint-settings";
 import { ASRModelSettings } from "@/components/asr-model-settings";
+import { MCPSettings } from "@/components/mcp-settings";
 
 type Translator = (key: MessageKey, params?: Record<string, number | string>) => string;
 type SelectOption<T extends string | number> = { label: string; value: T };
@@ -63,12 +63,6 @@ export function GeneralTab({
         title={t("launchAtLoginTitle")}
       />
       <SettingField
-        control={<Switch checked={settings.desktop.startRecordingOnLaunch} onCheckedChange={(value: boolean) => updateDesktop({ startRecordingOnLaunch: value })} />}
-        description={t("startRecordingOnLaunchDescription")}
-        testId="start-recording-on-launch-field"
-        title={t("startRecordingOnLaunchTitle")}
-      />
-      <SettingField
         control={
           <div className="flex min-w-0 max-w-full items-center gap-2">
             <div
@@ -96,11 +90,6 @@ export function GeneralTab({
         description={t("outputDirDescription")}
         layout="stacked"
         title={t("outputDirTitle")}
-      />
-      <SettingField
-        control={<SelectField options={options.audioFormatOptions} value={settings.recording.audioFormat} onChange={(value) => updateRecording({ audioFormat: value as AudioFormat })} />}
-        description={t("audioFormatDescription")}
-        title={t("audioFormatTitle")}
       />
       <SettingField
         control={<SelectNumberField options={options.segmentOptions} value={settings.recording.segmentMinutes} onChange={(value) => updateRecording({ segmentMinutes: value })} />}
@@ -140,6 +129,7 @@ export function GeneralTab({
         description={t("githubStarDescription")}
         title={t("githubStarTitle")}
       />
+      <MCPSettings t={t} />
     </div>
   );
 }
@@ -211,7 +201,7 @@ export function TranscribeTab({
       />
       <SettingField control={<Switch checked={!settings.recording.disableAsr} onCheckedChange={(value: boolean) => updateRecording({ disableAsr: !value })} />} description={t("realtimeAsrDescription")} testId="realtime-asr-field" title={t("realtimeAsrTitle")} />
       <ASRModelSettings snapshot={snapshot} t={t} />
-      <SettingField control={<SelectField options={options.asrLanguageOptions} value={settings.recording.asrLanguage} onChange={(value) => updateRecording({ asrLanguage: value })} />} description={t("asrLanguageDescription")} title={t("asrLanguageTitle")} />
+      <SettingField control={<SelectField options={options.asrLanguageOptions} value={settings.recording.asrLanguage} onChange={(value) => updateRecording({ asrLanguage: value })} />} description={t(settings.recording.asrModel === "speech-analyzer" ? "asrLanguageSpeechAnalyzerDescription" : "asrLanguageDescription")} title={t("asrLanguageTitle")} />
       <SettingField
         control={
           <div className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface)] px-3 py-2 text-xs leading-5 text-[color:var(--foreground)]">
@@ -231,7 +221,7 @@ export function TranscribeTab({
   );
 }
 
-export function buildSettingsOptions(snapshot: Pick<DesktopSnapshot, "app" | "devices" | "updater">, t: Translator) {
+export function buildSettingsOptions(snapshot: Pick<DesktopSnapshot, "app" | "devices" | "updater" | "settings">, t: Translator) {
   return {
     appVersionLabel: `${snapshot.app.name} v${snapshot.app.version}`,
     languageOptions: [
@@ -244,10 +234,6 @@ export function buildSettingsOptions(snapshot: Pick<DesktopSnapshot, "app" | "de
       { label: t("themeLight"), value: "light" },
       { label: t("themeDark"), value: "dark" }
     ] satisfies SelectOption<ThemeMode>[],
-    audioFormatOptions: [
-      { label: "FLAC", value: "flac" },
-      { label: "WAV", value: "wav" }
-    ] satisfies SelectOption<AudioFormat>[],
     deviceOptions: [
       { label: t("recordingDeviceDefault"), value: "default" },
       ...snapshot.devices.map((device) => ({
@@ -256,7 +242,7 @@ export function buildSettingsOptions(snapshot: Pick<DesktopSnapshot, "app" | "de
       }))
     ] satisfies SelectOption<string>[],
     asrLanguageOptions: [
-      { label: t("asrLanguageAuto"), value: "auto" },
+      { label: t(snapshot.settings.recording.asrModel === "speech-analyzer" ? "asrLanguageSystem" : "asrLanguageAuto"), value: "auto" },
       { label: t("languageNameChinese"), value: "zh" },
       { label: t("languageNameEnglish"), value: "en" },
       { label: t("languageNameJapanese"), value: "ja" },

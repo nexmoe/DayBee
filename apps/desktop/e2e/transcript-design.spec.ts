@@ -8,7 +8,7 @@ const record = (id: string, audioSource: "microphone" | "system", transcriptChun
   status: "ok", startedAt: transcriptChunks[0].startedAt, textPreview: transcriptChunks.map(chunk => chunk.text).join("\n"), transcriptChunks
 });
 
-for (const role of ["compact", "main"] as const) for (const language of ["zh-CN", "en-US"] as const) for (const theme of ["light", "dark"] as const) {
+for (const role of ["compact"] as const) for (const language of ["zh-CN", "en-US"] as const) for (const theme of ["light", "dark"] as const) {
   test(`renders connected speaker nodes in ${role} ${language} ${theme}`, async ({ launchApp }, testInfo) => {
     const { app, page } = await launchApp();
     const snapshot = await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"));
@@ -27,8 +27,8 @@ for (const role of ["compact", "main"] as const) for (const language of ["zh-CN"
       { id: "other-app", appId: "long-app", appName: "会议应用LongApplicationNameWithoutSpaces用于验证窗口内换行", appIcon: "data:image/png;base64,broken", startedAt: at(-1), endedAt: at(20) }
     ] };
     await app.setFixture(snapshot);
-    if (role === "main") await page.goto("/?window=main");
-    await page.setViewportSize({ width: role === "main" ? 1000 : 420, height: 900 });
+    if (role === "compact") await page.goto("/");
+    await page.setViewportSize({ width: role === "compact" ? 1000 : 420, height: 900 });
     await page.emulateMedia({ colorScheme: theme });
     await expect(page.locator("html")).toHaveClass(theme === "dark" ? /dark/ : /^$/);
     const timeline = page.getByRole("list", { name: /Transcription timeline|转写时间线/ });
@@ -65,7 +65,7 @@ for (const role of ["compact", "main"] as const) for (const language of ["zh-CN"
       return node.getAttribute("data-voice-identity") === "me" ? dot.backgroundColor === speaker.color : dot.backgroundColor !== speaker.color;
     }))).toBe(true);
 
-    for (const width of role === "main" ? [1000, 720, 380] : [420, 380]) {
+    for (const width of role === "compact" ? [1000, 720, 380] : [420, 380]) {
       await page.setViewportSize({ width, height: 900 });
       await expect.poll(() => timeline.locator(".transcript-turn").evaluateAll(elements => elements.every(element => {
         const rect = element.getBoundingClientRect();
@@ -87,12 +87,7 @@ for (const role of ["compact", "main"] as const) for (const language of ["zh-CN"
       await page.screenshot({ path: screenshot, animations: "disabled" });
       await testInfo.attach(`transcript-${width}`, { path: screenshot, contentType: "image/png" });
     }
-    if (role === "main") {
-      await page.setViewportSize({ width: 1000, height: 900 });
-      await meeting.getByRole("button", { name: /微信输入法/ }).first().click();
-      await expect(page.getByRole("combobox", { name: /Filter by app|按应用筛选/ })).toHaveValue("wetype");
-      await expect(timeline.getByRole("article")).toHaveCount(3);
-    }
+    await expect(meeting.getByRole("button")).toHaveCount(0);
     await app.close();
   });
 }

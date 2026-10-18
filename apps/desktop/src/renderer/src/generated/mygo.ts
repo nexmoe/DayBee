@@ -4,12 +4,15 @@ import { call, event } from "mygo-runtime";
 
 // ---- Types ----
 
-export type ASRModel = "whisper-tiny" | "whisper-base" | "whisper-small" | "qwen3-0.6b" | "firered-asr2-aed" | "firered-asr2-ctc" | "sensevoice-2025";
+export type ASRModel = "speech-analyzer" | "whisper-tiny" | "whisper-base" | "whisper-small" | "qwen3-0.6b" | "firered-asr2-aed" | "firered-asr2-ctc" | "sensevoice-2025";
 
 export interface ASRModelSnapshot {
   id: ASRModel;
   name: string;
-  /** EstimatedBytes is the compressed download size, not resident memory. */
+  /**
+   * EstimatedBytes is the compressed download size, not resident memory.
+   * Zero for OS-managed SpeechAnalyzer assets, whose size is not fixed.
+   */
   estimatedBytes: number;
   ready: boolean;
 }
@@ -33,8 +36,6 @@ export interface AppSettings {
   recording: RecordingSettings;
 }
 
-export type AudioFormat = "flac" | "wav";
-
 export type AudioSource = "microphone" | "system";
 
 export type AutoUpdatePhase = "available" | "checking" | "downloaded" | "downloading" | "error" | "idle" | "unavailable";
@@ -54,7 +55,6 @@ export interface DesktopSettings {
   hideWindowOnClose: boolean;
   language: AppLanguage;
   launchAtLogin: boolean;
-  startRecordingOnLaunch: boolean;
   theme: ThemeMode;
   voiceprintSetup: VoiceprintSetupState;
 }
@@ -163,7 +163,6 @@ export interface RecordingHistoryItem {
 }
 
 export interface RecordingSettings {
-  audioFormat: AudioFormat;
   asrLanguage: string;
   asrModel: ASRModel;
   autoSwitchConfirmations: number;
@@ -245,8 +244,14 @@ export const DesktopService = {
   closeWindow(role: string): Promise<void> {
     return call("DesktopService.CloseWindow", role);
   },
+  copyMCPConfig(): Promise<string> {
+    return call("DesktopService.CopyMCPConfig");
+  },
   exportVoiceprintSamples(recordingID: string, destinationDir: string): Promise<string> {
     return call("DesktopService.ExportVoiceprintSamples", recordingID, destinationDir);
+  },
+  getMCPConfig(): Promise<string> {
+    return call("DesktopService.GetMCPConfig");
   },
   /** InstallUpdate saves the current recording, installs the detected update and relaunches. */
   installUpdate(): Promise<void> {
@@ -257,10 +262,6 @@ export const DesktopService = {
   },
   openExternal(target: string): Promise<void> {
     return call("DesktopService.OpenExternal", target);
-  },
-  /** The main window is created once, on demand. Its lifetime never owns recording. */
-  openMainWindow(): Promise<void> {
-    return call("DesktopService.OpenMainWindow");
   },
   openMicrophoneSettings(): Promise<boolean> {
     return call("DesktopService.OpenMicrophoneSettings");

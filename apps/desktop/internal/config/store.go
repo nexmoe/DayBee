@@ -35,7 +35,7 @@ type Store struct {
 // configuration. Models and audio stay in place for rollback to Electron.
 func Open(root, documents string, legacy []string, migrateDevices bool) (*Store, error) {
 	s := &Store{root: root, defaults: protocol.DefaultSettings(filepath.Join(documents, "DayBee"))}
-	s.data = document{Settings: s.defaults, WindowState: WindowState{620, 420}, NativeDevices: true}
+	s.data = document{Settings: s.defaults, WindowState: WindowState{Height: 760, Width: 420}, NativeDevices: true}
 	if err := os.MkdirAll(root, 0700); err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func Open(root, documents string, legacy []string, migrateDevices bool) (*Store,
 			s.data.WindowState.Width = 520
 		}
 		if s.data.WindowState.Height < 480 {
-			s.data.WindowState.Height = 620
+			s.data.WindowState.Height = 760
 		}
 		var alreadyNative bool
 		_ = json.Unmarshal(payload["nativeDevices"], &alreadyNative)
@@ -175,9 +175,6 @@ func normalize(raw []byte, defaults protocol.AppSettings) protocol.AppSettings {
 	case protocol.VoiceprintPending, protocol.VoiceprintSkipped, protocol.VoiceprintConfigured:
 	default:
 		result.Desktop.VoiceprintSetup = protocol.VoiceprintPending
-	}
-	if result.Recording.AudioFormat != protocol.WAV {
-		result.Recording.AudioFormat = protocol.FLAC
 	}
 	if !protocol.ValidASRModel(result.Recording.ASRModel) {
 		result.Recording.ASRModel = protocol.DefaultASRModel

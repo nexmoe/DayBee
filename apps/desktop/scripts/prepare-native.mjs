@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { chmodSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { delimiter, join } from "node:path";
+import { prepareSpeech } from "./prepare-speech.mjs";
 
 const version = "1.13.8";
 const targets = {
@@ -33,6 +34,7 @@ export function prepareNative(root, target, env) {
   env.DAYBEE_NATIVE_LIBRARY_DIR = library;
   if (!existsSync(library)) throw new Error(`Missing locked sherpa libraries: ${library}`);
   if (platform === "macos") {
+    prepareSpeech(root, target, env);
     // The upstream Go package embeds its module-cache rpath. Patch an isolated
     // copy before linking, so signed bundles/updates never depend on that cache.
     const copy = join(generated, `sherpa-${platform}-${version}`);

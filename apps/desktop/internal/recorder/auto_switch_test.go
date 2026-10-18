@@ -30,7 +30,6 @@ func autoSwitchEngine(t *testing.T, levels map[string]float64) (*Engine, *autoSw
 	s := protocol.DefaultSettings(t.TempDir())
 	s.Recording.AutoSwitchDevice, s.Recording.EchoCancellation, s.Recording.RecordSystemAudio = true, true, true
 	s.Recording.DisableASR = true
-	s.Recording.AudioFormat = protocol.WAV
 	c := &autoSwitchCapture{fakeCapture: &fakeCapture{}, levels: levels, probeErrors: map[string]error{}}
 	e := New(s, c, &fakeAssets{}, &fakeRuntime{}, nil, nil)
 	t.Cleanup(func() {

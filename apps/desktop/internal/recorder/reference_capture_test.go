@@ -69,7 +69,6 @@ func TestReferenceOnlySkipsSystemArchiveAndDecode(t *testing.T) {
 func TestReferenceDeniedKeepsMicrophone(t *testing.T) {
 	dir := t.TempDir()
 	settings := protocol.DefaultSettings(dir)
-	settings.Recording.AudioFormat = protocol.WAV
 	settings.Recording.AutoSwitchDevice = false
 	capture := &denyRefCapture{}
 	runtime := &fakeRuntime{}
@@ -323,7 +322,6 @@ func TestClearSameManagerStopsReferenceOnApply(t *testing.T) {
 func TestSavingSettingsDoesNotRetryUnavailableReference(t *testing.T) {
 	dir := t.TempDir()
 	settings := protocol.DefaultSettings(dir)
-	settings.Recording.AudioFormat = protocol.WAV
 	settings.Recording.AutoSwitchDevice = false
 	capture := &denyRefCapture{}
 	e := New(settings, capture, &fakeAssets{}, &fakeRuntime{}, nil, nil)
