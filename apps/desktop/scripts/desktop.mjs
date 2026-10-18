@@ -27,6 +27,7 @@ if (command === "build") {
 }
 if (["generate", "dev", "build"].includes(command)) {
   const defaults = spawnSync("go", ["run", "./cmd/contracts"], { cwd: root, env, stdio: "inherit" });
+  if (defaults.error) throw new Error("Could not start the Go contract generator", { cause: defaults.error });
   if (defaults.status !== 0) process.exit(defaults.status ?? 1);
 }
 if (command === "test" && platform === "darwin") {
@@ -35,6 +36,7 @@ if (command === "test" && platform === "darwin") {
 const binary = ["test", "vet"].includes(command) ? "go" : binaryPath();
 const flags = command === "test" ? ["test", ...args, "./..."] : command === "vet" ? ["vet", "./..."] : [command, ...args];
 const child = spawnSync(binary, flags, { cwd: root, env, stdio: "inherit" });
+if (child.error) throw new Error(`Could not start ${binary}`, { cause: child.error });
 if (child.status === 0 && command === "build" && platform === "darwin") {
   const out = join(root, "dist", target);
   for (const file of readdirSync(out).filter(file => file.endsWith(".dmg") && !file.endsWith(`-${target}.dmg`))) {

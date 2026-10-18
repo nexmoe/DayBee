@@ -10,6 +10,7 @@ All notable changes to this project are documented in this file.
 
 ### Fixes
 
+- Restore an intact native library when older Xcode tools cannot strip its symbols, and preserve Windows executable search paths while preparing native dependencies.
 - Use version 1.0.0 as the fallback when launching the Go entry point directly.
 
 ## 1.0.0 - 2026-10-18

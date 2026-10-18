@@ -46,7 +46,9 @@ Bun workspace 放桌面端、营销站和前后端共用的默认值。桌面端
 
 `build` 与 `build:desktop` 调用 `node scripts/desktop.mjs build`。macOS 上它设置 `CGO_ENABLED`（1）、`MACOSX_DEPLOYMENT_TARGET`（13.3），以及同样的 `CGO_CFLAGS` 和 `CGO_LDFLAGS`。
 
-`prepare-native.mjs` 的 `prepareNative` 只接受本机目标：`darwin-arm64`、`darwin-amd64`、`windows-amd64`。它下载锁定的 sherpa 平台模块 1.13.8，把许可证和 `native-versions.json` 放到 `apps/desktop/resources/<target>`。macOS 在 `.generated` 里复制一份 sherpa 模块，把绝对 rpath 换成 `@executable_path/../Resources/lib`，并用 `-modfile` 指向这份副本。Go 模块缓存不被改写。dylib 先去掉上游签名，再 `strip -x`。
+`prepare-native.mjs` 的 `prepareNative` 只接受本机目标：`darwin-arm64`、`darwin-amd64`、`windows-amd64`。它下载锁定的 sherpa 平台模块 1.13.8，把许可证和 `native-versions.json` 放到 `apps/desktop/resources/<target>`。macOS 在 `.generated` 里复制一份 sherpa 模块，把绝对 rpath 换成 `@executable_path/../Resources/lib`，并用 `-modfile` 指向这份副本。Go 模块缓存不被改写。dylib 先去掉上游签名，再尝试 `strip -x`；旧 Xcode 无法处理上游库的 `__LINKEDIT` 时，从缓存恢复干净副本并去掉签名，保留完整符号，记录警告后继续构建。签名移除失败仍终止构建。
+
+Windows 将原生库目录添加到已有的 `Path` 或 `PATH` 前面，保留原来的键名和搜索目录，并移除大小写冲突的重复键；不能因为 DLL 路径覆盖 Go、Bun 和 C 编译器的搜索路径。
 
 mygo 再执行 `buildCommand`（`bun run build:web`）并把前端产物从 `out/renderer` 打进 `dist`。macOS 最低系统版本、签名身份、entitlements 和可选公证都在 `mygo.config.ts`。Windows 证书和签名命令只在对应环境变量存在时写入。
 
@@ -63,6 +65,7 @@ mygo 再执行 `buildCommand`（`bun run build:web`）并把前端产物从 `out
 - `desktop.mjs` 比对 `go version` 输出里的 `go1.27.1 `。版本不对就退出。
 - `DAYBEE_BUILD_TARGET` 必须等于当前平台和架构。否则报交叉编译不支持。
 - `go run ./cmd/contracts` 失败时，`desktop.mjs` 用它的退出码结束，不继续 generate 或 build。
+- 契约生成器或 mygo/Go 子进程无法启动时，脚本输出底层启动错误，避免只留下退出码 1。
 - 首次构建需要网络拉取 Go 模块。之后复用模块缓存和 `.generated`。
 - 编解码不依赖 FFmpeg。`prepareNative` 会删掉资源目录里遗留的 ffmpeg 路径。版本钉在 `prepare-native.mjs`：sherpa `version`（1.13.8），ONNX Runtime 1.28.2，malgo 0.11.26，FLAC 1.0.14。Go 源里的 `OnnxRuntimeVersion`（1.28.2）在 `apps/desktop/internal/asr/runtime.go`。
 - 不支持 Linux 和交叉编译。Windows x64 用 MSYS2 的 MINGW64 GCC、`make`、`diffutils`，CI 里由 `msys2/setup-msys2` 安装；应用用 WebView2。
@@ -83,6 +86,6 @@ node apps/desktop/scripts/desktop.mjs vet
 node apps/desktop/scripts/release-gates.mjs
 ```
 
-`test:release` 跑 `apps/desktop/scripts/release-artifacts.test.mjs`。`release-gates.mjs` 在门未通过时以非零退出，这是当前数据的预期结果。
+`test:release` 跑 `apps/desktop/scripts/release-artifacts.test.mjs` 和 `apps/desktop/scripts/prepare-native.test.mjs`，覆盖发布产物、Windows 路径保留及 strip 失败后的原始库恢复。`release-gates.mjs` 在门未通过时以非零退出，这是当前数据的预期结果。
 
 链接：`bun run check:docs`

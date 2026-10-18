@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { chmodSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { delimiter, join } from "node:path";
+import { basename, delimiter, join } from "node:path";
 
 const version = "1.13.8";
 const targets = {
@@ -8,6 +8,33 @@ const targets = {
   "darwin-amd64": ["macos", "x86_64-apple-darwin"],
   "windows-amd64": ["windows", "x86_64-pc-windows-gnu"]
 };
+
+export function prependNativePath(env, library, separator = delimiter) {
+  const keys = Object.keys(env).filter(key => key.toLowerCase() === "path").sort();
+  const key = keys[0] || "PATH";
+  const previous = env[key];
+  for (const duplicate of keys.slice(1)) delete env[duplicate];
+  env[key] = [library, previous].filter(Boolean).join(separator);
+}
+
+export function prepareMacLibrary(source, bundled, { run = execFileSync, warn = console.warn } = {}) {
+  const restore = () => {
+    rmSync(bundled, { force: true });
+    cpSync(source, bundled);
+    chmodSync(bundled, 0o755);
+    // Remove the upstream signature so mygo signs the bundled copy.
+    run("codesign", ["--remove-signature", bundled]);
+  };
+  restore();
+  try {
+    run("xcrun", ["strip", "-x", bundled], { stdio: "inherit" });
+  } catch (error) {
+    // Some Xcode versions cannot rewrite the upstream ONNX __LINKEDIT layout.
+    // Restore from the untouched cache: strip may have partially changed its copy.
+    restore();
+    warn(`Keeping unstripped ${basename(source)}: ${error.message}`);
+  }
+}
 
 export function prepareNative(root, target, env) {
   const details = targets[target];
@@ -49,16 +76,7 @@ export function prepareNative(root, target, env) {
     env.CGO_LDFLAGS_ALLOW = "-Wl,-rpath,@executable_path/\\.\\./Resources/lib";
     const dest = join(resource, "lib"); mkdirSync(dest, { recursive: true });
     for (const file of readdirSync(library).filter((f) => f.endsWith(".dylib"))) {
-      const bundled = join(dest, file);
-      rmSync(bundled, { force: true });
-      cpSync(join(library, file), bundled);
-      chmodSync(bundled, 0o755);
-      // Remove the upstream signature first: ad hoc mygo builds otherwise
-      // see its stale signature and skip signing this modified library.
-      execFileSync("codesign", ["--remove-signature", bundled]);
-      // Keep exported symbols for dynamic linking and the upstream cache
-      // untouched. Mygo signs the stripped copy before packaging.
-      execFileSync("xcrun", ["strip", "-x", bundled], { stdio: "inherit" });
+      prepareMacLibrary(join(library, file), join(dest, file));
     }
     env.DYLD_LIBRARY_PATH = [library, env.DYLD_LIBRARY_PATH].filter(Boolean).join(delimiter);
   } else {
@@ -67,7 +85,7 @@ export function prepareNative(root, target, env) {
       if (existsSync(dest)) chmodSync(dest, 0o666);
       rmSync(dest, { force:true }); cpSync(join(library,file),dest); chmodSync(dest,0o644);
     }
-    env.PATH = library + delimiter + env.PATH;
+    prependNativePath(env, library);
   }
   return env;
 }
