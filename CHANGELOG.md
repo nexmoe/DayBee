@@ -23,6 +23,7 @@ All notable changes to this project are documented in this file.
 
 ### Fixes
 
+- Run voiceprint device-consistency acceptance tests in virtual time so accelerated capture does not race CI scheduling.
 - Use virtual time to verify stalled model downloads switch to the first healthy mirror at the idle deadline, without CI scheduling or disk latency causing false timeouts.
 - Check live model-switch ordering against blocked inference with a CI-safe deadlock watchdog, preserving capture and queued-speech assertions.
 - Wait for fonts and measure Home layout in one frame to avoid false overlap failures during responsive transitions.

@@ -147,4 +147,6 @@ go test ./internal/recorder/ -count=1 -timeout 180s -run 'TestVoiceprintLabelsMi
 
 需要本机模型和公开语音的测试不作为默认门禁：`TestNativeSpeakerVerification`、`TestNativeCalibratedPipelineContract`、`TestNativeVoiceprintEnrollment`。
 
+录入设备一致性回归：`go test ./internal/desktop/ -race -count=20 -run 'TestEnrollmentRejectsDeviceChangeOnEveryStep|TestEnrollmentRejectsEchoChangeBeforeCapture'`。每个设备或回声变化步骤在虚拟时间中运行，避免加速模拟音频与 CI 调度竞争先触发溢出或超时；仍要求错误类型、嵌入次数、采集关闭及未保存档案均正确。
+
 链接：`bun run check:docs`
