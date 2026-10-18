@@ -23,6 +23,7 @@ All notable changes to this project are documented in this file.
 
 ### Fixes
 
+- Check live model-switch ordering against blocked inference with a CI-safe deadlock watchdog, preserving capture and queued-speech assertions.
 - Wait for fonts and measure Home layout in one frame to avoid false overlap failures during responsive transitions.
 - Verify Windows title-bar clearance and platform-specific recovery controls in renderer acceptance tests, with local platform emulation for regression coverage.
 - Preserve the intended Windows content viewport by compensating for invisible frameless resize borders.

@@ -96,3 +96,5 @@ bunx playwright test e2e/recording-recovery.spec.ts
 ```
 
 链接：`bun run check:docs`
+
+`TestLiveModelSwitchKeepsCaptureAndQueuedSpeech` 在推理 gate 保持关闭时要求模型切换返回，再检查采集连续性、旧队列及两种模型的归档。5 秒看门狗用于发现死锁，给 Windows 文件同步和 race 检测留出余量，不是产品的切换延迟指标。

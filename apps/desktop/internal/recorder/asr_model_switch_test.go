@@ -15,6 +15,7 @@ import (
 )
 
 func TestLiveModelSwitchKeepsCaptureAndQueuedSpeech(t *testing.T) {
+	const watchdog = 5 * time.Second
 	for _, systemAudio := range []bool{false, true} {
 		name := "microphone"
 		if systemAudio {
@@ -53,7 +54,7 @@ func TestLiveModelSwitchKeepsCaptureAndQueuedSpeech(t *testing.T) {
 			feed(audio.WindowSize)
 			select {
 			case <-runtime.entered:
-			case <-time.After(time.Second):
+			case <-time.After(watchdog):
 				t.Fatal("first decode did not start")
 			}
 			// Leave both queued speech and a partial VAD window at the boundary.
@@ -67,8 +68,15 @@ func TestLiveModelSwitchKeepsCaptureAndQueuedSpeech(t *testing.T) {
 				if err != nil {
 					t.Fatal("live switch failed", err)
 				}
-			case <-time.After(time.Second):
+			case <-time.After(watchdog):
 				t.Fatal("model switch waited for inference")
+			}
+			// This proves ordering rather than imposing a disk-latency benchmark:
+			// Apply returned while the original inference was still blocked.
+			select {
+			case <-gate:
+				t.Fatal("inference was released before the model switch completed")
+			default:
 			}
 			capture.mu.Lock()
 			starts, capturing := len(capture.options), capture.callback != nil
