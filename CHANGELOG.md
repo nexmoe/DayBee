@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Use `daybee.co` as the website's canonical URL, add repeatable Cloudflare deployments with Alchemy, and repair links to product guides.
+
 ## 1.0.0 - 2026-10-18
 
 ### Maintenance

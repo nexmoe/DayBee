@@ -51,6 +51,7 @@ htmlcov/
 logs/
 
 # Node / desktop
+.alchemy/
 node_modules/
 apps/desktop/.mygo/
 apps/desktop/out/
