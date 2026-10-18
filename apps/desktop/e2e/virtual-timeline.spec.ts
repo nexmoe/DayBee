@@ -53,6 +53,8 @@ async function openTimeline(page: Page, role: "compact" | "main") {
 
 for (const role of ["compact", "main"] as const) {
   test(`virtualizes all history and preserves the reading position in the ${role} window`, async ({ launchApp }, testInfo) => {
+    // This complete 1000-row flow includes resize, live updates, search and navigation.
+    test.setTimeout(90_000);
     const { app, page } = await launchApp();
     const snapshot = await page.evaluate(() => window.mygo!.call<DesktopSnapshot>("DesktopService.Bootstrap"));
     snapshot.history = Array.from({ length: count }, (_, index) => record(index));
