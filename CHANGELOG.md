@@ -176,6 +176,9 @@ All notable changes to this project are documented in this file.
 - Refactor the desktop runtime internals to align with the Sherpa/FFmpeg pipeline and simplify the main-process execution path.
 
 ### Fixes
+- Ask for microphone access before recording on macOS and bring the permission request into view.
+- Restore microphone access in the installed Mac app so recording can start after permission is granted.
+- Explain immediately when recording must wait for speech models to finish downloading.
 - Avoid double-initializing the packaged `electron-log` preload bridge so the desktop renderer no longer crashes into a blank settings window on macOS.
 - Disable the translucent glass tray window style in packaged macOS builds and fall back to a solid background for more stable desktop window rendering.
 - Log packaged renderer load failures and renderer-process exits in the desktop main process to make post-release crash diagnosis easier.
@@ -265,6 +268,9 @@ All notable changes to this project are documented in this file.
 ### Performance
 - Cache tray snapshot state and refresh devices/history only when needed to reduce unnecessary work in the desktop main process.
 
+### Improvements
+- Use clearer speech activity labels so it is easier to tell whether speech is being detected.
+
 ## 0.5.0 - 2026-03-23
 
 ### Features
@@ -292,6 +298,7 @@ All notable changes to this project are documented in this file.
 - Add desktop app runtime and skill-packaged workflow.
 
 ### Fixes
+- Keep recording on the microphone you explicitly selected unless you enable automatic device switching.
 - Fix speech segment loss during segment rotation (by @jeasonzhang-eth).
 - Fix macOS recorder stalls and improve default switching behavior.
 
@@ -301,6 +308,7 @@ All notable changes to this project are documented in this file.
 - Add `--version` / `-v` flags to show CLI version from both the root command and subcommands.
 
 ### Fixes
+- Show clearer startup guidance when speech recognition cannot load, including when the folder used to launch the app is no longer available.
 - Improve packaged runtime resilience by normalizing working directory and model/resource path resolution.
 
 ## 0.3.5 - 2026-02-23
